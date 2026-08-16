@@ -1,0 +1,53 @@
+namespace MultiverseCardBattle.Effects
+{
+    public enum EffectType
+    {
+        None,
+
+        // Damage
+        DealDamage,
+        DealTrueDamage,
+
+        // Heal
+        Heal,
+
+        // Stats
+        GainAttack,
+        GainHealth,
+        SetAttack,
+        SetHealth,
+
+        // Cost
+        ReduceCost,
+        IncreaseCost,
+        SetCost,
+
+        // Card
+        DrawCard,
+        DiscardCard,
+        CreateCard,
+        DestroyCard,
+
+        // Board
+        Summon,
+        ReturnToHand,
+        MoveToDeck,
+        Banish,
+
+        // Keywords
+        AddKeyword,
+        RemoveKeyword,
+
+        // Status
+        Silence,
+        Stun,
+
+        // Resource
+        GainEnergy,
+        SpendEnergy,
+
+        // Other
+        Discover,
+        Transform
+    }
+}
