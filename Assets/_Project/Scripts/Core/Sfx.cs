@@ -67,7 +67,12 @@ namespace MultiverseCardBattle.Core
                 musicSource.loop = true;
                 musicSource.spatialBlend = 0f;
                 musicSource.volume = MusicVolume;
-                musicSource.clip = BuildMusic();
+
+                // วางไฟล์เพลงไว้ที่ Assets/_Project/Resources/Music/bgm (.mp3/.ogg/.wav)
+                // เกมจะใช้ไฟล์นั้นแทนเพลงที่สร้างจากโค้ด
+                AudioClip custom = Resources.Load<AudioClip>("Music/bgm");
+
+                musicSource.clip = custom != null ? custom : BuildMusic();
             }
 
             musicSource.mute = Muted;
