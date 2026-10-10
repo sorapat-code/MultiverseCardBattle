@@ -44,7 +44,16 @@ namespace MultiverseCardBattle.Core
                     SaveData data = JsonUtility.FromJson<SaveData>(json);
 
                     if (data != null && data.Decks != null && data.Decks.Count > 0)
+                    {
+                        // เซฟเก่าที่ยังไม่มี Gold: แจก Gold เริ่มต้นให้ครั้งเดียว
+                        if (data.Version < SaveData.CurrentVersion)
+                        {
+                            data.Gold += PlayerProfile.StartingGold;
+                            data.Version = SaveData.CurrentVersion;
+                        }
+
                         profile = new PlayerProfile(data);
+                    }
                 }
             }
             catch (Exception exception)

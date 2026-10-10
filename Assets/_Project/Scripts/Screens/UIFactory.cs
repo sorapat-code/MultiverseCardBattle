@@ -3,6 +3,7 @@ using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using MultiverseCardBattle.Core;
 
 namespace MultiverseCardBattle.Screens
 {
@@ -174,6 +175,8 @@ namespace MultiverseCardBattle.Screens
             Button button = rect.gameObject.AddComponent<Button>();
 
             button.targetGraphic = image;
+
+            button.onClick.AddListener(() => Sfx.Play(SoundId.Click));
 
             if (onClick != null)
                 button.onClick.AddListener(onClick);

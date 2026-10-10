@@ -26,9 +26,11 @@ namespace MultiverseCardBattle.Screens
     /// การ์ด 1 ใบบนหน้าจอ สร้างด้วยโค้ดผ่าน CardView.Create
     /// แสดงได้ 2 แบบ: CardInstance (ในการต่อสู้) หรือ CardData (คอลเลกชัน/เด็ค)
     /// </summary>
-    public class CardView : MonoBehaviour, IPointerClickHandler
+    public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         public event Action<CardView> Clicked;
+        public event Action<CardView> HoverEntered;
+        public event Action<CardView> HoverExited;
 
         public CardInstance Instance { get; private set; }
         public CardData Data { get; private set; }
@@ -380,6 +382,26 @@ namespace MultiverseCardBattle.Screens
         {
             if (Clicked != null)
                 Clicked(this);
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (HoverEntered != null)
+                HoverEntered(this);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (HoverExited != null)
+                HoverExited(this);
+        }
+
+        /// <summary>
+        /// ปิดการรับเมาส์ (ใช้กับการ์ดพรีวิว ไม่ให้บังการ์ดอื่น)
+        /// </summary>
+        public void SetInteractable(bool interactable)
+        {
+            group.blocksRaycasts = interactable;
         }
 
         // ---------- สี ----------

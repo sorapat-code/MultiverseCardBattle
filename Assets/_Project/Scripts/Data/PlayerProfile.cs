@@ -38,13 +38,21 @@ namespace MultiverseCardBattle.Data
     [Serializable]
     public class SaveData
     {
-        public int Version = 1;
+        // 1 = ก่อนมี Gold / 2 = มี Gold และตั้งค่าเสียง
+        public const int CurrentVersion = 2;
+
+        public int Version = CurrentVersion;
 
         public List<OwnedCardEntry> Owned = new List<OwnedCardEntry>();
         public List<DeckList> Decks = new List<DeckList>();
         public int ActiveDeckIndex;
 
         public List<string> CompletedStages = new List<string>();
+
+        // เหรียญสำหรับซื้อแพ็คการ์ด ได้จากการชนะการต่อสู้
+        public int Gold;
+
+        public bool SoundMuted;
     }
 
     /// <summary>
@@ -53,6 +61,7 @@ namespace MultiverseCardBattle.Data
     public class PlayerProfile
     {
         public const int MaxDecks = 9;
+        public const int StartingGold = 150;
 
         public SaveData Data;
 
@@ -69,6 +78,8 @@ namespace MultiverseCardBattle.Data
 
             foreach (string id in StarterDecks.StarterCollectionIds())
                 profile.AddCard(id, 2);
+
+            data.Gold = StartingGold;
 
             DeckList starter = profile.AddDeck("Starter Deck");
 
@@ -180,6 +191,31 @@ namespace MultiverseCardBattle.Data
 
             if (Data.ActiveDeckIndex >= Data.Decks.Count)
                 Data.ActiveDeckIndex = Data.Decks.Count - 1;
+
+            return true;
+        }
+
+        // ---------- Gold ----------
+
+        public int Gold
+        {
+            get { return Data.Gold; }
+        }
+
+        public void AddGold(int amount)
+        {
+            if (amount <= 0)
+                return;
+
+            Data.Gold += amount;
+        }
+
+        public bool TrySpendGold(int amount)
+        {
+            if (amount < 0 || Data.Gold < amount)
+                return false;
+
+            Data.Gold -= amount;
 
             return true;
         }

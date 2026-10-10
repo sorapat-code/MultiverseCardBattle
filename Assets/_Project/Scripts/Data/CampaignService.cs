@@ -92,8 +92,13 @@ namespace MultiverseCardBattle.Data
             return null;
         }
 
+        public const int GoldFirstClear = 120;
+        public const int GoldStageReplay = 40;
+        public const int GoldQuickWin = 30;
+        public const int GoldLoss = 10;
+
         /// <summary>
-        /// เรียกเมื่อการต่อสู้จบ: บันทึกความคืบหน้า/รางวัล คืนข้อความสรุปให้แสดง
+        /// เรียกเมื่อการต่อสู้จบ: บันทึกความคืบหน้า/รางวัล/Gold คืนข้อความสรุปให้แสดง
         /// </summary>
         public static List<string> OnBattleFinished(bool playerWon)
         {
@@ -101,33 +106,45 @@ namespace MultiverseCardBattle.Data
 
             CampaignStage stage = BattleSetup.Stage;
 
-            if (stage == null || !playerWon)
-                return lines;
-
             PlayerProfile profile = SaveManager.Profile;
 
-            bool firstClear = !profile.IsStageCompleted(stage.Id);
+            int gold;
 
-            profile.MarkStageCompleted(stage.Id);
-
-            lines.Add("Stage cleared: " + stage.Name);
-
-            if (firstClear && stage.RewardCardIds != null)
+            if (playerWon && stage != null)
             {
-                foreach (string cardId in stage.RewardCardIds)
+                bool firstClear = !profile.IsStageCompleted(stage.Id);
+
+                profile.MarkStageCompleted(stage.Id);
+
+                lines.Add("Stage cleared: " + stage.Name);
+
+                if (firstClear && stage.RewardCardIds != null)
                 {
-                    CardData card = CardRegistry.Get(cardId);
+                    foreach (string cardId in stage.RewardCardIds)
+                    {
+                        CardData card = CardRegistry.Get(cardId);
 
-                    if (card == null)
-                        continue;
+                        if (card == null)
+                            continue;
 
-                    int copies = DeckRules.MaxCopies(card);
+                        int copies = DeckRules.MaxCopies(card);
 
-                    profile.AddCard(cardId, copies);
+                        profile.AddCard(cardId, copies);
 
-                    lines.Add("Reward: " + card.CardName + " x" + copies);
+                        lines.Add("Reward: " + card.CardName + " x" + copies);
+                    }
                 }
+
+                gold = firstClear ? GoldFirstClear : GoldStageReplay;
             }
+            else
+            {
+                gold = playerWon ? GoldQuickWin : GoldLoss;
+            }
+
+            profile.AddGold(gold);
+
+            lines.Add("Gold +" + gold);
 
             SaveManager.Save();
 

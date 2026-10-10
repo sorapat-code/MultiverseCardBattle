@@ -140,6 +140,112 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
+        public void Pack_HasFiveCardsWithAtLeastOneRarePlus()
+        {
+            System.Random rng = new System.Random(12345);
+
+            for (int i = 0; i < 200; i++)
+            {
+                List<CardData> cards = PackService.RollCards(rng);
+
+                Assert.AreEqual(PackService.CardsPerPack, cards.Count);
+
+                bool rarePlus = false;
+
+                foreach (CardData card in cards)
+                {
+                    Assert.IsTrue(CardRegistry.IsCollectible(card));
+
+                    if (card.Rarity != CardRarity.Common)
+                        rarePlus = true;
+                }
+
+                Assert.IsTrue(rarePlus, "Pack " + i + " had no Rare or better");
+            }
+        }
+
+        [Test]
+        public void BuyPack_SpendsGoldAndAddsCards()
+        {
+            PlayerProfile profile = PlayerProfile.CreateNew();
+
+            int goldBefore = profile.Gold;
+
+            int copiesBefore = 0;
+
+            foreach (OwnedCardEntry entry in profile.Owned)
+                copiesBefore += entry.Count;
+
+            string error;
+
+            List<PackPull> pulls =
+                PackService.Buy(profile, new System.Random(1), out error);
+
+            Assert.IsNotNull(pulls, error);
+            Assert.AreEqual(PackService.CardsPerPack, pulls.Count);
+            Assert.AreEqual(goldBefore - PackService.PackPrice, profile.Gold);
+
+            int copiesAfter = 0;
+
+            foreach (OwnedCardEntry entry in profile.Owned)
+                copiesAfter += entry.Count;
+
+            Assert.AreEqual(copiesBefore + PackService.CardsPerPack, copiesAfter);
+        }
+
+        [Test]
+        public void BuyPack_FailsWithoutEnoughGold()
+        {
+            PlayerProfile profile = PlayerProfile.CreateNew();
+
+            profile.TrySpendGold(profile.Gold);
+
+            string error;
+
+            List<PackPull> pulls =
+                PackService.Buy(profile, new System.Random(1), out error);
+
+            Assert.IsNull(pulls);
+            Assert.IsNotNull(error);
+            Assert.AreEqual(0, profile.Gold);
+        }
+
+        [Test]
+        public void Gold_RejectsOverspendAndNegativeValues()
+        {
+            PlayerProfile profile = PlayerProfile.CreateNew();
+
+            int gold = profile.Gold;
+
+            Assert.IsFalse(profile.TrySpendGold(gold + 1));
+            Assert.AreEqual(gold, profile.Gold);
+
+            profile.AddGold(-50);
+            Assert.AreEqual(gold, profile.Gold);
+
+            profile.AddGold(50);
+            Assert.AreEqual(gold + 50, profile.Gold);
+        }
+
+        [Test]
+        public void RemoveDeck_KeepsSameActiveDeck()
+        {
+            PlayerProfile profile = PlayerProfile.CreateNew();
+
+            DeckList second = profile.AddDeck("Second");
+            DeckList third = profile.AddDeck("Third");
+
+            profile.SetActiveDeck(2);
+
+            Assert.AreSame(third, profile.ActiveDeck);
+
+            profile.RemoveDeck(profile.Decks[0]);
+
+            Assert.AreSame(third, profile.ActiveDeck);
+            Assert.IsNotNull(second);
+        }
+
+        [Test]
         public void Keywords_AddRemoveAndSilence()
         {
             CardData data = UnityEngine.ScriptableObject.CreateInstance<CardData>();

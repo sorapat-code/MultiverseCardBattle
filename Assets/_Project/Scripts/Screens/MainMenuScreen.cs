@@ -1,68 +1,174 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Core;
 using MultiverseCardBattle.Data;
 
 namespace MultiverseCardBattle.Screens
 {
+    /// <summary>
+    /// เมนูหลัก + แผงร้านค้า (ซื้อแพ็ค) + แผงวิธีเล่น อยู่ในซีนเดียวกัน
+    /// </summary>
     public class MainMenuScreen : MonoBehaviour
     {
+        private static readonly Vector2 PackCardSize = new Vector2(210f, 294f);
+
+        private const string HelpText =
+            "<b>Goal</b>: reduce the enemy Leader's HP to 0.\n\n" +
+            "<b>Turns</b>: each turn you draw a card and gain 1 max Energy (up to 10). Cards cost Energy.\n" +
+            "<b>Play</b>: click a card in your hand. Units join your field (max 7); spells act immediately. " +
+            "If a card needs a target, click a highlighted (red) target.\n" +
+            "<b>Attack</b>: click one of your ready units (green outline), then click an enemy unit or the enemy Leader. " +
+            "A unit cannot attack the turn it is played unless it has Charge or Rush.\n\n" +
+            "<b>Keywords</b>\n" +
+            "Taunt - enemies must attack this unit first.      Charge - can attack right away.\n" +
+            "Rush - can attack enemy units right away.          Shield - blocks the next damage.\n" +
+            "Lifesteal - damage dealt heals your Leader.        Poison - any damage it deals destroys a unit.\n" +
+            "Stealth - cannot be targeted until it attacks.     DoubleStrike - attacks twice per turn.\n\n" +
+            "<b>Status</b>: Stun - cannot attack.  Silence - loses keywords.  Burn - takes damage each turn.  Regen - heals each turn.\n\n" +
+            "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
+            "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.";
+
+        private RectTransform root;
+        private RectTransform mainPanel;
+        private RectTransform shopPanel;
+        private RectTransform helpPanel;
+
         private Text message;
+        private Text goldText;
+        private Text shopGoldText;
+        private Text shopMessage;
+        private RectTransform packRow;
+
         private Button resetButton;
+        private Button soundButton;
         private bool resetArmed;
+
+        private readonly System.Random rng = new System.Random();
 
         private void Start()
         {
-            RectTransform root = UIFactory.CreateScreenRoot("MainMenuCanvas");
+            root = UIFactory.CreateScreenRoot("MainMenuCanvas");
 
-            UIFactory.CreateTitle(root, "MULTIVERSE CARD BATTLE");
+            mainPanel = CreatePanel("MainPanel");
+            shopPanel = CreatePanel("ShopPanel");
+            helpPanel = CreatePanel("HelpPanel");
+
+            BuildMain();
+            BuildShop();
+            BuildHelp();
+
+            Show(mainPanel);
+        }
+
+        private RectTransform CreatePanel(string name)
+        {
+            RectTransform panel = UIFactory.CreateRect(name, root);
+
+            UIFactory.Stretch(panel);
+
+            return panel;
+        }
+
+        private void Show(RectTransform panel)
+        {
+            mainPanel.gameObject.SetActive(panel == mainPanel);
+            shopPanel.gameObject.SetActive(panel == shopPanel);
+            helpPanel.gameObject.SetActive(panel == helpPanel);
+
+            RefreshGold();
+        }
+
+        private void RefreshGold()
+        {
+            string gold = "Gold: " + SaveManager.Profile.Gold;
+
+            if (goldText != null)
+                goldText.text = gold;
+
+            if (shopGoldText != null)
+                shopGoldText.text = gold;
+        }
+
+        // ---------- เมนูหลัก ----------
+
+        private void BuildMain()
+        {
+            UIFactory.CreateTitle(mainPanel, "MULTIVERSE CARD BATTLE");
 
             ScreenKit.AddLabel(
-                root, "Heroes from every universe, one battlefield", 28,
+                mainPanel, "Heroes from every universe, one battlefield", 28,
                 TextAnchor.MiddleCenter, 0.2f, 0.82f, 0.8f, 0.9f);
 
-            float y = 0.70f;
-            const float height = 0.08f;
-            const float step = 0.10f;
+            goldText = ScreenKit.AddLabel(
+                mainPanel, "", 30, TextAnchor.MiddleRight,
+                0.74f, 0.93f, 0.98f, 0.99f, FontStyle.Bold);
 
-            ScreenKit.AddButton(root, "Campaign",
+            // คอลัมน์ซ้าย: เล่น
+            float y = 0.68f;
+            const float height = 0.09f;
+            const float step = 0.115f;
+
+            ScreenKit.AddButton(mainPanel, "Campaign",
                 () => SceneLoader.Go(GameScene.Campaign),
-                UIFactory.Accent, 0.35f, y, 0.65f, y + height);
+                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+
+            ScreenKit.AddButton(mainPanel, "How to Play",
+                () => Show(helpPanel),
+                UIFactory.Muted, 0.51f, y, 0.78f, y + height);
 
             y -= step;
 
-            ScreenKit.AddButton(root, "Quick Battle",
+            ScreenKit.AddButton(mainPanel, "Quick Battle",
                 StartQuickBattle,
-                UIFactory.Success, 0.35f, y, 0.65f, y + height);
+                UIFactory.Success, 0.22f, y, 0.49f, y + height);
+
+            soundButton = ScreenKit.AddButton(mainPanel, "",
+                ToggleSound,
+                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 26);
+
+            RefreshSoundLabel();
 
             y -= step;
 
-            ScreenKit.AddButton(root, "Deck Builder",
-                () => SceneLoader.Go(GameScene.DeckBuilder),
-                UIFactory.Accent, 0.35f, y, 0.65f, y + height);
+            ScreenKit.AddButton(mainPanel, "Shop",
+                () =>
+                {
+                    ClearPackRow();
 
-            y -= step;
+                    shopMessage.text =
+                        "A pack has " + PackService.CardsPerPack +
+                        " cards with at least one Rare or better";
 
-            ScreenKit.AddButton(root, "Collection",
-                () => SceneLoader.Go(GameScene.Collection),
-                UIFactory.Accent, 0.35f, y, 0.65f, y + height);
+                    Show(shopPanel);
+                },
+                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 
-            y -= step;
-
-            resetButton = ScreenKit.AddButton(root, "Reset Progress",
+            resetButton = ScreenKit.AddButton(mainPanel, "Reset Progress",
                 OnResetClicked,
-                UIFactory.Muted, 0.35f, y, 0.65f, y + height, 24);
+                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
 
             y -= step;
+
+            ScreenKit.AddButton(mainPanel, "Deck Builder",
+                () => SceneLoader.Go(GameScene.DeckBuilder),
+                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 
 #if !UNITY_WEBGL
-            ScreenKit.AddButton(root, "Quit",
+            ScreenKit.AddButton(mainPanel, "Quit",
                 Application.Quit,
-                UIFactory.Danger, 0.35f, y, 0.65f, y + height);
+                UIFactory.Danger, 0.51f, y, 0.78f, y + height);
 #endif
 
+            y -= step;
+
+            ScreenKit.AddButton(mainPanel, "Collection",
+                () => SceneLoader.Go(GameScene.Collection),
+                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+
             message = ScreenKit.AddLabel(
-                root, "", 26, TextAnchor.MiddleCenter,
+                mainPanel, "", 26, TextAnchor.MiddleCenter,
                 0.1f, 0.02f, 0.9f, 0.1f);
         }
 
@@ -72,6 +178,24 @@ namespace MultiverseCardBattle.Screens
 
             if (error != null)
                 message.text = "<color=#FF8080>" + error + "</color>";
+        }
+
+        private void ToggleSound()
+        {
+            Sfx.Muted = !Sfx.Muted;
+
+            SaveManager.Save();
+
+            RefreshSoundLabel();
+
+            // เปิดเสียงแล้วให้ได้ยินตัวอย่าง
+            Sfx.Play(SoundId.Click);
+        }
+
+        private void RefreshSoundLabel()
+        {
+            UIFactory.SetButtonLabel(
+                soundButton, Sfx.Muted ? "Sound: Off" : "Sound: On");
         }
 
         // กดสองครั้งเพื่อยืนยัน กันกดผิด
@@ -92,7 +216,109 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.SetButtonLabel(resetButton, "Reset Progress");
 
+            RefreshGold();
+            RefreshSoundLabel();
+
             message.text = "Progress reset. Starter collection restored.";
+        }
+
+        // ---------- ร้านค้า ----------
+
+        private void BuildShop()
+        {
+            UIFactory.CreateTitle(shopPanel, "SHOP");
+
+            shopGoldText = ScreenKit.AddLabel(
+                shopPanel, "", 34, TextAnchor.MiddleCenter,
+                0.3f, 0.80f, 0.7f, 0.88f, FontStyle.Bold);
+
+            ScreenKit.AddButton(shopPanel,
+                "Buy Pack  (" + PackService.PackPrice + " Gold)",
+                BuyPack,
+                UIFactory.Success, 0.35f, 0.68f, 0.65f, 0.78f, 30);
+
+            ScreenKit.AddLabel(
+                shopPanel,
+                "Odds: Common 68%   Rare 22%   Epic 8%   Legendary 2%",
+                22, TextAnchor.MiddleCenter, 0.2f, 0.62f, 0.8f, 0.67f);
+
+            packRow = UIFactory.CreateZone(
+                shopPanel, "PackRow", 0.03f, 0.2f, 0.97f, 0.6f);
+
+            UIFactory.AddHorizontalRow(packRow, 14f);
+
+            shopMessage = ScreenKit.AddLabel(
+                shopPanel, "", 26, TextAnchor.MiddleCenter,
+                0.2f, 0.1f, 0.8f, 0.18f);
+
+            ScreenKit.AddButton(shopPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+
+        private void ClearPackRow()
+        {
+            ScreenKit.ClearNow(packRow);
+        }
+
+        private void BuyPack()
+        {
+            string error;
+
+            List<PackPull> pulls =
+                PackService.Buy(SaveManager.Profile, rng, out error);
+
+            if (pulls == null)
+            {
+                shopMessage.text = "<color=#FF8080>" + error + "</color>";
+                return;
+            }
+
+            SaveManager.Save();
+
+            Sfx.Play(SoundId.Pack);
+
+            ClearPackRow();
+
+            int newCards = 0;
+
+            foreach (PackPull pull in pulls)
+            {
+                CardView view = CardView.Create(packRow, PackCardSize);
+
+                view.ShowData(pull.Card, pull.IsNew ? "NEW!" : "");
+
+                if (pull.IsNew)
+                {
+                    view.SetHighlight(CardHighlight.Ready);
+                    newCards++;
+                }
+            }
+
+            shopMessage.text = newCards > 0
+                ? newCards + " new card(s) added to your collection!"
+                : "No new cards this time - extra copies added.";
+
+            RefreshGold();
+        }
+
+        // ---------- วิธีเล่น ----------
+
+        private void BuildHelp()
+        {
+            UIFactory.CreateTitle(helpPanel, "HOW TO PLAY");
+
+            ScreenKit.AddPanel(
+                helpPanel, "HelpBackground", UIFactory.Panel,
+                0.06f, 0.14f, 0.94f, 0.88f);
+
+            ScreenKit.AddLabel(
+                helpPanel, HelpText, 24, TextAnchor.UpperLeft,
+                0.08f, 0.16f, 0.92f, 0.86f);
+
+            ScreenKit.AddButton(helpPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
     }
 }

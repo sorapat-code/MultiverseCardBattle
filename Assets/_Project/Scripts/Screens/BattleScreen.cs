@@ -20,6 +20,7 @@ namespace MultiverseCardBattle.Screens
         private static readonly Vector2 HandCardSize = new Vector2(140f, 200f);
         private static readonly Vector2 FieldCardSize = new Vector2(150f, 210f);
         private static readonly Vector2 DiscoverCardSize = new Vector2(220f, 310f);
+        private static readonly Vector2 PreviewCardSize = new Vector2(250f, 350f);
 
         private const float AIActionDelay = 0.6f;
         private const int MaxLogLinesShown = 16;
@@ -40,6 +41,21 @@ namespace MultiverseCardBattle.Screens
         private Button playerLeader;
         private Button endTurnButton;
         private Button cancelButton;
+
+        // พรีวิวการ์ดใบใหญ่ตอนเอาเมาส์ชี้
+        private CardView previewView;
+        private RectTransform previewZone;
+
+        // ใช้ตรวจว่าค่าอะไรเปลี่ยน เพื่อแสดงตัวเลขลอยและเล่นเสียง
+        private readonly Dictionary<int, CardView> viewsByInstance =
+            new Dictionary<int, CardView>();
+
+        private Dictionary<int, int> lastHealth = new Dictionary<int, int>();
+        private int lastHumanHealth = -1;
+        private int lastAiHealth = -1;
+        private int lastFieldCount = -1;
+        private bool sawDamage;
+        private bool sawHeal;
 
         // การเลือกของผู้เล่น
         private CardInstance selectedHand;
@@ -176,7 +192,15 @@ namespace MultiverseCardBattle.Screens
 
             logText = ScreenKit.AddLabel(
                 root, "", 17, TextAnchor.LowerLeft,
-                0.01f, 0.02f, 0.165f, 0.98f);
+                0.01f, 0.02f, 0.165f, 0.58f);
+
+            previewZone = UIFactory.CreateZone(
+                root, "PreviewZone", 0.005f, 0.60f, 0.17f, 0.99f);
+
+            previewView = CardView.Create(previewZone, PreviewCardSize);
+
+            previewView.SetInteractable(false);
+            previewView.gameObject.SetActive(false);
 
             // แถบบน
             turnText = ScreenKit.AddLabel(
@@ -258,9 +282,19 @@ namespace MultiverseCardBattle.Screens
             RefreshLeader(enemyLeader, Ai, true);
             RefreshLeader(playerLeader, Human, false);
 
+            viewsByInstance.Clear();
+
             RefreshField(enemyField, Ai, myTurn);
             RefreshField(playerField, Human, myTurn);
             RefreshHand(myTurn);
+
+            // ต้องคำนวณ Layout ก่อน จึงจะรู้ตำแหน่งการ์ดสำหรับตัวเลขลอย
+            LayoutRebuilder.ForceRebuildLayoutImmediate(enemyField);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(playerField);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(handZone);
+
+            DetectChanges();
+            RefreshPreview();
 
             endTurnButton.interactable = myTurn;
 
@@ -319,6 +353,10 @@ namespace MultiverseCardBattle.Screens
 
                 view.ShowInstance(card);
 
+                viewsByInstance[card.InstanceID] = view;
+                view.HoverEntered += ShowPreview;
+                view.HoverExited += HidePreview;
+
                 CardHighlight highlight = CardHighlight.None;
 
                 if (card == selectedAttacker)
@@ -372,6 +410,10 @@ namespace MultiverseCardBattle.Screens
 
                 view.ShowInstance(card);
 
+                viewsByInstance[card.InstanceID] = view;
+                view.HoverEntered += ShowPreview;
+                view.HoverExited += HidePreview;
+
                 CardHighlight highlight = CardHighlight.None;
 
                 if (card == selectedHand)
@@ -388,6 +430,142 @@ namespace MultiverseCardBattle.Screens
 
                 view.Clicked += OnHandCardClicked;
             }
+        }
+
+        // ---------- พรีวิวการ์ด ----------
+
+        private void ShowPreview(CardView view)
+        {
+            if (view == null || previewView == null)
+                return;
+
+            if (view.Instance != null)
+                previewView.ShowInstance(view.Instance);
+            else if (view.Data != null)
+                previewView.ShowData(view.Data);
+            else
+                return;
+
+            previewView.SetHighlight(CardHighlight.None);
+        }
+
+        private void HidePreview(CardView view)
+        {
+            if (previewView != null)
+                previewView.gameObject.SetActive(false);
+        }
+
+        // วาดใหม่หลังสถานะเปลี่ยน: อัปเดตค่าบนพรีวิว หรือซ่อนถ้าการ์ดหายไปแล้ว
+        private void RefreshPreview()
+        {
+            if (previewView == null || !previewView.gameObject.activeSelf)
+                return;
+
+            CardInstance shown = previewView.Instance;
+
+            if (shown == null)
+                return;
+
+            if (shown.Zone == CardZone.Field || shown.Zone == CardZone.Hand)
+                previewView.ShowInstance(shown);
+            else
+                previewView.gameObject.SetActive(false);
+        }
+
+        // ---------- ตัวเลขลอย / เสียง ----------
+
+        private void DetectChanges()
+        {
+            sawDamage = false;
+            sawHeal = false;
+
+            Dictionary<int, int> now = new Dictionary<int, int>();
+
+            BattlePlayer[] players = { Human, Ai };
+
+            foreach (BattlePlayer player in players)
+            {
+                foreach (CardInstance card in player.Field)
+                {
+                    int previous;
+
+                    if (lastHealth.TryGetValue(card.InstanceID, out previous) &&
+                        previous != card.CurrentHealth)
+                    {
+                        CardView view;
+
+                        if (viewsByInstance.TryGetValue(card.InstanceID, out view))
+                        {
+                            SpawnDelta(
+                                view.transform.position,
+                                card.CurrentHealth - previous);
+                        }
+
+                        NoteChange(card.CurrentHealth - previous);
+                    }
+
+                    now[card.InstanceID] = card.CurrentHealth;
+                }
+            }
+
+            // ยูนิตที่หายไปจากสนาม (ตาย) นับเป็นความเสียหาย
+            foreach (int id in lastHealth.Keys)
+            {
+                if (!now.ContainsKey(id))
+                    sawDamage = true;
+            }
+
+            lastHealth = now;
+
+            CheckLeader(Human, ref lastHumanHealth, playerLeader);
+            CheckLeader(Ai, ref lastAiHealth, enemyLeader);
+
+            int fieldCount = Human.Field.Count + Ai.Field.Count;
+
+            if (sawDamage)
+                Sfx.Play(SoundId.Hit);
+            else if (sawHeal)
+                Sfx.Play(SoundId.Heal);
+            else if (lastFieldCount >= 0 && fieldCount > lastFieldCount)
+                Sfx.Play(SoundId.Play);
+
+            lastFieldCount = fieldCount;
+        }
+
+        private void CheckLeader(BattlePlayer player, ref int last, Button button)
+        {
+            if (last >= 0 && last != player.LeaderHealth)
+            {
+                int delta = player.LeaderHealth - last;
+
+                SpawnDelta(button.transform.position, delta);
+
+                NoteChange(delta);
+            }
+
+            last = player.LeaderHealth;
+        }
+
+        private void NoteChange(int delta)
+        {
+            if (delta < 0)
+                sawDamage = true;
+            else if (delta > 0)
+                sawHeal = true;
+        }
+
+        private void SpawnDelta(Vector3 position, int delta)
+        {
+            if (delta == 0)
+                return;
+
+            FloatingText.Spawn(
+                root,
+                position,
+                delta > 0 ? "+" + delta : delta.ToString(),
+                delta > 0
+                    ? new Color(0.45f, 1f, 0.5f, 1f)
+                    : new Color(1f, 0.4f, 0.4f, 1f));
         }
 
         // ---------- Overlay ----------
@@ -417,6 +595,9 @@ namespace MultiverseCardBattle.Screens
             overlay.gameObject.SetActive(true);
             overlay.SetAsLastSibling();
 
+            // พรีวิวต้องอยู่เหนือพื้นหลังมืดของ Discover
+            previewZone.SetAsLastSibling();
+
             Image dim = UIFactory.CreatePanel(
                 overlay, "Dim", new Color(0f, 0f, 0f, 0.8f));
 
@@ -435,6 +616,8 @@ namespace MultiverseCardBattle.Screens
                 CardView view = CardView.Create(row, DiscoverCardSize);
 
                 view.ShowData(option);
+                view.HoverEntered += ShowPreview;
+                view.HoverExited += HidePreview;
                 view.SetHighlight(CardHighlight.Ready);
                 view.Clicked += OnDiscoverClicked;
             }
@@ -449,6 +632,9 @@ namespace MultiverseCardBattle.Screens
                 resultShown = true;
 
                 resultLines = CampaignService.OnBattleFinished(won);
+
+                if (battle.Winner != null)
+                    Sfx.Play(won ? SoundId.Win : SoundId.Lose);
             }
 
             ScreenKit.ClearNow(overlay);
