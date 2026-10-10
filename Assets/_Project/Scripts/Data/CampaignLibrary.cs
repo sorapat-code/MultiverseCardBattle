@@ -49,7 +49,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_001", 4), ("STR_002", 4), ("STR_003", 4),
                     ("STR_004", 3), ("STR_010", 3), ("STR_012", 3),
                     ("STR_013", 3), ("SPL_001", 3), ("SPL_003", 3)),
-                RewardCardIds = new List<string> { "STR_012", "SPL_004" }
+                RewardCardIds = new List<string> { "STR_012", "SPL_004", "HSR_001" }
             });
 
             stages.Add(new CampaignStage
@@ -65,7 +65,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_012", 3), ("STR_023", 3), ("STR_006", 3),
                     ("STR_011", 2), ("STR_014", 3), ("SPL_001", 3),
                     ("SPL_002", 2), ("STR_007", 2)),
-                RewardCardIds = new List<string> { "STR_023", "STR_005" }
+                RewardCardIds = new List<string> { "STR_023", "STR_005", "NAR_002" }
             });
 
             stages.Add(new CampaignStage
@@ -81,7 +81,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_011", 3), ("STR_004", 3), ("STR_017", 3),
                     ("STR_001", 2), ("SPL_007", 3), ("SPL_002", 3),
                     ("SPL_001", 2)),
-                RewardCardIds = new List<string> { "STR_008", "SPL_007" }
+                RewardCardIds = new List<string> { "STR_008", "SPL_007", "HSR_002" }
             });
 
             stages.Add(new CampaignStage
@@ -96,7 +96,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_002", 4), ("STR_009", 4), ("STR_022", 4),
                     ("STR_003", 3), ("STR_005", 3), ("STR_013", 3),
                     ("STR_014", 3), ("SPL_003", 3), ("SPL_010", 3)),
-                RewardCardIds = new List<string> { "STR_022", "SPL_010", "STR_011" }
+                RewardCardIds = new List<string> { "STR_022", "SPL_010", "STR_011", "BLE_002" }
             });
 
             stages.Add(new CampaignStage
@@ -112,7 +112,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_013", 3), ("STR_003", 2), ("STR_016", 3),
                     ("SPL_002", 3), ("SPL_005", 3), ("SPL_006", 2),
                     ("SPL_001", 2)),
-                RewardCardIds = new List<string> { "STR_019", "SPL_009", "SPL_008" }
+                RewardCardIds = new List<string> { "STR_019", "SPL_009", "SPL_008", "WUW_001" }
             });
 
             stages.Add(new CampaignStage
@@ -128,7 +128,7 @@ namespace MultiverseCardBattle.Data
                     ("STR_009", 3), ("STR_002", 3), ("STR_014", 3),
                     ("STR_015", 3), ("STR_007", 3), ("SPL_006", 2),
                     ("SPL_007", 2)),
-                RewardCardIds = new List<string> { "STR_015", "STR_016", "STR_024", "SPL_006" }
+                RewardCardIds = new List<string> { "STR_015", "STR_016", "STR_024", "SPL_006", "NAR_001" }
             });
 
             stages.Add(new CampaignStage
@@ -144,7 +144,59 @@ namespace MultiverseCardBattle.Data
                     ("STR_016", 3), ("STR_005", 3), ("STR_009", 3),
                     ("STR_011", 3), ("STR_018", 3), ("STR_019", 2),
                     ("SPL_006", 2), ("SPL_007", 2)),
-                RewardCardIds = new List<string> { "STR_021", "STR_020" }
+                RewardCardIds = new List<string> { "STR_021", "STR_020", "OPC_002" }
+            });
+
+            stages.Add(new CampaignStage
+            {
+                Id = "stage_08",
+                Name = "Grand Line Showdown",
+                Description = "A rubber-limbed captain and his swordsman crew set sail for glory.",
+                EnemyName = "Pirate Emperor",
+                EnemyHealth = 35,
+                RequiresStageId = "stage_07",
+                EnemyDeckIds = StarterDecks.Build(
+                    ("OPC_001", 2), ("OPC_002", 2), ("STR_004", 3),
+                    ("STR_011", 3), ("STR_012", 3), ("STR_013", 2),
+                    ("STR_009", 2), ("STR_007", 2), ("SPL_002", 3),
+                    ("SPL_001", 3), ("SPL_007", 2)),
+                RewardCardIds = new List<string> { "OPC_001", "DBZ_002" }
+            });
+
+            stages.Add(new CampaignStage
+            {
+                Id = "stage_09",
+                Name = "Soul Reaper's Trial",
+                Description = "Spirit blades, stand power and a berserk substitute reaper.",
+                EnemyName = "Captain of the Gotei 13",
+                EnemyHealth = 40,
+                RequiresStageId = "stage_08",
+                EnemyDeckIds = StarterDecks.Build(
+                    ("BLE_001", 2), ("BLE_002", 3), ("JJB_001", 2),
+                    ("STR_010", 3), ("STR_006", 3), ("STR_007", 3),
+                    ("STR_017", 2), ("STR_018", 3), ("SPL_007", 2),
+                    ("SPL_002", 3), ("SPL_001", 3)),
+                RewardCardIds = new List<string> { "BLE_001", "JJB_001" }
+            });
+
+            stages.Add(new CampaignStage
+            {
+                Id = "stage_10",
+                Name = "Gods of the Multiverse",
+                Description = "Heroes and gods from every universe gather for the final battle.",
+                EnemyName = "The Multiverse Sovereign",
+                EnemyHealth = 45,
+                RequiresStageId = "stage_09",
+                EnemyDeckIds = StarterDecks.Build(
+                    ("MYT_001", 1), ("MYT_002", 1), ("JJB_002", 1),
+                    ("FAT_001", 1), ("DBZ_001", 1), ("NAR_001", 2),
+                    ("HSR_002", 2), ("WUW_001", 2), ("STR_020", 2),
+                    ("STR_021", 2), ("STR_009", 2), ("STR_024", 2),
+                    ("STR_016", 2), ("SPL_006", 2), ("SPL_007", 2)),
+                RewardCardIds = new List<string>
+                {
+                    "MYT_001", "MYT_002", "JJB_002", "FAT_001", "DBZ_001"
+                }
             });
         }
     }

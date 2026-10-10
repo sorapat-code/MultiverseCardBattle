@@ -98,6 +98,48 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
+        public void Library_HasFiftyCollectibleCardsFromManyUniverses()
+        {
+            int count = 0;
+            HashSet<Universe> universes = new HashSet<Universe>();
+
+            foreach (CardData card in CardRegistry.All)
+            {
+                if (!CardRegistry.IsCollectible(card))
+                    continue;
+
+                count++;
+                universes.Add(card.Universe);
+            }
+
+            Assert.GreaterOrEqual(count, 50);
+            Assert.GreaterOrEqual(universes.Count, 8);
+        }
+
+        [Test]
+        public void EveryCollectibleCard_CanBeObtained()
+        {
+            HashSet<string> obtainable =
+                new HashSet<string>(StarterDecks.StarterCollectionIds());
+
+            foreach (CampaignStage stage in CampaignLibrary.Stages)
+            {
+                if (stage.RewardCardIds == null)
+                    continue;
+
+                foreach (string id in stage.RewardCardIds)
+                    obtainable.Add(id);
+            }
+
+            foreach (CardData card in CardRegistry.All)
+            {
+                if (CardRegistry.IsCollectible(card))
+                    Assert.IsTrue(obtainable.Contains(card.CardID),
+                        card.CardID + " cannot be obtained");
+            }
+        }
+
+        [Test]
         public void Keywords_AddRemoveAndSilence()
         {
             CardData data = UnityEngine.ScriptableObject.CreateInstance<CardData>();
