@@ -133,6 +133,19 @@ namespace MultiverseCardBattle.Screens
             return image;
         }
 
+        /// <summary>
+        /// แผงสี่เหลี่ยมมุมมน
+        /// </summary>
+        public static Image CreateRoundedPanel(
+            Transform parent, string name, Color color, float cornerSize = 12f)
+        {
+            Image image = CreatePanel(parent, name, color);
+
+            UIShapes.MakeRounded(image, cornerSize);
+
+            return image;
+        }
+
         public static Text CreateText(
             Transform parent,
             string content,
@@ -172,9 +185,19 @@ namespace MultiverseCardBattle.Screens
 
             image.color = background;
 
+            UIShapes.MakeRounded(image, 10f);
+
             Button button = rect.gameObject.AddComponent<Button>();
 
             button.targetGraphic = image;
+
+            // ปุ่มที่ปิดใช้งานจะจางลง ปุ่มที่กดอยู่จะเข้มขึ้น
+            ColorBlock colors = button.colors;
+
+            colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
+            colors.disabledColor = new Color(0.6f, 0.6f, 0.6f, 0.7f);
+
+            button.colors = colors;
 
             button.onClick.AddListener(() => Sfx.Play(SoundId.Click));
 

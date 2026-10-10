@@ -36,7 +36,9 @@ namespace MultiverseCardBattle.Screens
         public CardData Data { get; private set; }
 
         private Image background;
+        private Image artFrame;
         private Image artwork;
+        private AspectRatioFitter artFitter;
         private Outline outline;
         private CanvasGroup group;
 
@@ -68,14 +70,21 @@ namespace MultiverseCardBattle.Screens
             return view;
         }
 
+        /// <summary>
+        /// เลย์เอาต์ตามแบบการ์ด: รูปเต็มใบ, ค่าใช้จ่ายซ้ายบน, ชื่อด้านบน,
+        /// กล่องข้อความด้านล่าง, พลังโจมตีซ้ายล่าง, พลังชีวิตขวาล่าง
+        /// </summary>
         private void Build(Vector2 size)
         {
             scale = size.x / 150f;
 
             group = gameObject.AddComponent<CanvasGroup>();
 
+            // กรอบนอก (สีตามความหายาก)
             background = gameObject.AddComponent<Image>();
-            background.color = new Color(0.2f, 0.22f, 0.3f, 1f);
+            background.color = new Color(0.55f, 0.58f, 0.65f, 1f);
+
+            UIShapes.MakeRounded(background, 10f * scale);
 
             outline = gameObject.AddComponent<Outline>();
             outline.effectDistance = new Vector2(5f * scale, -5f * scale);
@@ -83,20 +92,88 @@ namespace MultiverseCardBattle.Screens
 
             RectTransform root = transform as RectTransform;
 
-            // ช่องรูป
-            artwork = AddBox(root, "Art", 0.06f, 0.46f, 0.94f, 0.82f,
-                new Color(0f, 0f, 0f, 0.28f));
+            // กรอบรูป: ตัดรูปให้เป็นมุมมนและครอบเต็มช่อง (ไม่บิดสัดส่วน)
+            artFrame = UIFactory.CreateRoundedPanel(
+                root, "ArtFrame", new Color(0.25f, 0.3f, 0.35f, 1f),
+                8f * scale);
+
+            UIFactory.SetAnchors(artFrame.rectTransform, 0.03f, 0.025f, 0.97f, 0.975f);
+
+            artFrame.raycastTarget = false;
+
+            Mask mask = artFrame.gameObject.AddComponent<Mask>();
+
+            mask.showMaskGraphic = true;
+
+            artwork = UIFactory.CreatePanel(
+                artFrame.transform, "Art", Color.white);
+
+            artwork.raycastTarget = false;
+
+            RectTransform artRect = artwork.rectTransform;
+
+            artRect.anchorMin = new Vector2(0.5f, 0.5f);
+            artRect.anchorMax = new Vector2(0.5f, 0.5f);
+            artRect.pivot = new Vector2(0.5f, 0.5f);
+
+            artFitter = artwork.gameObject.AddComponent<AspectRatioFitter>();
+            artFitter.aspectMode = AspectRatioFitter.AspectMode.EnvelopeParent;
 
             stateText = UIFactory.CreateText(
-                artwork.transform, "", Font(16),
+                artFrame.transform, "", Font(16),
                 new Color(1f, 0.9f, 0.4f, 1f),
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             UIFactory.Stretch(stateText.rectTransform);
 
-            // ค่าใช้จ่าย
-            Image costBox = AddBox(root, "CostBox", 0f, 0.83f, 0.24f, 1f,
-                new Color(0.2f, 0.4f, 0.85f, 1f));
+            AddShadow(stateText);
+
+            // ชื่อ (แถบโปร่งแสงด้านบน)
+            Image nameBox = UIFactory.CreateRoundedPanel(
+                root, "NameBox", new Color(0f, 0f, 0f, 0.5f), 5f * scale);
+
+            UIFactory.SetAnchors(nameBox.rectTransform, 0.22f, 0.9f, 0.96f, 0.975f);
+
+            nameBox.raycastTarget = false;
+
+            nameText = UIFactory.CreateText(
+                nameBox.transform, "", Font(16), Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(nameText.rectTransform);
+
+            nameText.rectTransform.offsetMin = new Vector2(10f * scale, 0f);
+            nameText.rectTransform.offsetMax = new Vector2(-4f * scale, 0f);
+
+            nameText.resizeTextForBestFit = true;
+            nameText.resizeTextMinSize = 7;
+            nameText.resizeTextMaxSize = Font(16);
+
+            // กล่องข้อความด้านล่าง
+            Image bodyBox = UIFactory.CreateRoundedPanel(
+                root, "BodyBox", new Color(0f, 0f, 0f, 0.58f), 6f * scale);
+
+            UIFactory.SetAnchors(bodyBox.rectTransform, 0.06f, 0.19f, 0.94f, 0.46f);
+
+            bodyBox.raycastTarget = false;
+
+            bodyText = UIFactory.CreateText(
+                bodyBox.transform, "", Font(14),
+                new Color(0.95f, 0.96f, 0.98f, 1f),
+                TextAnchor.MiddleCenter);
+
+            UIFactory.Stretch(bodyText.rectTransform);
+
+            bodyText.rectTransform.offsetMin = new Vector2(4f * scale, 2f * scale);
+            bodyText.rectTransform.offsetMax = new Vector2(-4f * scale, -2f * scale);
+
+            bodyText.resizeTextForBestFit = true;
+            bodyText.resizeTextMinSize = 6;
+            bodyText.resizeTextMaxSize = Font(14);
+
+            // ค่าใช้จ่าย (วงกลมซ้ายบน)
+            Image costBox = AddCircle(root, "CostBox", 0.14f, 0.89f, 0.3f,
+                new Color(0.1f, 0.65f, 0.85f, 1f), size);
 
             costText = UIFactory.CreateText(
                 costBox.transform, "0", Font(24), Color.white,
@@ -104,31 +181,9 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(costText.rectTransform);
 
-            // ชื่อ
-            nameText = UIFactory.CreateText(
-                root, "", Font(18), Color.white,
-                TextAnchor.MiddleCenter, FontStyle.Bold);
-
-            UIFactory.SetAnchors(nameText.rectTransform, 0.25f, 0.83f, 0.98f, 1f);
-
-            nameText.resizeTextForBestFit = true;
-            nameText.resizeTextMinSize = 8;
-            nameText.resizeTextMaxSize = Font(18);
-
-            // คำอธิบาย
-            bodyText = UIFactory.CreateText(
-                root, "", Font(14), new Color(0.92f, 0.93f, 0.96f, 1f),
-                TextAnchor.UpperCenter);
-
-            UIFactory.SetAnchors(bodyText.rectTransform, 0.05f, 0.17f, 0.95f, 0.45f);
-
-            bodyText.resizeTextForBestFit = true;
-            bodyText.resizeTextMinSize = 7;
-            bodyText.resizeTextMaxSize = Font(14);
-
-            // พลังโจมตี / พลังชีวิต
-            attackBox = AddBox(root, "AttackBox", 0f, 0f, 0.28f, 0.16f,
-                new Color(0.8f, 0.3f, 0.2f, 1f));
+            // พลังโจมตี (ซ้ายล่าง) / พลังชีวิต (ขวาล่าง)
+            attackBox = AddCircle(root, "AttackBox", 0.14f, 0.11f, 0.3f,
+                new Color(0.8f, 0.15f, 0.15f, 1f), size);
 
             attackText = UIFactory.CreateText(
                 attackBox.transform, "0", Font(24), Color.white,
@@ -136,8 +191,8 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(attackText.rectTransform);
 
-            healthBox = AddBox(root, "HealthBox", 0.72f, 0f, 1f, 0.16f,
-                new Color(0.25f, 0.65f, 0.35f, 1f));
+            healthBox = AddCircle(root, "HealthBox", 0.86f, 0.11f, 0.3f,
+                new Color(0.12f, 0.75f, 0.3f, 1f), size);
 
             healthText = UIFactory.CreateText(
                 healthBox.transform, "0", Font(24), Color.white,
@@ -145,30 +200,54 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(healthText.rectTransform);
 
-            // ป้ายจำนวน (เช่น x2)
+            // ป้ายจำนวน (เช่น x2) ตรงกลางด้านล่าง
             badgeText = UIFactory.CreateText(
                 root, "", Font(22), new Color(1f, 0.9f, 0.4f, 1f),
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
-            UIFactory.SetAnchors(badgeText.rectTransform, 0.3f, 0f, 0.7f, 0.16f);
+            UIFactory.SetAnchors(badgeText.rectTransform, 0.3f, 0.02f, 0.7f, 0.17f);
+
+            AddShadow(badgeText);
+        }
+
+        private static void AddShadow(Text text)
+        {
+            Shadow shadow = text.gameObject.AddComponent<Shadow>();
+
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.85f);
+            shadow.effectDistance = new Vector2(1.5f, -1.5f);
+        }
+
+        // วงกลมที่มีจุดศูนย์กลางและเส้นผ่านศูนย์กลาง (สัดส่วนของความกว้างการ์ด)
+        private static Image AddCircle(
+            RectTransform parent, string name,
+            float centerX, float centerY, float diameter,
+            Color color, Vector2 size)
+        {
+            Image image = UIFactory.CreatePanel(parent, name, color);
+
+            UIShapes.MakeCircle(image);
+
+            float heightFraction = diameter * size.x / size.y;
+
+            UIFactory.SetAnchors(
+                image.rectTransform,
+                centerX - diameter / 2f, centerY - heightFraction / 2f,
+                centerX + diameter / 2f, centerY + heightFraction / 2f);
+
+            image.raycastTarget = false;
+
+            Outline ring = image.gameObject.AddComponent<Outline>();
+
+            ring.effectColor = new Color(1f, 1f, 1f, 0.85f);
+            ring.effectDistance = new Vector2(1.5f, -1.5f);
+
+            return image;
         }
 
         private int Font(int baseSize)
         {
             return Mathf.Max(6, Mathf.RoundToInt(baseSize * scale));
-        }
-
-        private static Image AddBox(
-            RectTransform parent, string name,
-            float xMin, float yMin, float xMax, float yMax, Color color)
-        {
-            Image image = UIFactory.CreatePanel(parent, name, color);
-
-            UIFactory.SetAnchors(image.rectTransform, xMin, yMin, xMax, yMax);
-
-            image.raycastTarget = false;
-
-            return image;
         }
 
         // ---------- แสดงผล ----------
@@ -291,22 +370,31 @@ namespace MultiverseCardBattle.Screens
 
         private void ApplyCommon(CardData data)
         {
-            background.color = UniverseColor(data.Universe, data.Type);
+            background.color = RarityBorder(data.Rarity);
+            artFrame.color = UniverseColor(data.Universe, data.Type);
 
             nameText.text = data.CardName;
-            nameText.color = RarityColor(data.Rarity);
+            nameText.color = Color.white;
 
             if (data.Artwork != null)
             {
-                artwork.sprite = data.Artwork;
+                Sprite sprite = data.Artwork;
+
+                artwork.enabled = true;
+                artwork.sprite = sprite;
                 artwork.color = Color.white;
-                artwork.preserveAspect = true;
+
+                artFitter.aspectRatio =
+                    sprite.rect.height > 0f
+                        ? sprite.rect.width / sprite.rect.height
+                        : 1f;
+
                 stateText.text = "";
             }
             else
             {
-                artwork.sprite = null;
-                artwork.color = new Color(0f, 0f, 0f, 0.28f);
+                artwork.enabled = false;
+
                 // ยังไม่มีรูป: แสดงตัวอักษรย่อของชื่อใหญ่ๆ แทน
                 stateText.text = Initials(data.CardName);
                 stateText.fontSize = Font(44);
@@ -446,15 +534,16 @@ namespace MultiverseCardBattle.Screens
             }
         }
 
-        private static Color RarityColor(CardRarity rarity)
+        // สีกรอบการ์ดตามความหายาก
+        private static Color RarityBorder(CardRarity rarity)
         {
             switch (rarity)
             {
-                case CardRarity.Rare: return new Color(0.5f, 0.75f, 1f, 1f);
-                case CardRarity.Epic: return new Color(0.8f, 0.55f, 1f, 1f);
-                case CardRarity.Legendary: return new Color(1f, 0.7f, 0.2f, 1f);
+                case CardRarity.Rare: return new Color(0.35f, 0.6f, 1f, 1f);
+                case CardRarity.Epic: return new Color(0.7f, 0.45f, 1f, 1f);
+                case CardRarity.Legendary: return new Color(1f, 0.75f, 0.25f, 1f);
                 case CardRarity.Secret: return new Color(1f, 0.4f, 0.5f, 1f);
-                default: return Color.white;
+                default: return new Color(0.55f, 0.58f, 0.65f, 1f);
             }
         }
     }

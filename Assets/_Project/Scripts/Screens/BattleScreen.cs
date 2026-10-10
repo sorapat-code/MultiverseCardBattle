@@ -43,6 +43,37 @@ namespace MultiverseCardBattle.Screens
         private Button endTurnButton;
         private Button cancelButton;
 
+        // แผงข้อมูล Leader (แถบ HP / Energy)
+        private LeaderWidget enemyWidget;
+        private LeaderWidget playerWidget;
+
+        // ดูกองทิ้งและมือฝั่งตรงข้าม
+        private enum PileKind
+        {
+            None,
+            EnemyHand,
+            EnemyGraveyard,
+            PlayerGraveyard
+        }
+
+        private PileKind openPile = PileKind.None;
+        private RectTransform pileOverlay;
+        private ScrollRect pileScroll;
+        private Button enemyHandButton;
+        private Button enemyGraveButton;
+        private Button playerGraveButton;
+        private Text playerDeckLabel;
+
+        private class LeaderWidget
+        {
+            public Button Button;
+            public Text Title;
+            public Image HpFill;
+            public Text HpText;
+            public Image EnergyFill;
+            public Text EnergyText;
+        }
+
         // พรีวิวการ์ดใบใหญ่ตอนเอาเมาส์ชี้
         private CardView previewView;
         private RectTransform previewZone;
@@ -147,7 +178,12 @@ namespace MultiverseCardBattle.Screens
                 OnEndTurnClicked();
 
             if (keyboard.escapeKey.wasPressedThisFrame)
-                ClearSelectionAndRefresh();
+            {
+                if (openPile != PileKind.None)
+                    TogglePile(openPile);
+                else
+                    ClearSelectionAndRefresh();
+            }
         }
 
         // ---------- AI ----------
@@ -232,13 +268,46 @@ namespace MultiverseCardBattle.Screens
                 UIFactory.Danger, 0.88f, 0.95f, 0.99f, 0.995f, 22);
 
             // Leader ศัตรู / ผู้เล่น
-            enemyLeader = ScreenKit.AddButton(
-                root, "", () => OnLeaderClicked(Ai),
-                UIFactory.Panel, 0.36f, 0.84f, 0.74f, 0.94f, 24);
+            enemyWidget = CreateLeaderWidget(
+                () => OnLeaderClicked(Ai),
+                0.345f, 0.84f, 0.665f, 0.94f);
 
-            playerLeader = ScreenKit.AddButton(
-                root, "", () => OnLeaderClicked(Human),
-                UIFactory.Panel, 0.36f, 0.265f, 0.74f, 0.365f, 24);
+            playerWidget = CreateLeaderWidget(
+                () => OnLeaderClicked(Human),
+                0.345f, 0.265f, 0.665f, 0.365f);
+
+            enemyLeader = enemyWidget.Button;
+            playerLeader = playerWidget.Button;
+
+            // ปุ่มดูกองทิ้ง / มือศัตรู
+            enemyHandButton = ScreenKit.AddButton(
+                root, "Opp. Hand", () => TogglePile(PileKind.EnemyHand),
+                UIFactory.Muted, 0.675f, 0.89f, 0.785f, 0.94f, 20);
+
+            enemyGraveButton = ScreenKit.AddButton(
+                root, "Graveyard", () => TogglePile(PileKind.EnemyGraveyard),
+                UIFactory.Muted, 0.675f, 0.84f, 0.785f, 0.885f, 20);
+
+            playerGraveButton = ScreenKit.AddButton(
+                root, "Graveyard", () => TogglePile(PileKind.PlayerGraveyard),
+                UIFactory.Muted, 0.675f, 0.315f, 0.785f, 0.365f, 20);
+
+            playerDeckLabel = ScreenKit.AddLabel(
+                root, "", 20, TextAnchor.MiddleCenter,
+                0.675f, 0.265f, 0.785f, 0.31f);
+
+            // พื้นหลังโซนการ์ด
+            ScreenKit.AddPanel(
+                root, "EnemyLane", new Color(0.75f, 0.3f, 0.3f, 0.10f),
+                0.18f, 0.60f, 0.99f, 0.84f);
+
+            ScreenKit.AddPanel(
+                root, "PlayerLane", new Color(0.3f, 0.6f, 0.9f, 0.10f),
+                0.18f, 0.365f, 0.99f, 0.60f);
+
+            ScreenKit.AddPanel(
+                root, "HandLane", new Color(0f, 0f, 0f, 0.28f),
+                0.18f, 0.0f, 0.99f, 0.265f);
 
             // โซนการ์ด
             enemyField = CreateRow(root, "EnemyField", 0.18f, 0.60f, 0.99f, 0.84f, 8f);
@@ -253,12 +322,79 @@ namespace MultiverseCardBattle.Screens
                 root, "Cancel", ClearSelectionAndRefresh,
                 UIFactory.Muted, 0.19f, 0.275f, 0.31f, 0.355f, 24);
 
+            // หน้าต่างดูกองทิ้ง / มือศัตรู
+            pileOverlay = UIFactory.CreateRect("PileOverlay", root);
+
+            UIFactory.Stretch(pileOverlay);
+
+            pileOverlay.gameObject.SetActive(false);
+
             // Overlay (Discover / ผลการต่อสู้) อยู่บนสุด
             overlay = UIFactory.CreateRect("Overlay", root);
 
             UIFactory.Stretch(overlay);
 
             overlay.gameObject.SetActive(false);
+        }
+
+        private LeaderWidget CreateLeaderWidget(
+            UnityEngine.Events.UnityAction onClick,
+            float xMin, float yMin, float xMax, float yMax)
+        {
+            LeaderWidget widget = new LeaderWidget();
+
+            widget.Button = ScreenKit.AddButton(
+                root, "", onClick, UIFactory.Panel,
+                xMin, yMin, xMax, yMax, 22);
+
+            widget.Title = widget.Button.GetComponentInChildren<Text>();
+            widget.Title.alignment = TextAnchor.MiddleLeft;
+
+            UIFactory.SetAnchors(
+                widget.Title.rectTransform, 0.03f, 0.56f, 0.97f, 0.98f);
+
+            widget.HpFill = AddBar(
+                widget.Button.transform, "Hp", 0.30f, 0.54f,
+                new Color(0.25f, 0.75f, 0.35f, 1f), out widget.HpText);
+
+            widget.EnergyFill = AddBar(
+                widget.Button.transform, "Energy", 0.05f, 0.27f,
+                new Color(0.2f, 0.55f, 0.95f, 1f), out widget.EnergyText);
+
+            return widget;
+        }
+
+        // แถบความคืบหน้า: พื้นหลัง + แถบสี + ข้อความกลางแถบ
+        private static Image AddBar(
+            Transform parent, string name, float yMin, float yMax,
+            Color color, out Text label)
+        {
+            Image back = UIFactory.CreatePanel(
+                parent, name + "Back", new Color(0f, 0f, 0f, 0.45f));
+
+            UIFactory.SetAnchors(back.rectTransform, 0.03f, yMin, 0.97f, yMax);
+
+            back.raycastTarget = false;
+
+            Image fill = UIFactory.CreatePanel(back.transform, name + "Fill", color);
+
+            UIFactory.Stretch(fill.rectTransform);
+
+            fill.raycastTarget = false;
+
+            label = UIFactory.CreateText(
+                back.transform, "", 17, Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(label.rectTransform);
+
+            return fill;
+        }
+
+        private static void SetBar(Image fill, float ratio)
+        {
+            fill.rectTransform.anchorMax =
+                new Vector2(Mathf.Clamp01(ratio), 1f);
         }
 
         private static RectTransform CreateRow(
@@ -291,15 +427,20 @@ namespace MultiverseCardBattle.Screens
                 (battle.IsOver
                     ? "Battle over"
                     : (battle.CurrentPlayer == Human
-                        ? "Your turn"
-                        : "Opponent's turn"));
+                        ? "<color=#6BE38A>Your turn</color>"
+                        : "<color=#FFB060>Opponent's turn</color>"));
+
+            // ปิดหน้าต่างกองทิ้งเมื่อมีหน้าต่างอื่นขึ้นมาทับ
+            if (battle.IsOver || battle.HasPendingChoice)
+                openPile = PileKind.None;
 
             hintText.text = string.IsNullOrEmpty(hint)
                 ? "<color=#8A93A6>Space: end turn  -  Esc: cancel</color>"
                 : hint;
 
-            RefreshLeader(enemyLeader, Ai, true);
-            RefreshLeader(playerLeader, Human, false);
+            RefreshLeader(enemyWidget, Ai);
+            RefreshLeader(playerWidget, Human);
+            RefreshPileButtons();
 
             viewsByInstance.Clear();
 
@@ -326,6 +467,7 @@ namespace MultiverseCardBattle.Screens
             logText.text = BuildLog();
 
             RefreshOverlay();
+            RefreshPile();
         }
 
         private string BuildLog()
@@ -345,20 +487,40 @@ namespace MultiverseCardBattle.Screens
             return text.ToString();
         }
 
-        private void RefreshLeader(Button button, BattlePlayer player, bool isEnemy)
+        private void RefreshLeader(LeaderWidget widget, BattlePlayer player)
         {
-            string text =
-                "<b>" + player.Name + "</b>   HP " +
-                player.LeaderHealth + "/" + player.MaxLeaderHealth +
-                "\nEnergy " + player.CurrentEnergy + "/" + player.MaxEnergy +
-                "   Hand " + player.Hand.Count +
+            widget.Title.text =
+                "<b>" + player.Name + "</b>     Hand " + player.Hand.Count +
                 "   Deck " + player.Deck.Count;
 
-            UIFactory.SetButtonLabel(button, text);
+            float hp = player.MaxLeaderHealth > 0
+                ? (float)player.LeaderHealth / player.MaxLeaderHealth
+                : 0f;
+
+            SetBar(widget.HpFill, hp);
+
+            widget.HpFill.color =
+                hp > 0.5f
+                    ? new Color(0.25f, 0.75f, 0.35f, 1f)
+                    : (hp > 0.25f
+                        ? new Color(0.95f, 0.75f, 0.2f, 1f)
+                        : new Color(0.9f, 0.3f, 0.3f, 1f));
+
+            widget.HpText.text =
+                "HP " + player.LeaderHealth + " / " + player.MaxLeaderHealth;
+
+            float energy = player.MaxEnergy > 0
+                ? (float)player.CurrentEnergy / player.MaxEnergy
+                : 0f;
+
+            SetBar(widget.EnergyFill, energy);
+
+            widget.EnergyText.text =
+                "Energy " + player.CurrentEnergy + " / " + player.MaxEnergy;
 
             bool isTarget = IsActiveTarget(player);
 
-            button.GetComponent<Image>().color =
+            widget.Button.GetComponent<Image>().color =
                 isTarget ? UIFactory.Danger : UIFactory.Panel;
         }
 
@@ -491,7 +653,9 @@ namespace MultiverseCardBattle.Screens
             if (shown == null)
                 return;
 
-            if (shown.Zone == CardZone.Field || shown.Zone == CardZone.Hand)
+            if (shown.Zone == CardZone.Field ||
+                shown.Zone == CardZone.Hand ||
+                shown.Zone == CardZone.Graveyard)
                 previewView.ShowInstance(shown);
             else
                 previewView.gameObject.SetActive(false);
@@ -719,6 +883,129 @@ namespace MultiverseCardBattle.Screens
             Sfx.Play(SoundId.Play);
 
             battle.ResolveAdapt(index);
+        }
+
+        // ---------- ดูกองทิ้ง / มือฝั่งตรงข้าม ----------
+
+        private void TogglePile(PileKind kind)
+        {
+            openPile = openPile == kind ? PileKind.None : kind;
+
+            dirty = true;
+        }
+
+        private void RefreshPileButtons()
+        {
+            UIFactory.SetButtonLabel(
+                enemyHandButton, "Opp. Hand " + Ai.Hand.Count);
+
+            UIFactory.SetButtonLabel(
+                enemyGraveButton, "Graveyard " + Ai.Graveyard.Count);
+
+            UIFactory.SetButtonLabel(
+                playerGraveButton, "Graveyard " + Human.Graveyard.Count);
+
+            playerDeckLabel.text = "Deck " + Human.Deck.Count;
+
+            Tint(enemyHandButton, openPile == PileKind.EnemyHand);
+            Tint(enemyGraveButton, openPile == PileKind.EnemyGraveyard);
+            Tint(playerGraveButton, openPile == PileKind.PlayerGraveyard);
+        }
+
+        private static void Tint(Button button, bool active)
+        {
+            button.GetComponent<Image>().color =
+                active ? UIFactory.Accent : UIFactory.Muted;
+        }
+
+        private void RefreshPile()
+        {
+            if (openPile == PileKind.None)
+            {
+                pileOverlay.gameObject.SetActive(false);
+                pileScroll = null;
+                return;
+            }
+
+            List<CardInstance> cards;
+            string title;
+
+            switch (openPile)
+            {
+                case PileKind.EnemyHand:
+                    cards = new List<CardInstance>(Ai.Hand.Cards);
+                    title = "OPPONENT'S HAND";
+                    break;
+
+                case PileKind.EnemyGraveyard:
+                    cards = new List<CardInstance>(Ai.Graveyard);
+                    cards.Reverse();
+                    title = "OPPONENT'S GRAVEYARD";
+                    break;
+
+                default:
+                    cards = new List<CardInstance>(Human.Graveyard);
+                    cards.Reverse();
+                    title = "YOUR GRAVEYARD";
+                    break;
+            }
+
+            // จำตำแหน่งเลื่อนไว้ ไม่ให้เด้งกลับขึ้นบนทุกครั้งที่สถานะเปลี่ยน
+            float scrollPosition =
+                pileScroll != null ? pileScroll.verticalNormalizedPosition : 1f;
+
+            ScreenKit.ClearNow(pileOverlay);
+
+            pileOverlay.gameObject.SetActive(true);
+            pileOverlay.SetAsLastSibling();
+
+            // พรีวิวต้องอยู่เหนือพื้นหลังมืด
+            previewZone.SetAsLastSibling();
+
+            Image dim = UIFactory.CreatePanel(
+                pileOverlay, "Dim", new Color(0f, 0f, 0f, 0.85f));
+
+            UIFactory.Stretch(dim.rectTransform);
+
+            ScreenKit.AddLabel(
+                pileOverlay, title + " (" + cards.Count + ")", 40,
+                TextAnchor.MiddleCenter, 0.2f, 0.88f, 0.8f, 0.98f,
+                FontStyle.Bold);
+
+            if (cards.Count == 0)
+            {
+                ScreenKit.AddLabel(
+                    pileOverlay, "Empty", 36, TextAnchor.MiddleCenter,
+                    0.3f, 0.45f, 0.7f, 0.55f);
+            }
+            else
+            {
+                RectTransform content;
+
+                pileScroll = ScreenKit.AddScroll(
+                    pileOverlay, "PileScroll",
+                    0.19f, 0.14f, 0.97f, 0.87f, out content);
+
+                UIFactory.AddGrid(content, new Vector2(150f, 210f), 14f, 14);
+
+                foreach (CardInstance card in cards)
+                {
+                    CardView view = CardView.Create(content, new Vector2(150f, 210f));
+
+                    view.ShowInstance(card);
+
+                    view.HoverEntered += ShowPreview;
+                    view.HoverExited += HidePreview;
+                }
+
+                LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+
+                pileScroll.verticalNormalizedPosition = scrollPosition;
+            }
+
+            ScreenKit.AddButton(
+                pileOverlay, "Close", () => TogglePile(openPile),
+                UIFactory.Accent, 0.4f, 0.03f, 0.6f, 0.11f, 28);
         }
 
         private void ShowResult()

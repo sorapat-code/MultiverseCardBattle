@@ -40,6 +40,8 @@ namespace MultiverseCardBattle.Screens
                 Image image = UIFactory.CreatePanel(
                     fx.transform, "Flash", new Color(1f, 1f, 1f, 0f));
 
+                UIShapes.MakeRounded(image, 8f);
+
                 UIFactory.Stretch(image.rectTransform);
 
                 image.raycastTarget = false;
