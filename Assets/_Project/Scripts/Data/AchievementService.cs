@@ -12,6 +12,7 @@ namespace MultiverseCardBattle.Data
         public int PlayerMaxHealth;
         public bool OpponentDeckOut;
         public bool SecretSummoned;
+        public List<string> SecretIds = new List<string>();
     }
 
     public class AchievementDef

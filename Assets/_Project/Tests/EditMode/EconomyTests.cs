@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Data;
+using MultiverseCardBattle.Decks;
 
 namespace MultiverseCardBattle.Tests
 {
@@ -94,12 +95,12 @@ namespace MultiverseCardBattle.Tests
                 profile, CardRegistry.Get(Common), out message));
 
             profile.AddDust(1000);
-            profile.AddCard(Common, 2);
+            profile.AddCard(Common, 3);
 
             Assert.IsFalse(CardEconomy.Craft(
                 profile, CardRegistry.Get(Common), out message));
 
-            Assert.AreEqual(2, profile.GetOwnedCount(Common));
+            Assert.AreEqual(3, profile.GetOwnedCount(Common));
         }
 
         [Test]
@@ -126,16 +127,16 @@ namespace MultiverseCardBattle.Tests
 
             profile.AddCard(Common, 5);
 
-            Assert.AreEqual(3, CardEconomy.ExtraCopies(
+            Assert.AreEqual(2, CardEconomy.ExtraCopies(
                 profile, CardRegistry.Get(Common)));
 
             int cards;
 
             int dust = CardEconomy.DisenchantAllExtras(profile, out cards);
 
-            Assert.AreEqual(3, cards);
-            Assert.AreEqual(15, dust);
-            Assert.AreEqual(2, profile.GetOwnedCount(Common));
+            Assert.AreEqual(2, cards);
+            Assert.AreEqual(10, dust);
+            Assert.AreEqual(3, profile.GetOwnedCount(Common));
         }
 
         [Test]
@@ -179,6 +180,67 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsTrue(AchievementService.IsUnlocked(profile, secret));
             Assert.AreEqual(300, profile.Dust);
+        }
+
+        [Test]
+        public void MaxCopies_IsThree_AndOneForUnique()
+        {
+            Assert.AreEqual(3, DeckRules.MaxCopies(CardRegistry.Get(Common)));
+            Assert.AreEqual(3, DeckRules.MaxCopies(CardRegistry.Get("STR_020")));
+
+            CardData secret = CardRegistry.Get(StarterCardLibrary.SecretId);
+
+            Assert.AreEqual(1, DeckRules.MaxCopies(secret));
+            Assert.AreNotEqual(0, (int)(secret.Keywords & Keyword.Unique));
+        }
+
+        [Test]
+        public void SecretCard_VisibleOnlyAfterUnlock_AndDeckable()
+        {
+            PlayerProfile profile = NewProfile();
+
+            CardData secret = CardRegistry.Get(StarterCardLibrary.SecretId);
+
+            Assert.IsTrue(CardRegistry.IsDeckable(secret));
+            Assert.IsFalse(CardRegistry.IsVisibleInCollection(secret, profile));
+
+            var lines = CampaignService.UnlockSecrets(
+                profile, new[] { StarterCardLibrary.SecretId });
+
+            Assert.AreEqual(1, lines.Count);
+            Assert.AreEqual(1, profile.GetOwnedCount(StarterCardLibrary.SecretId));
+            Assert.IsTrue(CardRegistry.IsVisibleInCollection(secret, profile));
+
+            // ปลดล็อกซ้ำไม่ได้เพิ่มใบ
+            Assert.AreEqual(0, CampaignService.UnlockSecrets(
+                profile, new[] { StarterCardLibrary.SecretId }).Count);
+            Assert.AreEqual(1, profile.GetOwnedCount(StarterCardLibrary.SecretId));
+        }
+
+        [Test]
+        public void SecretCard_CannotBeDisenchantedOrCrafted_ButCanBeInDeck()
+        {
+            PlayerProfile profile = NewProfile();
+
+            profile.AddCard(StarterCardLibrary.SecretId, 1);
+            profile.AddDust(100000);
+
+            CardData secret = CardRegistry.Get(StarterCardLibrary.SecretId);
+
+            string message;
+
+            Assert.IsFalse(CardEconomy.Disenchant(profile, secret, 1, out message));
+            Assert.IsFalse(CardEconomy.Craft(profile, secret, out message));
+
+            DeckList deck = new DeckList();
+
+            deck.CardIDs.Add(StarterCardLibrary.SecretId);
+            deck.CardIDs.Add(StarterCardLibrary.SecretId);
+
+            var problems = DeckRules.Validate(deck, profile);
+
+            Assert.IsTrue(problems.Exists(p => p.Contains("max 1")));
+            Assert.IsFalse(problems.Exists(p => p.Contains("cannot be put")));
         }
     }
 }

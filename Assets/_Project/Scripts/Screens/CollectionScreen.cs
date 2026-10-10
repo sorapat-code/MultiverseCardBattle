@@ -85,7 +85,7 @@ namespace MultiverseCardBattle.Screens
 
             foreach (CardData data in CardRegistry.All)
             {
-                if (CardRegistry.IsCollectible(data))
+                if (CardRegistry.IsVisibleInCollection(data, profile))
                     cards.Add(data);
             }
 

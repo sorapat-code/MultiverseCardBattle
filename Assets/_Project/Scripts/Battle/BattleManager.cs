@@ -163,6 +163,9 @@ namespace MultiverseCardBattle.Battle
         // เหตุการณ์สุ่ม: ผู้เล่นได้การ์ดลับจากการ Summon ในการต่อสู้นี้
         public bool SecretCardSummoned { get; set; }
 
+        // ID ของการ์ดลับทั้งหมดที่ผู้เล่นได้ในการต่อสู้นี้
+        public readonly List<string> SecretsSummoned = new List<string>();
+
         private void GiveCoin(BattlePlayer player)
         {
             CardData coin = StarterCardLibrary.Get(StarterCardLibrary.CoinId);

@@ -629,6 +629,9 @@ namespace MultiverseCardBattle.Effects
             {
                 context.Battle.SecretCardSummoned = true;
 
+                if (!context.Battle.SecretsSummoned.Contains(secret.CardID))
+                    context.Battle.SecretsSummoned.Add(secret.CardID);
+
                 context.Battle.Log(
                     "A shadow stirs... " + secret.CardName + " answers the summon!");
             }

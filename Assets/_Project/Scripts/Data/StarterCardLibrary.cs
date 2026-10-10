@@ -108,7 +108,7 @@ namespace MultiverseCardBattle.Data
             Add(Create(
                 SecretId, "Sung Jin-Woo, Shadow Monarch", CardType.Unit,
                 Universe.SoloLeveling, Faction.ShadowArmy, CardRarity.Secret,
-                9, 8, 8, Keyword.Charge | Keyword.Lifesteal | Keyword.Shadowbound,
+                9, 8, 8, Keyword.Charge | Keyword.Lifesteal | Keyword.Shadowbound | Keyword.Unique,
                 CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Dark,
                 CardSource.Event,
                 new[]

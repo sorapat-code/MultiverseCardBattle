@@ -75,6 +75,30 @@ namespace MultiverseCardBattle.Data
             return true;
         }
 
+        /// <summary>ใส่เด็คได้: การ์ดทั่วไป และการ์ดลับที่ปลดล็อกแล้ว</summary>
+        public static bool IsDeckable(CardData data)
+        {
+            if (IsCollectible(data))
+                return true;
+
+            return data != null &&
+                   data.Type != CardType.Leader &&
+                   data.Source != CardSource.Token &&
+                   data.Source != CardSource.Debug &&
+                   (data.Tags & CardTag.Token) == 0 &&
+                   (data.Rarity == CardRarity.Secret || data.Source == CardSource.Event);
+        }
+
+        /// <summary>แสดงใน Collection / Deck Builder: การ์ดทั่วไป หรือการ์ดลับที่ปลดล็อกแล้ว</summary>
+        public static bool IsVisibleInCollection(CardData data, PlayerProfile profile)
+        {
+            if (IsCollectible(data))
+                return true;
+
+            return profile != null && IsDeckable(data) &&
+                   profile.GetOwnedCount(data.CardID) > 0;
+        }
+
         public static CardPool CreateDiscoverPool()
         {
             Initialize();

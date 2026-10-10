@@ -103,6 +103,30 @@ namespace MultiverseCardBattle.Data
         /// <summary>
         /// เรียกเมื่อการต่อสู้จบ: บันทึกความคืบหน้า/รางวัล/Gold คืนข้อความสรุปให้แสดง
         /// </summary>
+        /// <summary>การ์ดลับที่เจอในการต่อสู้ ปลดล็อกเข้า Collection 1 ใบ (ครั้งแรกเท่านั้น)</summary>
+        public static List<string> UnlockSecrets(
+            PlayerProfile profile, IEnumerable<string> ids)
+        {
+            List<string> lines = new List<string>();
+
+            if (profile == null || ids == null)
+                return lines;
+
+            foreach (string id in ids)
+            {
+                CardData card = CardRegistry.Get(id);
+
+                if (card == null || profile.GetOwnedCount(id) > 0)
+                    continue;
+
+                profile.AddCard(id, 1);
+
+                lines.Add("Secret card unlocked: " + card.CardName);
+            }
+
+            return lines;
+        }
+
         public static List<string> OnBattleFinished(
             bool playerWon, BattleSummary summary = null)
         {
@@ -160,6 +184,8 @@ namespace MultiverseCardBattle.Data
             {
                 if (summary.SecretSummoned)
                     profile.Data.StatSecrets++;
+
+                lines.AddRange(UnlockSecrets(profile, summary.SecretIds));
 
                 if (playerWon)
                 {

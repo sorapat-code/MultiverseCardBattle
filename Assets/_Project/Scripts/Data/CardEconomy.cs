@@ -138,6 +138,13 @@ namespace MultiverseCardBattle.Data
         {
             reason = null;
 
+            if (card != null && !CardRegistry.IsCollectible(card) &&
+                CardRegistry.IsDeckable(card))
+            {
+                reason = "Secret cards cannot be crafted - they must be unlocked";
+                return false;
+            }
+
             if (profile == null || card == null || !CardRegistry.IsCollectible(card))
             {
                 reason = "This card cannot be crafted";

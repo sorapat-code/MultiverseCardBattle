@@ -66,7 +66,7 @@ namespace MultiverseCardBattle.Tests
         {
             DeckList deck = new DeckList();
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 4; i++)
                 deck.CardIDs.Add("STR_001");
 
             List<string> problems = DeckRules.Validate(deck, null);

@@ -24,7 +24,7 @@ namespace MultiverseCardBattle.Screens
             "A unit cannot attack the turn it is played unless it has Charge or Rush.\n\n" +
             "<b>Keywords</b>\n" +
             "Taunt, Charge, Rush, Shield, Lifesteal, Poison, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
-            "Unstoppable, Guard, Ward, Immune, Reborn, Shadowbound, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
+            "Unstoppable, Guard, Ward, Immune, Reborn, Shadowbound, Unique, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
             "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
             "See <b>Keywords & Status</b> in the main menu for every keyword, status and game term (Discover, Energy, Graveyard...).\n" +
             "While battling, hover a card to see it larger with an explanation of its keywords underneath.\n\n" +
@@ -33,7 +33,7 @@ namespace MultiverseCardBattle.Screens
             "<b>Deck-out</b>: if your deck ever reaches 0 cards you lose immediately - watch your draws!\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
             "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.\n" +
-            "<b>Collection</b>: click a card to see it full size. Disenchant spare copies into Dust and spend Dust to craft cards you are missing.\n" +
+            "<b>Deck rules</b>: 20-30 cards, up to 3 copies of a card (Unique cards: 1). Secret cards appear in your Collection only after you unlock them.\n<b>Collection</b>: click a card to see it full size. Disenchant spare copies into Dust and spend Dust to craft cards you are missing.\n" +
             "<b>Achievements</b>: complete goals for Gold and Dust. Some are hidden...";
 
         private RectTransform root;

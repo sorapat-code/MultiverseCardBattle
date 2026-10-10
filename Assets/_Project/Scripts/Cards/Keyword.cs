@@ -63,6 +63,9 @@ namespace MultiverseCardBattle.Cards
         Spellburst   = 1 << 16,
 
         // ขณะเจ้าของมี Token บนสนาม: ได้ Unstoppable และยูนิตศัตรูโจมตีไม่ได้ (เลือกด้วยสเปลได้)
-        Shadowbound  = 1 << 17
+        Shadowbound  = 1 << 17,
+
+        // ใส่ในเด็คได้แค่ 1 ใบ
+        Unique       = 1 << 18
     }
 }

@@ -38,17 +38,19 @@ namespace MultiverseCardBattle.Decks
         public const int MinDeckSize = 20;
         public const int MaxDeckSize = 30;
 
-        // Legendary / Secret ใส่ได้ 1 ใบ ที่เหลือ 2 ใบ
+        public const int DefaultMaxCopies = 3;
+
+        // ใส่ซ้ำได้ 3 ใบ ยกเว้นการ์ด Unique (และการ์ดลับ) ที่ใส่ได้ 1 ใบ
         public static int MaxCopies(CardData card)
         {
             if (card == null)
                 return 0;
 
-            if (card.Rarity == CardRarity.Legendary ||
+            if ((card.Keywords & Keyword.Unique) != 0 ||
                 card.Rarity == CardRarity.Secret)
                 return 1;
 
-            return 2;
+            return DefaultMaxCopies;
         }
 
         /// <summary>
@@ -100,7 +102,7 @@ namespace MultiverseCardBattle.Decks
                     continue;
                 }
 
-                if (!CardRegistry.IsCollectible(card))
+                if (!CardRegistry.IsDeckable(card))
                 {
                     problems.Add(card.CardName + " cannot be put in a deck");
                     continue;

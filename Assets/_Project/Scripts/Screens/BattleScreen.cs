@@ -1564,6 +1564,7 @@ namespace MultiverseCardBattle.Screens
                 summary.PlayerMaxHealth = Human.MaxLeaderHealth;
                 summary.OpponentDeckOut = Ai.Deck.Count == 0 && Human.Deck.Count > 0;
                 summary.SecretSummoned = battle.SecretCardSummoned;
+                summary.SecretIds.AddRange(battle.SecretsSummoned);
 
                 resultLines = CampaignService.OnBattleFinished(won, summary);
 
