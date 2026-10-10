@@ -47,6 +47,8 @@ namespace MultiverseCardBattle.Data
         // การ์ดลับที่ปลดล็อกจากเงื่อนไขในแมตช์ (SecretCardService)
         public const string ArtoriasId = "EVT_002";
         public const string AinzId = "EVT_003";
+        public const string VergilId = "EVT_004";
+        public const string DevilTriggerId = "TKN_006";
 
         private static void Build()
         {
@@ -174,6 +176,56 @@ namespace MultiverseCardBattle.Data
                 "The Undead Overlord: Once per match, when he would die from damage, he survives with 1 HP and gains Unstoppable until the end of your next turn.";
 
             Add(ainz);
+
+            // Vergil ร่าง Devil Trigger (แปลงร่างจากปุ่ม ไม่ใช่ Token ที่ Summon จึงไม่ใส่ Tag Token)
+            CardData devilTrigger = Create(
+                DevilTriggerId, "Vergil, Awakened Dark Slayer", CardType.Unit,
+                Universe.DevilMayCry, Faction.SpardaClan, CardRarity.Legendary,
+                8, 12, 10, Keyword.Charge | Keyword.Unstoppable | Keyword.Lifesteal,
+                CardTag.Demon | CardTag.Elite | CardTag.Boss | CardTag.Melee | CardTag.Dark,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Attack, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 3))
+                });
+
+            devilTrigger.Passives =
+                CardPassive.SinDevilRegeneration | CardPassive.OverwhelmingPower |
+                CardPassive.DevilTriggerForm;
+
+            devilTrigger.Description =
+                "Charge, Unstoppable, Lifesteal\n" +
+                "Judgment of the End: When attacking, deal 3 damage to all enemy units.\n" +
+                "Sin Devil's Regeneration: At the start of your turn, heal 3.\n" +
+                "Overwhelming Power: Attack damage cannot be reduced by Immune, Defense Up or Weakness (Shield still blocks).\n" +
+                "Lasts 2 of your turns, then reverts to Vergil.";
+
+            Add(devilTrigger);
+
+            // Vergil: ปลดล็อกด้วยเงื่อนไข "The Power of the Yamato"
+            CardData vergil = Create(
+                VergilId, "Vergil, The Alpha and the Omega", CardType.Unit,
+                Universe.DevilMayCry, Faction.SpardaClan, CardRarity.Secret,
+                8, 8, 6, Keyword.Charge | Keyword.Unstoppable | Keyword.Unique,
+                CardTag.Human | CardTag.Demon | CardTag.Elite | CardTag.Boss | CardTag.Melee,
+                CardSource.Event,
+                new[]
+                {
+                    Act(TriggerType.Summon, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 3)),
+                    Act(TriggerType.Summon, TargetRule.Self, TargetSelection.All,
+                        Fx(EffectType.GrantExtraAttack, 1))
+                });
+
+            vergil.Passives = CardPassive.Concentration | CardPassive.DevilTrigger;
+            vergil.Description =
+                "Charge, Unstoppable, Unique\n" +
+                "Judgment Cut: On summon, deal 3 damage to all enemy units, then attack one additional time this turn.\n" +
+                "Concentration: At the start of your turn, if Vergil took no damage since your last turn start, +2 ATK until end of turn.\n" +
+                "Devil Trigger: Once per match during your turn (not the turn he is summoned), press the DEVIL TRIGGER button to transform for free for 2 of your turns.";
+
+            Add(vergil);
 
             // ---------- Units ----------
 

@@ -17,6 +17,9 @@ namespace MultiverseCardBattle.Battle
         // เอฟเฟกต์ที่ทำลายยูนิตศัตรูทันทีโดยไม่ผ่านการต่อสู้
         public readonly int[] InstantDestroys = new int[3];
 
+        // มียูนิตของเราโจมตีครบ 3 ครั้งโดยยังไม่ตาย
+        public readonly bool[] TripleAttacker = new bool[3];
+
         // จำนวน Spell ที่ใช้
         public readonly int[] SpellsPlayed = new int[3];
 
@@ -56,6 +59,12 @@ namespace MultiverseCardBattle.Battle
         {
             if (Valid(playerId))
                 UnitDeaths[playerId]++;
+        }
+
+        public void NoteSurvivingAttacks(int playerId, int totalAttacks)
+        {
+            if (Valid(playerId) && totalAttacks >= 3)
+                TripleAttacker[playerId] = true;
         }
 
         public void AddSpellPlayed(int playerId)

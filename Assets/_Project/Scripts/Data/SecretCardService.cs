@@ -17,7 +17,8 @@ namespace MultiverseCardBattle.Data
     public enum BannerStyle
     {
         Gold,
-        Nazarick
+        Nazarick,
+        Yamato
     }
 
     /// <summary>
@@ -68,7 +69,31 @@ namespace MultiverseCardBattle.Data
                 list.Add(unlock);
             }
 
+            if (IsVergilEarned(battle.Stats, humanId) &&
+                profile.GetOwnedCount(StarterCardLibrary.VergilId) == 0)
+            {
+                SecretUnlock unlock = new SecretUnlock();
+
+                unlock.CardId = StarterCardLibrary.VergilId;
+                unlock.Title = "THE POWER OF THE YAMATO";
+                unlock.Subtitle = "Devil Trigger awakened";
+                unlock.Tint = new Color(0.25f, 0.6f, 1f, 1f);
+                unlock.Style = BannerStyle.Yamato;
+
+                list.Add(unlock);
+            }
+
             return list;
+        }
+
+        // ชนะโดยไม่ใช้ Spell และมียูนิตใบเดียวกันโจมตีครบ 3 ครั้งโดยไม่ตาย
+        public static bool IsVergilEarned(BattleStats stats, int humanId)
+        {
+            if (stats == null)
+                return false;
+
+            return stats.TripleAttacker[humanId] &&
+                   stats.SpellsPlayed[humanId] == 0;
         }
 
         public static bool IsAinzEarned(

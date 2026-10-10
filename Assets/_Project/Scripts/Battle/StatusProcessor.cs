@@ -142,6 +142,23 @@ namespace MultiverseCardBattle.Battle
 
             string from = card.Data.CardName;
 
+            // ร่าง Devil Trigger: กลับร่างแล้วคง HP (ลดเหลือเพดานของร่างปกติ) ไม่ติด Fatigue / Lock
+            if ((card.Data.Passives & CardPassive.DevilTriggerForm) != 0)
+            {
+                int keptHealth = card.CurrentHealth;
+
+                card.RestoreOriginalForm();
+                card.EvolveTo(card.Data);
+
+                card.RemoveStatus(StatusType.Transformed);
+
+                card.CurrentHealth = System.Math.Min(keptHealth, card.MaxHealth);
+
+                battle.Log(from + " reverts to " + card.Data.CardName);
+
+                return;
+            }
+
             int damage = card.MaxHealth - card.CurrentHealth;
 
             card.RestoreOriginalForm();

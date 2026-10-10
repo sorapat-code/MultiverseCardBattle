@@ -66,6 +66,9 @@ namespace MultiverseCardBattle.Cards
         CursedSpirits,
 
         // Overlord
-        Nazarick
+        Nazarick,
+
+        // Devil May Cry
+        SpardaClan
     }
 }

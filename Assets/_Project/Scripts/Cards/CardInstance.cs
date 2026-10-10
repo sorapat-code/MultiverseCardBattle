@@ -257,6 +257,18 @@ namespace MultiverseCardBattle.Cards
         // เทิร์น (TotalTurns) ที่ต้องคืน Taunt ให้ -1 = ไม่มี
         public int TauntRestoreTurn = -1;
 
+        // โจมตีเพิ่มได้อีกกี่ครั้งในเทิร์นนี้ (ล้างตอนจบเทิร์น)
+        public int ExtraAttacks;
+
+        // ใช้ Devil Trigger ไปแล้วในแมตช์นี้
+        public bool DevilTriggerUsed;
+
+        // ได้รับความเสียหายตั้งแต่ต้นเทิร์นของเจ้าของครั้งก่อน (Concentration)
+        public bool DamagedSinceTurnStart;
+
+        // จำนวนครั้งที่ยูนิตนี้โจมตีทั้งหมด (ตัวนับเริ่มใหม่เมื่อเป็นการ์ดใบใหม่)
+        public int TotalAttacks;
+
         // The Undead Overlord ใช้ไปแล้วในแมตช์นี้
         public bool UndeadOverlordUsed;
 

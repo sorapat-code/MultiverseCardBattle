@@ -207,7 +207,7 @@ namespace MultiverseCardBattle.Battle
 
         private static int MaxAttacks(CardInstance card)
         {
-            return card.HasKeyword(Keyword.DoubleStrike) ? 2 : 1;
+            return (card.HasKeyword(Keyword.DoubleStrike) ? 2 : 1) + card.ExtraAttacks;
         }
 
         private static bool IsSummoningSick(

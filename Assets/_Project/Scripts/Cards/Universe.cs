@@ -20,6 +20,8 @@ namespace MultiverseCardBattle.Cards
 
         JujutsuKaisen,
 
-        Overlord
+        Overlord,
+
+        DevilMayCry
     }
 }

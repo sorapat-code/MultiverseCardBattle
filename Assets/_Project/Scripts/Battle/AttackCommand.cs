@@ -43,6 +43,7 @@ namespace MultiverseCardBattle.Battle
                 Redirect(battle, ref targetUnit, ref targetLeader);
 
             Attacker.AttacksThisTurn++;
+            Attacker.TotalAttacks++;
 
             // ซุ่มโจมตี: ตีจาก Stealth ครั้งแรกจะไม่โดนสวนกลับ
             bool ambush = Attacker.HasKeyword(Keyword.Stealth);
@@ -63,6 +64,10 @@ namespace MultiverseCardBattle.Battle
                 AfterUnitCombat(
                     battle, targetUnit, attackerHealthBefore, targetHealthBefore);
             }
+
+            // ยูนิตเดียวกันโจมตีครบ 3 ครั้งโดยไม่ตาย (ปลดล็อก Vergil)
+            if (Attacker.Zone == CardZone.Field && Attacker.CurrentHealth > 0)
+                battle.Stats.NoteSurvivingAttacks(Player.PlayerID, Attacker.TotalAttacks);
 
             return ActionResult.Ok();
         }
@@ -161,6 +166,10 @@ namespace MultiverseCardBattle.Battle
             // Trigger อาจทำให้ใครตายหรือถูกย้ายไปแล้ว
             if (Attacker.Zone != CardZone.Field ||
                 targetUnit.Zone != CardZone.Field)
+                return;
+
+            // เป้าหมายตายไปแล้วจาก Trigger ก่อนโจมตี (เช่น Judgment of the End) ไม่ต้องสู้ต่อ
+            if (targetUnit.CurrentHealth <= 0)
                 return;
 
             int attackerDamage = Attacker.CurrentAttack;

@@ -152,6 +152,11 @@ namespace MultiverseCardBattle.Effects
                     Adapt(effect, context);
                     break;
 
+                case EffectType.GrantExtraAttack:
+                    if (context.TargetCard != null)
+                        context.TargetCard.ExtraAttacks += PositiveOr(effect.Value, 1);
+                    break;
+
                 // Resource
                 case EffectType.GainEnergy:
                     GainEnergy(effect, context);

@@ -59,6 +59,9 @@ namespace MultiverseCardBattle.Effects
         RemoveStatus,
 
         // เลือกความสามารถ 1 อย่างจากตัวเลือกเพื่อเพิ่มให้การ์ด (Value = จำนวนตัวเลือก)
-        Adapt
+        Adapt,
+
+        // ให้ยูนิตโจมตีเพิ่มได้ Value ครั้งในเทิร์นนี้ (Judgment Cut)
+        GrantExtraAttack
     }
 }

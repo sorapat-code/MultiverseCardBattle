@@ -355,6 +355,9 @@ namespace MultiverseCardBattle.Data
                     return "remove " + StatusInfo.DisplayName(effect.Status) +
                         " from " + target;
 
+                case EffectType.GrantExtraAttack:
+                    return "attack " + System.Math.Max(1, value) + " additional time(s) this turn";
+
                 case EffectType.Adapt:
                     return "Adapt";
 

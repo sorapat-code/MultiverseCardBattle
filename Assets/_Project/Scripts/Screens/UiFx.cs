@@ -178,7 +178,10 @@ namespace MultiverseCardBattle.Screens
         private float particleTimer;
         private float ringTimer;
 
-        public static void Create(RectTransform parent, Color color)
+        private bool slashes;
+        private float slashTimer;
+
+        public static void Create(RectTransform parent, Color color, bool slashes = false)
         {
             RectTransform root = UIFactory.CreateRect("BannerMagic", parent);
 
@@ -201,6 +204,7 @@ namespace MultiverseCardBattle.Screens
             magic.color = color;
             magic.glow = glowImage;
             magic.fxParent = parent;
+            magic.slashes = slashes;
             magic.outer = MakeRing(root, color, 1f);
             magic.inner = MakeRing(root, color, 0.62f);
         }
@@ -257,6 +261,92 @@ namespace MultiverseCardBattle.Screens
 
                 UiFx.Ring(fxParent, center, color, 200f, 1000f, 1.3f);
             }
+
+            slashTimer -= dt;
+
+            if (slashes && slashTimer <= 0f)
+            {
+                slashTimer = Random.Range(0.35f, 0.8f);
+
+                Vector3 offset = new Vector3(
+                    Random.Range(-260f, 260f), Random.Range(-200f, 200f), 0f);
+
+                UiFx.Slash(fxParent, center + offset, color, 520f, 18f, 0.3f);
+            }
+        }
+    }
+
+    /// <summary>
+    /// ไฟสีน้ำเงินลุกรอบกรอบที่กำหนด (ปุ่ม Devil Trigger / การ์ด Vergil ร่าง Devil Trigger)
+    /// ปล่อยอนุภาคลอยขึ้นจากขอบเรื่อยๆ และทำให้แสงเรืองด้านหลังกะพริบ
+    /// </summary>
+    public class BlueFlame : MonoBehaviour
+    {
+        private RectTransform target;
+        private Transform fxParent;
+        private Image glow;
+        private float interval;
+        private float size;
+        private float timer;
+        private float age;
+
+        private static readonly Vector3[] corners = new Vector3[4];
+
+        public static void Attach(
+            RectTransform target, Transform fxParent, Image glow,
+            float interval = 0.035f, float size = 34f)
+        {
+            BlueFlame flame = target.gameObject.AddComponent<BlueFlame>();
+
+            flame.target = target;
+            flame.fxParent = fxParent;
+            flame.glow = glow;
+            flame.interval = interval;
+            flame.size = size;
+        }
+
+        private void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+
+            age += dt;
+
+            if (glow != null)
+            {
+                Color g = glow.color;
+
+                g.a = 0.5f + 0.25f * Mathf.Sin(age * 5f);
+
+                glow.color = g;
+            }
+
+            timer -= dt;
+
+            if (timer > 0f || target == null || fxParent == null)
+                return;
+
+            timer = interval;
+
+            target.GetWorldCorners(corners);
+
+            // สุ่มจุดบนขอบกรอบ: ซ้ายล่าง -> ซ้ายบน -> ขวาบน -> ขวาล่าง
+            Vector3 point;
+
+            float t = Random.value;
+
+            switch (Random.Range(0, 4))
+            {
+                case 0: point = Vector3.Lerp(corners[0], corners[1], t); break;
+                case 1: point = Vector3.Lerp(corners[1], corners[2], t); break;
+                case 2: point = Vector3.Lerp(corners[2], corners[3], t); break;
+                default: point = Vector3.Lerp(corners[3], corners[0], t); break;
+            }
+
+            Color color = Random.value < 0.3f
+                ? new Color(0.65f, 0.9f, 1f, 0.9f)
+                : new Color(0.2f, 0.5f, 1f, 0.95f);
+
+            UiFx.Burst(fxParent, point, color, 1, 60f, size, 0.9f, -200f);
         }
     }
 

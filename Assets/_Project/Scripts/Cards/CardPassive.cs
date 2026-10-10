@@ -27,6 +27,21 @@ namespace MultiverseCardBattle.Cards
         UndeadOverlord = 1 << 4,
 
         // Ainz: ต้นเทิร์นเลือกยูนิตศัตรู 1 ใบ ดาเมจ 4 (ตายแล้วกระจาย 3 ดาเมจให้ศัตรูสุ่ม 2 ใบ)
-        GraspHeart = 1 << 5
+        GraspHeart = 1 << 5,
+
+        // Vergil: ต้นเทิร์น ถ้าไม่โดนความเสียหายตั้งแต่ต้นเทิร์นก่อน ATK +2 จนจบเทิร์น
+        Concentration = 1 << 6,
+
+        // Vergil: แปลงร่างเป็น Devil Trigger ได้ครั้งเดียวต่อแมตช์ (ปุ่มกดในหน้าต่อสู้)
+        DevilTrigger = 1 << 7,
+
+        // ร่าง Devil Trigger: ต้นเทิร์นฟื้น HP ให้ตัวเอง 3
+        SinDevilRegeneration = 1 << 8,
+
+        // ร่าง Devil Trigger: ความเสียหายจากการโจมตีไม่ถูกลดโดย Immune / Defense Up / Weakness
+        OverwhelmingPower = 1 << 9,
+
+        // เป็นร่าง Devil Trigger: กลับร่างแล้วคง HP (ลดเหลือเพดานของร่างปกติ) และไม่ติด Fatigue
+        DevilTriggerForm = 1 << 10
     }
 }

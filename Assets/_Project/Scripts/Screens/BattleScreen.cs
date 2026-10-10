@@ -48,6 +48,9 @@ namespace MultiverseCardBattle.Screens
         private Button enemyLeader;
         private Button playerLeader;
         private Button endTurnButton;
+        private RectTransform devilRoot;
+        private Button devilButton;
+        private int devilFxInstance;
         private Button cancelButton;
 
         // แผงข้อมูล Leader (แถบ HP / Energy)
@@ -405,6 +408,29 @@ namespace MultiverseCardBattle.Screens
 
             enemyDeckLabel = AddPileLabel(0.875f, 0.745f, 0.995f, 0.79f);
 
+            // ปุ่มแปลงร่าง Devil Trigger (Vergil) มีไฟสีน้ำเงินลุกรอบ แสดงเมื่อใช้ได้เท่านั้น
+            devilRoot = UIFactory.CreateRect("DevilTrigger", root);
+
+            UIFactory.SetAnchors(devilRoot, 0.875f, 0.585f, 0.995f, 0.705f);
+
+            Image devilGlow = UIFactory.CreatePanel(
+                devilRoot, "Glow", new Color(0.2f, 0.5f, 1f, 0.6f));
+
+            devilGlow.sprite = UIShapes.Glow;
+            devilGlow.type = Image.Type.Simple;
+            devilGlow.raycastTarget = false;
+
+            devilGlow.rectTransform.anchorMin = Vector2.zero;
+            devilGlow.rectTransform.anchorMax = Vector2.one;
+            devilGlow.rectTransform.offsetMin = new Vector2(-50f, -40f);
+            devilGlow.rectTransform.offsetMax = new Vector2(50f, 40f);
+
+            devilButton = ScreenKit.AddButton(
+                devilRoot, "DEVIL\nTRIGGER", OnDevilTriggerClicked,
+                new Color(0.1f, 0.25f, 0.65f, 1f), 0f, 0f, 1f, 1f, 24);
+
+            devilRoot.gameObject.SetActive(false);
+
             endTurnButton = ScreenKit.AddButton(
                 root, "END TURN", OnEndTurnClicked,
                 UIFactory.Success, 0.875f, 0.42f, 0.995f, 0.55f, 30);
@@ -445,6 +471,8 @@ namespace MultiverseCardBattle.Screens
             fxLayer = UIFactory.CreateRect("FxLayer", root);
 
             UIFactory.Stretch(fxLayer);
+
+            BlueFlame.Attach(devilRoot, fxLayer, devilGlow);
 
             // หน้าต่างดูกองทิ้ง / มือศัตรู
             pileOverlay = UIFactory.CreateRect("PileOverlay", root);
@@ -684,6 +712,8 @@ namespace MultiverseCardBattle.Screens
             DetectChanges();
             RefreshPreview();
 
+            RefreshDevilTrigger(myTurn);
+
             endTurnButton.interactable = myTurn;
 
             UIFactory.SetButtonLabel(
@@ -821,6 +851,14 @@ namespace MultiverseCardBattle.Screens
 
                 if (owner == Human)
                     view.SetStateLabel(UnitStateLabel(card));
+
+                // Vergil ร่าง Devil Trigger: ไฟสีน้ำเงินลุกรอบการ์ด
+                if (card.Data != null &&
+                    (card.Data.Passives & CardPassive.DevilTriggerForm) != 0)
+                {
+                    BlueFlame.Attach(
+                        (RectTransform)view.transform, fxLayer, null, 0.06f, 28f);
+                }
 
                 view.Clicked += OnFieldCardClicked;
             }
@@ -1558,17 +1596,22 @@ namespace MultiverseCardBattle.Screens
         private void ShowUnlockBanner(SecretUnlock unlock)
         {
             bool nazarick = unlock.Style == BannerStyle.Nazarick;
+            bool yamato = unlock.Style == BannerStyle.Yamato;
 
             Image dim = UIFactory.CreatePanel(
                 overlay, "BannerDim",
                 nazarick
                     ? new Color(0.06f, 0f, 0.02f, 0.96f)
-                    : new Color(0f, 0f, 0f, 0.92f));
+                    : (yamato
+                        ? new Color(0f, 0.02f, 0.08f, 0.96f)
+                        : new Color(0f, 0f, 0f, 0.92f)));
 
             UIFactory.Stretch(dim.rectTransform);
 
             if (nazarick)
                 BannerMagic.Create(overlay, unlock.Tint);
+            else if (yamato)
+                BannerMagic.Create(overlay, unlock.Tint, true);
 
             Button next = dim.gameObject.AddComponent<Button>();
 
@@ -1857,6 +1900,69 @@ namespace MultiverseCardBattle.Screens
                 attacker,
                 candidate.TargetObject as CardInstance,
                 candidate.TargetObject as BattlePlayer)));
+        }
+
+        // ยูนิตของเราที่แปลงร่าง Devil Trigger ได้ตอนนี้ (null = ไม่มี)
+        private CardInstance FindDevilTriggerCard()
+        {
+            if (battle == null)
+                return null;
+
+            foreach (CardInstance card in Human.Field)
+            {
+                if (DevilTriggerCommand.Validate(battle, Human, card).Success)
+                    return card;
+            }
+
+            return null;
+        }
+
+        private void RefreshDevilTrigger(bool myTurn)
+        {
+            devilRoot.gameObject.SetActive(
+                myTurn && FindDevilTriggerCard() != null);
+
+            // เพิ่งแปลงร่าง: ไฟสีน้ำเงินลุกที่การ์ดทันที
+            if (devilFxInstance != 0)
+            {
+                CardView view;
+
+                if (viewsByInstance.TryGetValue(devilFxInstance, out view) &&
+                    view != null)
+                {
+                    Vector3 position = view.transform.position;
+
+                    UiFx.Ring(fxLayer, position,
+                        new Color(0.3f, 0.65f, 1f, 0.9f), 80f, 520f, 0.7f);
+
+                    UiFx.Burst(fxLayer, position,
+                        new Color(0.25f, 0.55f, 1f, 1f), 46, 340f, 40f, 1.1f, -140f);
+
+                    CardFx.Flash(view, new Color(0.4f, 0.7f, 1f, 1f));
+                }
+
+                devilFxInstance = 0;
+            }
+        }
+
+        private void OnDevilTriggerClicked()
+        {
+            if (!CanAct())
+                return;
+
+            CardInstance card = FindDevilTriggerCard();
+
+            if (card == null)
+                return;
+
+            ClearSelection();
+
+            ActionResult result = battle.Submit(new DevilTriggerCommand(Human, card));
+
+            if (result.Success)
+                devilFxInstance = card.InstanceID;
+
+            Report(result);
         }
 
         private void OnEndTurnClicked()

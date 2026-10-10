@@ -521,8 +521,14 @@ namespace MultiverseCardBattle.Battle
             if (target.Zone != CardZone.Field)
                 return 0;
 
+            // Overwhelming Power: ความเสียหายจากการโจมตีของยูนิตนี้ไม่ถูกลดด้วย Immune / Defense Up / Weakness
+            bool overwhelming =
+                source != null &&
+                ActiveEffectSource == null &&
+                source.HasPassive(CardPassive.OverwhelmingPower);
+
             // Immune: ลดความเสียหายทุกครั้งที่โดน (เช่น Immune 3 โดน 5 เหลือ 2)
-            int immune = target.ImmuneAmount;
+            int immune = overwhelming ? 0 : target.ImmuneAmount;
 
             if (immune > 0)
             {
@@ -552,7 +558,8 @@ namespace MultiverseCardBattle.Battle
             if (!trueDamage)
             {
                 // ผู้โจมตีอ่อนแรง: สร้างความเสียหายลดลงครึ่งหนึ่ง
-                if (source != null && source.HasStatus(StatusType.Weakness))
+                if (source != null && !overwhelming &&
+                    source.HasStatus(StatusType.Weakness))
                     amount = Mathf.Max(1, amount / 2);
 
                 // เป้าหมายเปราะบาง: ได้รับเพิ่ม 50% (ปัดขึ้น)
@@ -563,7 +570,9 @@ namespace MultiverseCardBattle.Battle
 
                 if (!exposed)
                 {
-                    int defense = target.StatusValue(StatusType.DefenseUp);
+                    int defense = overwhelming
+                        ? 0
+                        : target.StatusValue(StatusType.DefenseUp);
 
                     if (defense > 0)
                         amount = Mathf.Max(1, amount - defense);
@@ -579,6 +588,8 @@ namespace MultiverseCardBattle.Battle
 
             if (target.CurrentHealth < 0)
                 target.CurrentHealth = 0;
+
+            target.DamagedSinceTurnStart = true;
 
             // จดว่าดาเมจนี้มาจากเอฟเฟกต์ของใคร (ไม่ใช่การต่อสู้) ไว้ตัดสินสาเหตุการตาย
             target.LastEffectPlayerID =
@@ -671,6 +682,8 @@ namespace MultiverseCardBattle.Battle
                 return 0;
 
             if (!trueDamage && source != null &&
+                ActiveEffectSource == null &&
+                !source.HasPassive(CardPassive.OverwhelmingPower) &&
                 source.HasStatus(StatusType.Weakness))
                 amount = Mathf.Max(1, amount / 2);
 
@@ -893,6 +906,8 @@ namespace MultiverseCardBattle.Battle
             }
         }
 
+        private const int ConcentrationBonus = 2;
+        private const int SinDevilHeal = 3;
         private const int DarkWisdomCap = 3;
         private const int MaxEnergyCap = 10;
 
@@ -908,6 +923,27 @@ namespace MultiverseCardBattle.Battle
                 return;
 
             ResolveDoom(player);
+
+            foreach (CardInstance unit in new List<CardInstance>(player.Field))
+            {
+                if (unit.Zone != CardZone.Field)
+                    continue;
+
+                // Concentration: ไม่โดนดาเมจตั้งแต่ต้นเทิร์นก่อน ATK +2 จนจบเทิร์น
+                if (unit.HasPassive(CardPassive.Concentration) &&
+                    !unit.DamagedSinceTurnStart)
+                {
+                    unit.TurnAttackBonus += ConcentrationBonus;
+
+                    Log(unit.Data.CardName + " concentrates (+" + ConcentrationBonus + " Attack)");
+                }
+
+                unit.DamagedSinceTurnStart = false;
+
+                // Sin Devil's Regeneration
+                if (unit.HasPassive(CardPassive.SinDevilRegeneration))
+                    HealUnit(null, unit, SinDevilHeal);
+            }
 
             foreach (CardInstance unit in new List<CardInstance>(player.Field))
             {

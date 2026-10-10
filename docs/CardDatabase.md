@@ -115,6 +115,12 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   (destroys at the start of the caster's next turn), `CardPassive` flags (Grasp Heart / Dark Wisdom / Supreme Magic Caster /
   Undead Overlord) and `BattleManager.PendingTarget` (the player clicks the Grasp Heart target at turn start). Kill causes are
   tracked via `BattleManager.ActiveEffectSource` and `CardInstance.LastEffectSource`.
+- `Vergil, The Alpha and the Omega` (`EVT_004`) is unlocked by "The Power of the Yamato": win a match without playing any
+  Spell in which one unit attacks 3 times in total without dying. Judgment Cut uses the `GrantExtraAttack` effect; Concentration,
+  Devil Trigger, Sin Devil's Regeneration and Overwhelming Power are `CardPassive` flags. The **DEVIL TRIGGER** button
+  (blue flames, right column of the battle screen) sends `DevilTriggerCommand`: once per match, during your turn but not the
+  turn Vergil is summoned. It turns Vergil into `TKN_006` (Awakened Dark Slayer) for 2 of your turns, keeping position,
+  damage and attacks used; on revert HP is clamped to Vergil's normal max.
 - Disenchant gives Dust (Common 5, Rare 20, Epic 100, Legendary 400). Crafting costs Dust
   (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.
 - Achievements live in `Data/AchievementService.cs`; stats are stored in the save file (version 3).

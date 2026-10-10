@@ -126,6 +126,7 @@ namespace MultiverseCardBattle.Battle
                 foreach (CardInstance card in player.Field)
                 {
                     card.TurnAttackBonus = 0;
+                    card.ExtraAttacks = 0;
 
                     if (card.TempUnstoppableUntil >= 0 && TotalTurns >= card.TempUnstoppableUntil)
                     {
