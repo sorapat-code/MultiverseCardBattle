@@ -508,16 +508,31 @@ namespace MultiverseCardBattle.Screens
                 {
                     int previous;
 
-                    if (lastHealth.TryGetValue(card.InstanceID, out previous) &&
-                        previous != card.CurrentHealth)
+                    bool known =
+                        lastHealth.TryGetValue(card.InstanceID, out previous);
+
+                    // ยูนิตใหม่บนสนาม (ไม่นับการวาดครั้งแรก) ให้เด้งเข้า
+                    if (!known && lastFieldCount >= 0 &&
+                        viewsByInstance.TryGetValue(card.InstanceID, out CardView entered))
+                    {
+                        CardFx.Pop(entered);
+                    }
+
+                    if (known && previous != card.CurrentHealth)
                     {
                         CardView view;
 
                         if (viewsByInstance.TryGetValue(card.InstanceID, out view))
                         {
-                            SpawnDelta(
-                                view.transform.position,
-                                card.CurrentHealth - previous);
+                            int delta = card.CurrentHealth - previous;
+
+                            SpawnDelta(view.transform.position, delta);
+
+                            CardFx.Flash(
+                                view,
+                                delta < 0
+                                    ? new Color(1f, 0.15f, 0.15f, 0.65f)
+                                    : new Color(0.3f, 1f, 0.4f, 0.55f));
                         }
 
                         NoteChange(card.CurrentHealth - previous);
