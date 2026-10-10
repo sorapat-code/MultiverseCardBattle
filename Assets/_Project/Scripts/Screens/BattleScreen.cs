@@ -91,7 +91,7 @@ namespace MultiverseCardBattle.Screens
             // CardActionTest ใช้ทดสอบ Effect ในซีนนี้ จะไปแก้สถานะการต่อสู้จริง
             // จึงปิดไว้ (ปิดก่อน Start ของมันทำงาน)
             foreach (CardActionTest test in
-                FindObjectsByType<CardActionTest>(FindObjectsSortMode.None))
+                FindObjectsByType<CardActionTest>())
             {
                 test.enabled = false;
             }

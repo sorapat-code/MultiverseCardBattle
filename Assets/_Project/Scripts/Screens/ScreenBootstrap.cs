@@ -86,8 +86,7 @@ namespace MultiverseCardBattle.Screens
                     // ปิดสคริปต์ทดสอบ Effect ก่อนที่ Start จะทำงาน
                     // (ไม่งั้นมันจะแก้สถานะการต่อสู้จริง)
                     foreach (MultiverseCardBattle.Effects.CardActionTest test in
-                        Object.FindObjectsByType<MultiverseCardBattle.Effects.CardActionTest>(
-                            FindObjectsSortMode.None))
+                        Object.FindObjectsByType<MultiverseCardBattle.Effects.CardActionTest>())
                     {
                         test.enabled = false;
                     }
