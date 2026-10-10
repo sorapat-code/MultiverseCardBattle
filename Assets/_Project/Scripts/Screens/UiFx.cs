@@ -1,0 +1,293 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace MultiverseCardBattle.Screens
+{
+    /// <summary>
+    /// เอฟเฟกต์ UI สั้นๆ ที่สร้างจากโค้ด: อนุภาค (Burst) วงกระแทก (Ring) และรอยฟัน (Slash)
+    /// ใช้เวลาแบบ unscaled
+    /// </summary>
+    public class UiFx : MonoBehaviour
+    {
+        private enum Kind
+        {
+            Particle,
+            Ring,
+            Slash
+        }
+
+        private Kind kind;
+        private Image image;
+        private RectTransform rect;
+        private Color color;
+        private Vector2 velocity;
+        private float gravity;
+        private float age;
+        private float life;
+        private float startSize;
+        private float endSize;
+        private float thickness;
+
+        private static UiFx Make(
+            Transform parent, Vector3 world, Color color, Sprite sprite,
+            Kind kind, float life)
+        {
+            Image image = UIFactory.CreatePanel(parent, "Fx", color);
+
+            image.sprite = sprite;
+            image.type = Image.Type.Simple;
+            image.raycastTarget = false;
+
+            RectTransform rect = image.rectTransform;
+
+            rect.position = world;
+
+            UiFx fx = image.gameObject.AddComponent<UiFx>();
+
+            fx.kind = kind;
+            fx.image = image;
+            fx.rect = rect;
+            fx.color = color;
+            fx.life = Mathf.Max(0.05f, life);
+
+            return fx;
+        }
+
+        /// <summary>อนุภาคกระจายออกจากจุดเดียว (gravity ติดลบ = ลอยขึ้น)</summary>
+        public static void Burst(
+            Transform parent, Vector3 world, Color color,
+            int count, float speed, float size, float life,
+            float gravity = 0f)
+        {
+            if (parent == null)
+                return;
+
+            for (int i = 0; i < count; i++)
+            {
+                UiFx fx = Make(parent, world, color, UIShapes.Glow, Kind.Particle, life * Random.Range(0.7f, 1.2f));
+
+                float angle = Random.value * Mathf.PI * 2f;
+                float power = speed * Random.Range(0.35f, 1f);
+
+                fx.velocity = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * power;
+                fx.gravity = gravity;
+                fx.startSize = size * Random.Range(0.6f, 1.2f);
+                fx.endSize = fx.startSize * 0.2f;
+
+                fx.rect.sizeDelta = Vector2.one * fx.startSize;
+            }
+        }
+
+        /// <summary>วงแหวนขยายออกแล้วจาง</summary>
+        public static void Ring(
+            Transform parent, Vector3 world, Color color,
+            float fromSize, float toSize, float life)
+        {
+            if (parent == null)
+                return;
+
+            UiFx fx = Make(parent, world, color, UIShapes.RingCircle, Kind.Ring, life);
+
+            fx.startSize = fromSize;
+            fx.endSize = toSize;
+
+            fx.rect.sizeDelta = Vector2.one * fromSize;
+        }
+
+        /// <summary>รอยฟัน/แสงวาบเป็นเส้นยาวพุ่งออก</summary>
+        public static void Slash(
+            Transform parent, Vector3 world, Color color,
+            float length = 260f, float thick = 30f, float life = 0.28f)
+        {
+            if (parent == null)
+                return;
+
+            UiFx fx = Make(parent, world, color, UIShapes.Glow, Kind.Slash, life);
+
+            fx.startSize = length * 0.3f;
+            fx.endSize = length;
+            fx.thickness = thick;
+
+            fx.rect.localRotation = Quaternion.Euler(0f, 0f, Random.Range(25f, 65f) * (Random.value < 0.5f ? 1f : -1f));
+            fx.rect.sizeDelta = new Vector2(fx.startSize, thick);
+        }
+
+        private void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+
+            age += dt;
+
+            float t = Mathf.Clamp01(age / life);
+
+            Color c = color;
+
+            switch (kind)
+            {
+                case Kind.Particle:
+                    velocity.y -= gravity * dt;
+
+                    rect.localPosition += (Vector3)(velocity * dt);
+
+                    rect.sizeDelta = Vector2.one * Mathf.Lerp(startSize, endSize, t);
+
+                    c.a = color.a * (1f - t);
+                    break;
+
+                case Kind.Ring:
+                {
+                    float ease = 1f - (1f - t) * (1f - t);
+
+                    rect.sizeDelta = Vector2.one * Mathf.Lerp(startSize, endSize, ease);
+
+                    c.a = color.a * (1f - t);
+                    break;
+                }
+
+                case Kind.Slash:
+                {
+                    float ease = 1f - (1f - t) * (1f - t) * (1f - t);
+
+                    rect.sizeDelta = new Vector2(
+                        Mathf.Lerp(startSize, endSize, ease),
+                        thickness * (1f - t * 0.7f));
+
+                    c.a = color.a * (1f - t * t);
+                    break;
+                }
+            }
+
+            image.color = c;
+
+            if (t >= 1f)
+                Destroy(gameObject);
+        }
+    }
+
+    /// <summary>
+    /// ฝุ่น/ประกายลอยช้าๆ เป็นฉากหลัง พร้อมขอบจอมืด ใส่ในทุกหน้าเพื่อให้ดูมีบรรยากาศ
+    /// </summary>
+    public class AmbientFx : MonoBehaviour
+    {
+        private const int MoteCount = 34;
+
+        private RectTransform area;
+        private RectTransform[] motes;
+        private Image[] images;
+        private float[] speed;
+        private float[] sway;
+        private float[] phase;
+        private float[] baseX;
+        private float[] alpha;
+        private Color[] colors;
+
+        public static void Attach(Transform canvas, bool battle)
+        {
+            RectTransform area = UIFactory.CreateRect("Ambient", canvas);
+
+            UIFactory.Stretch(area);
+
+            AmbientFx fx = area.gameObject.AddComponent<AmbientFx>();
+
+            fx.Build(area, battle);
+
+            // ขอบจอมืดทับฝุ่น แต่ยังอยู่ใต้ UI ทั้งหมด
+            Image vignette = UIFactory.CreatePanel(
+                canvas, "Vignette", new Color(0f, 0f, 0f, 1f));
+
+            vignette.sprite = UIShapes.Vignette;
+            vignette.type = Image.Type.Simple;
+            vignette.raycastTarget = false;
+
+            UIFactory.Stretch(vignette.rectTransform);
+        }
+
+        private void Build(RectTransform root, bool battle)
+        {
+            area = root;
+
+            motes = new RectTransform[MoteCount];
+            images = new Image[MoteCount];
+            speed = new float[MoteCount];
+            sway = new float[MoteCount];
+            phase = new float[MoteCount];
+            baseX = new float[MoteCount];
+            alpha = new float[MoteCount];
+            colors = new Color[MoteCount];
+
+            for (int i = 0; i < MoteCount; i++)
+            {
+                Color tint = battle
+                    ? (i % 4 == 0
+                        ? new Color(1f, 0.6f, 0.25f, 1f)
+                        : new Color(0.7f, 0.95f, 0.85f, 1f))
+                    : (i % 3 == 0
+                        ? new Color(1f, 0.55f, 0.25f, 1f)
+                        : new Color(1f, 0.82f, 0.45f, 1f));
+
+                Image image = UIFactory.CreatePanel(root, "Mote", tint);
+
+                image.sprite = UIShapes.Glow;
+                image.type = Image.Type.Simple;
+                image.raycastTarget = false;
+
+                float size = Random.Range(6f, 26f);
+
+                image.rectTransform.sizeDelta = Vector2.one * size;
+
+                motes[i] = image.rectTransform;
+                images[i] = image;
+                speed[i] = Random.Range(12f, 38f);
+                sway[i] = Random.Range(10f, 40f);
+                phase[i] = Random.value * 10f;
+                alpha[i] = Random.Range(0.08f, 0.32f);
+                colors[i] = tint;
+                baseX[i] = Random.Range(-960f, 960f);
+
+                motes[i].anchoredPosition = new Vector2(baseX[i], Random.Range(-540f, 540f));
+            }
+        }
+
+        private void Update()
+        {
+            if (motes == null)
+                return;
+
+            float dt = Time.unscaledDeltaTime;
+            float time = Time.unscaledTime;
+
+            Rect rect = area.rect;
+
+            float halfH = rect.height * 0.5f + 30f;
+            float halfW = rect.width * 0.5f;
+
+            for (int i = 0; i < MoteCount; i++)
+            {
+                Vector2 position = motes[i].anchoredPosition;
+
+                position.y += speed[i] * dt;
+
+                position.x = Mathf.Clamp(
+                    baseX[i] + Mathf.Sin(time * 0.35f + phase[i]) * sway[i],
+                    -halfW, halfW);
+
+                if (position.y > halfH)
+                {
+                    position.y = -halfH;
+                    baseX[i] = Random.Range(-halfW, halfW);
+                }
+
+                motes[i].anchoredPosition = position;
+
+                // กะพริบเบาๆ
+                float twinkle = 0.65f + 0.35f * Mathf.Sin(time * 1.3f + phase[i] * 3f);
+
+                Color c = colors[i];
+
+                c.a = alpha[i] * twinkle;
+
+                images[i].color = c;
+            }
+        }
+    }
+}

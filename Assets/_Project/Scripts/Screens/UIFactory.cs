@@ -438,6 +438,9 @@ namespace MultiverseCardBattle.Screens
 
             Stretch(background.rectTransform);
 
+            // ฝุ่นประกายลอยและขอบจอมืด ให้ทุกหน้ามีบรรยากาศ
+            AmbientFx.Attach(canvas.transform, battle);
+
             return canvas.GetComponent<RectTransform>();
         }
 

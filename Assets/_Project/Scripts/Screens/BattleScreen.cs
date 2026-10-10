@@ -96,6 +96,11 @@ namespace MultiverseCardBattle.Screens
             new Dictionary<int, CardView>();
 
         private Dictionary<int, int> lastHealth = new Dictionary<int, int>();
+        private Dictionary<int, int> lastAttacks = new Dictionary<int, int>();
+        private Dictionary<int, Vector3> lastPositions = new Dictionary<int, Vector3>();
+        private int lastHumanGrave = -1;
+        private int lastAiGrave = -1;
+        private RectTransform fxLayer;
         private int lastHumanHealth = -1;
         private int lastAiHealth = -1;
         private int lastFieldCount = -1;
@@ -407,6 +412,11 @@ namespace MultiverseCardBattle.Screens
             UIFactory.AddTextShadow(bannerText);
 
             bannerRoot.gameObject.SetActive(false);
+
+            // ชั้นเอฟเฟกต์ (อนุภาค/รอยฟัน) อยู่เหนือการ์ด ใต้หน้าต่างต่างๆ
+            fxLayer = UIFactory.CreateRect("FxLayer", root);
+
+            UIFactory.Stretch(fxLayer);
 
             // หน้าต่างดูกองทิ้ง / มือศัตรู
             pileOverlay = UIFactory.CreateRect("PileOverlay", root);
@@ -833,6 +843,8 @@ namespace MultiverseCardBattle.Screens
 
                 view.ShowInstance(card);
 
+                CardHover.Add(view);
+
                 viewsByInstance[card.InstanceID] = view;
                 view.HoverEntered += ShowPreview;
                 view.HoverExited += HidePreview;
@@ -917,6 +929,8 @@ namespace MultiverseCardBattle.Screens
             sawHeal = false;
 
             Dictionary<int, int> now = new Dictionary<int, int>();
+            Dictionary<int, int> nowAttacks = new Dictionary<int, int>();
+            Dictionary<int, Vector3> nowPositions = new Dictionary<int, Vector3>();
 
             BattlePlayer[] players = { Human, Ai };
 
@@ -934,7 +948,34 @@ namespace MultiverseCardBattle.Screens
                         viewsByInstance.TryGetValue(card.InstanceID, out CardView entered))
                     {
                         CardFx.Pop(entered);
+
+                        UiFx.Ring(
+                            fxLayer, entered.transform.position,
+                            new Color(1f, 0.85f, 0.45f, 0.8f), 60f, 300f, 0.45f);
+
+                        UiFx.Burst(
+                            fxLayer, entered.transform.position,
+                            new Color(1f, 0.85f, 0.45f, 0.9f), 10, 220f, 22f, 0.5f);
                     }
+
+                    // ยูนิตโจมตี: พุ่งไปทางสนามฝั่งตรงข้าม
+                    int previousAttacks;
+
+                    if (lastAttacks.TryGetValue(card.InstanceID, out previousAttacks) &&
+                        card.AttacksThisTurn > previousAttacks &&
+                        viewsByInstance.TryGetValue(card.InstanceID, out CardView attacker))
+                    {
+                        CardFx.Lunge(
+                            attacker,
+                            player == Human ? Vector2.up : Vector2.down);
+                    }
+
+                    nowAttacks[card.InstanceID] = card.AttacksThisTurn;
+
+                    CardView located;
+
+                    if (viewsByInstance.TryGetValue(card.InstanceID, out located))
+                        nowPositions[card.InstanceID] = located.transform.position;
 
                     if (known && previous != card.CurrentHealth)
                     {
@@ -951,6 +992,8 @@ namespace MultiverseCardBattle.Screens
                                 delta < 0
                                     ? new Color(1f, 0.15f, 0.15f, 0.65f)
                                     : new Color(0.3f, 1f, 0.4f, 0.55f));
+
+                            PlayImpact(view.transform.position, delta);
                         }
 
                         NoteChange(card.CurrentHealth - previous);
@@ -964,10 +1007,33 @@ namespace MultiverseCardBattle.Screens
             foreach (int id in lastHealth.Keys)
             {
                 if (!now.ContainsKey(id))
+                {
                     sawDamage = true;
+
+                    Vector3 deathPos;
+
+                    if (lastPositions.TryGetValue(id, out deathPos))
+                    {
+                        UiFx.Ring(
+                            fxLayer, deathPos, new Color(1f, 0.4f, 0.25f, 0.8f),
+                            50f, 280f, 0.4f);
+
+                        UiFx.Burst(
+                            fxLayer, deathPos, new Color(0.9f, 0.35f, 0.2f, 1f),
+                            16, 300f, 26f, 0.7f, 380f);
+
+                        UiFx.Burst(
+                            fxLayer, deathPos, new Color(0.25f, 0.2f, 0.2f, 0.9f),
+                            8, 160f, 40f, 0.8f, -60f);
+                    }
+                }
             }
 
             lastHealth = now;
+            lastAttacks = nowAttacks;
+            lastPositions = nowPositions;
+
+            PlaySpellEffects();
 
             CheckLeader(Human, ref lastHumanHealth, playerLeader);
             CheckLeader(Ai, ref lastAiHealth, enemyLeader);
@@ -992,10 +1058,94 @@ namespace MultiverseCardBattle.Screens
 
                 SpawnDelta(button.transform.position, delta);
 
+                PlayImpact(button.transform.position, delta);
+
                 NoteChange(delta);
             }
 
             last = player.LeaderHealth;
+        }
+
+        // ดาเมจ = รอยฟันแดง + ประกาย / ฮีล = ประกายเขียวลอยขึ้น
+        private void PlayImpact(Vector3 position, int delta)
+        {
+            if (delta < 0)
+            {
+                float power = Mathf.Clamp(-delta, 1, 8);
+
+                UiFx.Slash(
+                    fxLayer, position, new Color(1f, 0.35f, 0.3f, 0.95f),
+                    200f + power * 18f, 26f + power * 2f);
+
+                UiFx.Burst(
+                    fxLayer, position, new Color(1f, 0.55f, 0.35f, 1f),
+                    6 + (int)power * 2, 260f + power * 20f, 20f, 0.45f, 300f);
+            }
+            else if (delta > 0)
+            {
+                UiFx.Burst(
+                    fxLayer, position, new Color(0.45f, 1f, 0.55f, 0.95f),
+                    12, 90f, 22f, 0.9f, -140f);
+
+                UiFx.Ring(
+                    fxLayer, position, new Color(0.5f, 1f, 0.6f, 0.7f),
+                    40f, 220f, 0.55f);
+            }
+        }
+
+        // สเปลที่เพิ่งลงกองทิ้ง: ปล่อยพลังจากสนามฝั่งผู้ใช้ ตามธาตุของการ์ด
+        private void PlaySpellEffects()
+        {
+            PlaySpellsFor(Human, ref lastHumanGrave, playerField);
+            PlaySpellsFor(Ai, ref lastAiGrave, enemyField);
+        }
+
+        private void PlaySpellsFor(
+            BattlePlayer player, ref int last, RectTransform lane)
+        {
+            int count = player.Graveyard.Count;
+
+            if (last >= 0 && count > last)
+            {
+                for (int i = last; i < count; i++)
+                {
+                    CardInstance card = player.Graveyard[i];
+
+                    if (card == null || card.Data == null ||
+                        card.Data.Type != CardType.Spell)
+                    {
+                        continue;
+                    }
+
+                    Color color = SpellColor(card.Data);
+
+                    UiFx.Ring(
+                        fxLayer, lane.position, new Color(color.r, color.g, color.b, 0.85f),
+                        80f, 520f, 0.6f);
+
+                    UiFx.Burst(
+                        fxLayer, lane.position, color, 26, 420f, 30f, 0.8f, 120f);
+
+                }
+            }
+
+            last = count;
+        }
+
+        private static Color SpellColor(CardData data)
+        {
+            CardTag tags = data.Tags;
+
+            if ((tags & CardTag.Fire) != 0) return new Color(1f, 0.55f, 0.2f, 1f);
+            if ((tags & CardTag.Ice) != 0) return new Color(0.55f, 0.88f, 1f, 1f);
+            if ((tags & CardTag.Lightning) != 0) return new Color(1f, 0.95f, 0.4f, 1f);
+            if ((tags & CardTag.Dark) != 0) return new Color(0.65f, 0.3f, 0.95f, 1f);
+            if ((tags & CardTag.Water) != 0) return new Color(0.3f, 0.6f, 1f, 1f);
+            if ((tags & CardTag.Wind) != 0) return new Color(0.6f, 1f, 0.8f, 1f);
+            if ((tags & CardTag.Earth) != 0) return new Color(0.75f, 0.58f, 0.3f, 1f);
+            if ((tags & CardTag.Light) != 0) return new Color(1f, 0.96f, 0.75f, 1f);
+
+            return new Color(1f, 0.85f, 0.45f, 1f);
         }
 
         private void NoteChange(int delta)

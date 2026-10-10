@@ -55,5 +55,23 @@ namespace MultiverseCardBattle.Tests
         {
             Assert.IsNull(UIArt.Get("this_file_does_not_exist"));
         }
+
+        [Test]
+        public void EffectSprites_AreBuiltWithExpectedAlpha()
+        {
+            Assert.IsNotNull(UIShapes.Glow);
+            Assert.IsNotNull(UIShapes.Vignette);
+            Assert.IsNotNull(UIShapes.RingCircle);
+
+            Texture2D glow = UIShapes.Glow.texture;
+
+            Assert.AreEqual(0f, glow.GetPixel(0, 0).a, 0.01f);
+            Assert.Greater(glow.GetPixel(32, 32).a, 0.9f);
+
+            Texture2D vignette = UIShapes.Vignette.texture;
+
+            Assert.AreEqual(0f, vignette.GetPixel(128, 72).a, 0.01f);
+            Assert.Greater(vignette.GetPixel(0, 0).a, 0.3f);
+        }
     }
 }

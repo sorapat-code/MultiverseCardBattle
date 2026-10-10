@@ -17,6 +17,9 @@ namespace MultiverseCardBattle.Screens
         private static Sprite rounded;
         private static Sprite bevel;
         private static Sprite ring;
+        private static Sprite glow;
+        private static Sprite vignette;
+        private static Sprite ringCircle;
         private static Sprite menuBackdrop;
         private static Sprite battleBackdrop;
         private static Sprite divider;
@@ -328,6 +331,95 @@ namespace MultiverseCardBattle.Screens
                     float edgeFade = (y == 0 || y == height - 1) ? 0.5f : 1f;
 
                     texture.SetPixel(x, y, new Color(1f, 1f, 1f, alpha * edgeFade));
+                }
+            }
+
+            texture.Apply();
+
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, width, height),
+                new Vector2(0.5f, 0.5f),
+                100f);
+        }
+
+        // จุดเรืองแสงนุ่มๆ (สีขาว ย้อมสีได้) ใช้ทำอนุภาคและแสง
+        public static Sprite Glow
+        {
+            get
+            {
+                if (glow == null)
+                    glow = BuildRadial(64, 64, 0);
+
+                return glow;
+            }
+        }
+
+        // ขอบจอมืดนุ่มๆ (สีดำ โปร่งใสตรงกลาง)
+        public static Sprite Vignette
+        {
+            get
+            {
+                if (vignette == null)
+                    vignette = BuildRadial(256, 144, 1);
+
+                return vignette;
+            }
+        }
+
+        // วงแหวนบางๆ เรืองแสง (สีขาว ย้อมสีได้) ใช้ทำคลื่นกระแทก
+        public static Sprite RingCircle
+        {
+            get
+            {
+                if (ringCircle == null)
+                    ringCircle = BuildRadial(128, 128, 2);
+
+                return ringCircle;
+            }
+        }
+
+        // mode 0 = เรืองแสง, 1 = ขอบมืด, 2 = วงแหวน
+        private static Sprite BuildRadial(int width, int height, int mode)
+        {
+            Texture2D texture = NewTexture(width, height);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    float dx = (x + 0.5f) / width * 2f - 1f;
+                    float dy = (y + 0.5f) / height * 2f - 1f;
+
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    float a;
+                    float c = 1f;
+
+                    if (mode == 0)
+                    {
+                        a = Mathf.Clamp01(1f - d);
+                        a *= a;
+                    }
+                    else if (mode == 1)
+                    {
+                        float e = Mathf.Sqrt(dx * dx * 0.8f + dy * dy * 1.1f);
+
+                        a = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.55f, 1.15f, e)) * 0.8f;
+                        c = 0f;
+                    }
+                    else
+                    {
+                        float band = Mathf.Abs(d - 0.82f);
+
+                        a = Mathf.Clamp01(1f - band / 0.14f);
+                        a *= a;
+
+                        if (d > 1f)
+                            a = 0f;
+                    }
+
+                    texture.SetPixel(x, y, new Color(c, c, c, a));
                 }
             }
 
