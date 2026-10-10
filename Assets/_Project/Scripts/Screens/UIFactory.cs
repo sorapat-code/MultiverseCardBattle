@@ -13,13 +13,18 @@ namespace MultiverseCardBattle.Screens
     /// </summary>
     public static class UIFactory
     {
-        public static readonly Color Background = new Color(0.08f, 0.09f, 0.13f, 1f);
-        public static readonly Color Panel = new Color(0.14f, 0.16f, 0.22f, 0.95f);
-        public static readonly Color Accent = new Color(0.25f, 0.45f, 0.85f, 1f);
-        public static readonly Color Danger = new Color(0.75f, 0.25f, 0.25f, 1f);
-        public static readonly Color Success = new Color(0.25f, 0.65f, 0.35f, 1f);
-        public static readonly Color Muted = new Color(0.35f, 0.38f, 0.45f, 1f);
-        public static readonly Color TextColor = new Color(0.95f, 0.96f, 0.98f, 1f);
+        // ธีมแฟนตาซี: ไม้เข้ม ทอง และกระดาษหนัง
+        public static readonly Color Background = new Color(0.08f, 0.06f, 0.05f, 1f);
+        public static readonly Color Panel = new Color(0.17f, 0.12f, 0.09f, 0.95f);
+        public static readonly Color Accent = new Color(0.66f, 0.46f, 0.16f, 1f);
+        public static readonly Color Danger = new Color(0.66f, 0.2f, 0.18f, 1f);
+        public static readonly Color Success = new Color(0.27f, 0.52f, 0.28f, 1f);
+        public static readonly Color Muted = new Color(0.34f, 0.3f, 0.27f, 1f);
+        public static readonly Color TextColor = new Color(0.97f, 0.93f, 0.83f, 1f);
+
+        // สีทองของกรอบและหัวข้อ
+        public static readonly Color Gold = new Color(0.9f, 0.72f, 0.33f, 1f);
+        public static readonly Color GoldDim = new Color(0.62f, 0.48f, 0.22f, 1f);
 
         private static Font cachedFont;
 
@@ -27,6 +32,17 @@ namespace MultiverseCardBattle.Screens
         {
             get
             {
+                if (cachedFont == null)
+                {
+                    // ฟอนต์เซอริฟแนวแฟนตาซี (ใช้ตัวแรกที่เครื่องมี) ไม่มีก็ใช้ฟอนต์ในตัว
+                    cachedFont = Font.CreateDynamicFontFromOSFont(
+                        new[] { "Cinzel", "Palatino Linotype", "Georgia", "Cambria" },
+                        18);
+
+                    if (cachedFont != null && cachedFont.fontNames.Length == 0)
+                        cachedFont = null;
+                }
+
                 if (cachedFont == null)
                 {
                     cachedFont =
@@ -146,6 +162,53 @@ namespace MultiverseCardBattle.Screens
             return image;
         }
 
+        /// <summary>
+        /// กรอบเส้นทองรอบ Parent (Image มุมมนแบบเส้น) ไม่รับการคลิก
+        /// </summary>
+        public static Image AddRing(
+            Transform parent, Color color, float cornerSize = 10f)
+        {
+            Image ring = CreatePanel(parent, "Ring", color);
+
+            ring.sprite = UIShapes.Ring;
+            ring.type = Image.Type.Sliced;
+            ring.pixelsPerUnitMultiplier = 16f / Mathf.Max(1f, cornerSize);
+            ring.raycastTarget = false;
+
+            Stretch(ring.rectTransform);
+
+            return ring;
+        }
+
+        /// <summary>
+        /// แผงมีกรอบทอง: พื้นสีเข้มมุมมน + เส้นกรอบ
+        /// </summary>
+        public static Image CreateFramedPanel(
+            Transform parent, string name, Color color, float cornerSize = 12f)
+        {
+            Image panel = CreateRoundedPanel(parent, name, color, cornerSize);
+
+            AddRing(panel.transform, GoldDim, cornerSize);
+
+            return panel;
+        }
+
+        /// <summary>
+        /// เส้นคั่นสีทองจางที่ปลาย กำหนดตำแหน่งแบบสัดส่วน
+        /// </summary>
+        public static Image CreateDivider(
+            Transform parent, float xMin, float yMin, float xMax, float yMax)
+        {
+            Image line = CreatePanel(parent, "Divider", Gold);
+
+            line.sprite = UIShapes.Divider;
+            line.raycastTarget = false;
+
+            SetAnchors(line.rectTransform, xMin, yMin, xMax, yMax);
+
+            return line;
+        }
+
         public static Text CreateText(
             Transform parent,
             string content,
@@ -185,7 +248,12 @@ namespace MultiverseCardBattle.Screens
 
             image.color = background;
 
-            UIShapes.MakeRounded(image, 10f);
+            // ปุ่มนูนสีตามธีม + กรอบทองบางๆ
+            image.sprite = UIShapes.Bevel;
+            image.type = Image.Type.Sliced;
+            image.pixelsPerUnitMultiplier = 16f / 10f;
+
+            AddRing(rect, GoldDim, 10f);
 
             Button button = rect.gameObject.AddComponent<Button>();
 
@@ -210,7 +278,18 @@ namespace MultiverseCardBattle.Screens
 
             Stretch(text.rectTransform);
 
+            AddTextShadow(text);
+
             return button;
+        }
+
+        /// <summary>เงาตัวอักษรให้อ่านง่ายบนพื้นหลายสี</summary>
+        public static void AddTextShadow(Text text)
+        {
+            Shadow shadow = text.gameObject.AddComponent<Shadow>();
+
+            shadow.effectColor = new Color(0f, 0f, 0f, 0.75f);
+            shadow.effectDistance = new Vector2(1.5f, -1.5f);
         }
 
         public static void SetButtonLabel(Button button, string label)
@@ -259,7 +338,11 @@ namespace MultiverseCardBattle.Screens
 
             Image background = root.gameObject.AddComponent<Image>();
 
-            background.color = new Color(0f, 0f, 0f, 0.25f);
+            background.color = new Color(0f, 0f, 0f, 0.32f);
+
+            UIShapes.MakeRounded(background, 12f);
+
+            AddRing(root, GoldDim, 12f);
 
             ScrollRect scroll = root.gameObject.AddComponent<ScrollRect>();
 
@@ -335,13 +418,23 @@ namespace MultiverseCardBattle.Screens
         /// <summary>
         /// สร้าง Canvas เต็มจอพร้อมพื้นหลัง คืน RectTransform ของ Canvas
         /// </summary>
-        public static RectTransform CreateScreenRoot(string name)
+        public static RectTransform CreateScreenRoot(
+            string name, bool battle = false)
         {
             EnsureEventSystem();
 
             Canvas canvas = CreateCanvas(name);
 
-            Image background = CreatePanel(canvas.transform, "Background", Background);
+            Image background = CreatePanel(canvas.transform, "Background", Color.white);
+
+            // ใช้รูปพื้นหลังจริงถ้ามีใน Resources/UI ไม่งั้นใช้ภาพไล่เฉดจากโค้ด
+            Sprite art = UIArt.Get(battle ? "bg_battle" : "bg_menu");
+
+            background.sprite = art != null
+                ? art
+                : (battle ? UIShapes.BattleBackdrop : UIShapes.MenuBackdrop);
+
+            background.raycastTarget = false;
 
             Stretch(background.rectTransform);
 
@@ -351,10 +444,15 @@ namespace MultiverseCardBattle.Screens
         public static Text CreateTitle(Transform parent, string title)
         {
             Text text = CreateText(
-                parent, title, 56, TextColor,
+                parent, title, 60, Gold,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
-            SetAnchors(text.rectTransform, 0.2f, 0.9f, 0.8f, 1f);
+            SetAnchors(text.rectTransform, 0.15f, 0.9f, 0.85f, 1f);
+
+            AddTextShadow(text);
+
+            // เส้นทองใต้หัวข้อ
+            CreateDivider(parent, 0.2f, 0.893f, 0.8f, 0.9f);
 
             return text;
         }

@@ -49,7 +49,7 @@ namespace MultiverseCardBattle.Screens
             Color color,
             float xMin, float yMin, float xMax, float yMax)
         {
-            Image image = UIFactory.CreateRoundedPanel(parent, name, color);
+            Image image = UIFactory.CreateFramedPanel(parent, name, color);
 
             UIFactory.SetAnchors(image.rectTransform, xMin, yMin, xMax, yMax);
 
