@@ -14,6 +14,12 @@ namespace MultiverseCardBattle.Core
         Pack
     }
 
+    public enum MusicTrack
+    {
+        Menu,
+        Battle
+    }
+
     /// <summary>
     /// เสียงเอฟเฟกต์สร้างจากโค้ด (คลื่นเสียงสังเคราะห์) จึงไม่ต้องมีไฟล์เสียง
     /// เปลี่ยนเป็นไฟล์เสียงจริงทีหลังได้โดยแก้เฉพาะคลาสนี้
@@ -29,7 +35,15 @@ namespace MultiverseCardBattle.Core
         private static AudioSource source;
         private static AudioSource musicSource;
 
-        private const float MusicVolume = 0.16f;
+        private const float MenuVolume = 0.16f;
+        private const float BattleVolume = 0.14f;
+
+        private static MusicFader musicFader;
+        private static bool musicStarted;
+        private static MusicTrack currentTrack;
+
+        private static readonly Dictionary<MusicTrack, AudioClip> musicClips =
+            new Dictionary<MusicTrack, AudioClip>();
 
         public static bool Muted
         {
@@ -52,33 +66,90 @@ namespace MultiverseCardBattle.Core
         }
 
         /// <summary>
-        /// เพลงพื้นหลังเรียบง่าย (อาร์เปจโจคอร์ด Am-F-C-G วน) สร้างจากโค้ด เล่นต่อเนื่องข้ามซีน
+        /// เล่นเพลงเมนู (เก็บไว้เพื่อความเข้ากันได้กับโค้ดเดิม)
         /// </summary>
         public static void StartMusic()
         {
-            if (musicSource == null)
-            {
-                GameObject go = new GameObject("Music");
+            PlayMusic(MusicTrack.Menu);
+        }
 
-                Object.DontDestroyOnLoad(go);
-
-                musicSource = go.AddComponent<AudioSource>();
-                musicSource.playOnAwake = false;
-                musicSource.loop = true;
-                musicSource.spatialBlend = 0f;
-                musicSource.volume = MusicVolume;
-
-                // วางไฟล์เพลงไว้ที่ Assets/_Project/Resources/Music/bgm (.mp3/.ogg/.wav)
-                // เกมจะใช้ไฟล์นั้นแทนเพลงที่สร้างจากโค้ด
-                AudioClip custom = Resources.Load<AudioClip>("Music/bgm");
-
-                musicSource.clip = custom != null ? custom : BuildMusic();
-            }
+        /// <summary>
+        /// เปลี่ยนเพลงพื้นหลังตามหน้าจอ: เมนูเป็นเพลงสงบ ตอนต่อสู้เป็นเพลงจังหวะเร็ว
+        /// เพลงทั้งสองสร้างจากโค้ด เล่นต่อเนื่องข้ามซีน และไม่เริ่มใหม่ถ้าเพลงเดิมอยู่แล้ว
+        /// วางไฟล์เพลงจริงไว้ที่ Assets/_Project/Resources/Music/ ชื่อ menu และ battle
+        /// (.mp3/.ogg/.wav) เกมจะใช้ไฟล์นั้นแทน (menu ใช้ bgm เป็นชื่อสำรอง)
+        /// </summary>
+        public static void PlayMusic(MusicTrack track)
+        {
+            EnsureMusicSource();
 
             musicSource.mute = Muted;
 
-            if (!musicSource.isPlaying)
-                musicSource.Play();
+            if (musicStarted && currentTrack == track)
+            {
+                if (!musicSource.isPlaying)
+                    musicSource.Play();
+
+                return;
+            }
+
+            musicStarted = true;
+            currentTrack = track;
+
+            musicFader.FadeTo(
+                GetMusicClip(track),
+                track == MusicTrack.Battle ? BattleVolume : MenuVolume);
+        }
+
+        private static void EnsureMusicSource()
+        {
+            if (musicSource != null && musicFader != null)
+                return;
+
+            GameObject go = new GameObject("Music");
+
+            Object.DontDestroyOnLoad(go);
+
+            musicSource = go.AddComponent<AudioSource>();
+            musicSource.playOnAwake = false;
+            musicSource.loop = true;
+            musicSource.spatialBlend = 0f;
+            musicSource.volume = 0f;
+
+            musicFader = go.AddComponent<MusicFader>();
+            musicFader.Setup(musicSource);
+
+            musicStarted = false;
+        }
+
+        public static AudioClip GetMusicClip(MusicTrack track)
+        {
+            AudioClip clip;
+
+            if (musicClips.TryGetValue(track, out clip) && clip != null)
+                return clip;
+
+            if (track == MusicTrack.Battle)
+            {
+                clip = Resources.Load<AudioClip>("Music/battle");
+
+                if (clip == null)
+                    clip = BuildBattleMusic();
+            }
+            else
+            {
+                clip = Resources.Load<AudioClip>("Music/menu");
+
+                if (clip == null)
+                    clip = Resources.Load<AudioClip>("Music/bgm");
+
+                if (clip == null)
+                    clip = BuildMenuMusic();
+            }
+
+            musicClips[track] = clip;
+
+            return clip;
         }
 
         /// <summary>
@@ -90,7 +161,8 @@ namespace MultiverseCardBattle.Core
                 musicSource.mute = Muted;
         }
 
-        private static AudioClip BuildMusic()
+        // เพลงเมนู: อาร์เปจโจสงบๆ คอร์ด Am-F-C-G วน
+        private static AudioClip BuildMenuMusic()
         {
             // คอร์ดละ 4 วินาที: ตัวโน้ต 4 ตัวของคอร์ด (ต่ำ -> สูง)
             float[][] chords =
@@ -159,6 +231,167 @@ namespace MultiverseCardBattle.Core
             clip.SetData(data, 0);
 
             return clip;
+        }
+
+        // เพลงต่อสู้: จังหวะเร็ว 150 BPM คีย์ Dm มีเบส กลอง เบสไลน์ และอาร์เปจโจ
+        private static AudioClip BuildBattleMusic()
+        {
+            // 3 โน้ตต่อคอร์ด + โน้ตเบส: Dm - Bb - C - A
+            float[][] chords =
+            {
+                new[] { 293.66f, 349.23f, 440.00f },
+                new[] { 233.08f, 293.66f, 349.23f },
+                new[] { 261.63f, 329.63f, 392.00f },
+                new[] { 220.00f, 277.18f, 329.63f }
+            };
+
+            float[] bass = { 73.42f, 58.27f, 65.41f, 55.00f };
+
+            int[] lead = { 2, 1, 2, 0, 2, 1, 0, 1 };
+
+            const float stepSeconds = 0.2f;   // โน้ตเขบ็ต 1 ชั้น ที่ 150 BPM
+            const int stepsPerBar = 8;
+            const int barsPerChord = 2;
+
+            int stepSamples = Mathf.RoundToInt(stepSeconds * SampleRate);
+            int chordSteps = stepsPerBar * barsPerChord;
+            int totalSteps = chordSteps * chords.Length;
+
+            float[] data = new float[stepSamples * totalSteps];
+
+            System.Random random = new System.Random(7);
+
+            for (int step = 0; step < totalSteps; step++)
+            {
+                int chord = step / chordSteps;
+                int stepInBar = step % stepsPerBar;
+                int start = step * stepSamples;
+
+                // เบส: ทุกจังหวะย่อย เน้นจังหวะแรกของห้อง
+                float bassFrequency = bass[chord] * (stepInBar % 4 == 3 ? 2f : 1f);
+                float bassGain = stepInBar == 0 ? 0.42f : 0.28f;
+
+                AddTone(data, start, stepSamples, bassFrequency,
+                    bassGain, 2.5f, 0.6f, 0.2f);
+
+                // ทำนองอาร์เปจโจ
+                float leadFrequency = chords[chord][lead[stepInBar]];
+
+                if (step % chordSteps >= stepsPerBar)
+                    leadFrequency *= 2f;   // ห้องที่สองสูงขึ้นหนึ่งออกเตฟ
+
+                AddTone(data, start, stepSamples, leadFrequency,
+                    0.13f, 1.6f, 0.5f, 0.33f);
+
+                // กลองใหญ่ทุกจังหวะ
+                if (stepInBar % 2 == 0)
+                    AddKick(data, start, stepSamples);
+
+                // สแนร์ที่จังหวะ 2 และ 4
+                if (stepInBar == 2 || stepInBar == 6)
+                    AddNoise(data, start, stepSamples, 0.11f, 0.3f, random, 190f);
+
+                // ไฮแฮตที่จังหวะย่อย
+                if (stepInBar % 2 == 1)
+                    AddNoise(data, start, stepSamples, 0.035f, 0.1f, random, 0f);
+            }
+
+            // ปรับระดับเสียงไม่ให้แตก
+            float peak = 0f;
+
+            for (int i = 0; i < data.Length; i++)
+                peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+
+            if (peak > 0.9f)
+            {
+                float scale = 0.9f / peak;
+
+                for (int i = 0; i < data.Length; i++)
+                    data[i] *= scale;
+            }
+
+            AudioClip clip =
+                AudioClip.Create("battle_music", data.Length, 1, SampleRate, false);
+
+            clip.SetData(data, 0);
+
+            return clip;
+        }
+
+        // โน้ตเสียงเดียวที่ค่อยๆ เบาลง พร้อมโอเวอร์โทนที่สอง/สาม
+        private static void AddTone(
+            float[] data, int start, int length, float frequency,
+            float gain, float decay, float second, float third)
+        {
+            for (int i = 0; i < length && start + i < data.Length; i++)
+            {
+                float t = (float)i / length;
+
+                float envelope = Mathf.Pow(1f - t, decay) *
+                    Mathf.Min(1f, i / (SampleRate * 0.005f));
+
+                float phase = 2f * Mathf.PI * frequency * i / SampleRate;
+
+                float tone =
+                    Mathf.Sin(phase) +
+                    second * Mathf.Sin(2f * phase) +
+                    third * Mathf.Sin(3f * phase);
+
+                data[start + i] += tone * envelope * gain;
+            }
+        }
+
+        // กลองใหญ่: ความถี่ลดจากสูงไปต่ำอย่างรวดเร็ว
+        private static void AddKick(float[] data, int start, int stepSamples)
+        {
+            int length = Mathf.Min(stepSamples, Mathf.RoundToInt(0.16f * SampleRate));
+
+            float phase = 0f;
+
+            for (int i = 0; i < length && start + i < data.Length; i++)
+            {
+                float t = (float)i / length;
+
+                float frequency = Mathf.Lerp(130f, 42f, Mathf.Sqrt(t));
+
+                phase += 2f * Mathf.PI * frequency / SampleRate;
+
+                float envelope = Mathf.Pow(1f - t, 2f);
+
+                data[start + i] += Mathf.Sin(phase) * envelope * 0.55f;
+            }
+        }
+
+        // เสียงซ่า (สแนร์/ไฮแฮต) ผสมโทนต่ำเล็กน้อยถ้าระบุความถี่
+        private static void AddNoise(
+            float[] data, int start, int stepSamples, float seconds,
+            float gain, System.Random random, float toneFrequency)
+        {
+            int length = Mathf.Min(stepSamples, Mathf.RoundToInt(seconds * SampleRate));
+
+            float previous = 0f;
+
+            for (int i = 0; i < length && start + i < data.Length; i++)
+            {
+                float t = (float)i / length;
+
+                float white = (float)(random.NextDouble() * 2.0 - 1.0);
+
+                // ลบค่าก่อนหน้าออกให้เหลือเสียงแหลม (ไฮพาสอย่างง่าย)
+                float high = white - previous * 0.6f;
+
+                previous = white;
+
+                float sample = high;
+
+                if (toneFrequency > 0f)
+                {
+                    sample = high * 0.7f +
+                        Mathf.Sin(2f * Mathf.PI * toneFrequency * i / SampleRate) * 0.5f;
+                }
+
+                data[start + i] += sample * Mathf.Pow(1f - t, 2f) * gain;
+            }
         }
 
         private static bool EnsureSource()

@@ -23,10 +23,6 @@ namespace MultiverseCardBattle.Screens
         {
             Register();
 
-            // เพลงพื้นหลังไม่ต้องเล่นตอนรันทดสอบอัตโนมัติ
-            if (!Application.isBatchMode)
-                Sfx.StartMusic();
-
             Attach(SceneManager.GetActiveScene());
         }
 
@@ -50,6 +46,13 @@ namespace MultiverseCardBattle.Screens
 
             if (!System.Enum.TryParse(scene.name, out id))
                 return;
+
+            // เพลงพื้นหลังตามหน้าจอ (ไม่เล่นตอนรันทดสอบอัตโนมัติ)
+            if (!Application.isBatchMode)
+            {
+                Sfx.PlayMusic(
+                    id == GameScene.Battle ? MusicTrack.Battle : MusicTrack.Menu);
+            }
 
             string objectName = id + "Screen";
 
