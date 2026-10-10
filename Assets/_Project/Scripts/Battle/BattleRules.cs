@@ -92,6 +92,53 @@ namespace MultiverseCardBattle.Battle
         }
 
         /// <summary>
+        /// การ์ดใบนี้ต้องให้ผู้เล่นเลือกเป้าหมายตอนลงหรือไม่ (มี Action ตอน Play แบบ Chosen)
+        /// </summary>
+        public static bool RequiresPlayTarget(CardData data)
+        {
+            if (data == null || data.Actions == null)
+                return false;
+
+            foreach (CardActionData action in data.Actions)
+            {
+                if (action == null ||
+                    action.Trigger != TriggerType.Play ||
+                    action.Selection != TargetSelection.Chosen)
+                    continue;
+
+                if (action.Target == TargetRule.Self ||
+                    action.Target == TargetRule.None)
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// ลงการ์ดได้จริงตอนนี้หรือไม่ ถ้าเป็นเวทย์ที่ต้องเลือกเป้าหมายแต่ไม่มีเป้าหมายเลย
+        /// จะลงไม่ได้ (ไม่งั้นเสียการ์ดเปล่า) ส่วนยูนิตลงได้เสมอ Battlecry จะไม่ทำงานเท่านั้น
+        /// </summary>
+        public static ActionResult ValidatePlayable(
+            BattleManager battle,
+            BattlePlayer player,
+            CardInstance card)
+        {
+            ActionResult basic = ValidateBasicPlay(battle, player, card);
+
+            if (!basic.Success)
+                return basic;
+
+            if (card.Data.Type != CardType.Unit &&
+                RequiresPlayTarget(card.Data) &&
+                GetPlayTargets(battle, player, card).Count == 0)
+                return ActionResult.Fail("No valid target");
+
+            return ActionResult.Ok();
+        }
+
+        /// <summary>
         /// ตรวจเงื่อนไขพื้นฐานของการลงการ์ด (ไม่รวมการเลือกเป้าหมาย)
         /// </summary>
         public static ActionResult ValidateBasicPlay(
@@ -133,7 +180,7 @@ namespace MultiverseCardBattle.Battle
             CardInstance card,
             TargetCandidate chosen)
         {
-            ActionResult basic = ValidateBasicPlay(battle, player, card);
+            ActionResult basic = ValidatePlayable(battle, player, card);
 
             if (!basic.Success)
                 return basic;

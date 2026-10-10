@@ -25,7 +25,7 @@ namespace MultiverseCardBattle.Data
                 case Keyword.Guard: return "While a Guard unit is on the field, enemies cannot attack its owner's Leader.";
                 case Keyword.Shield: return "Blocks the next damage, then disappears.";
                 case Keyword.Ward: return "Blocks the next enemy effect that targets this unit, then disappears.";
-                case Keyword.Immune: return "Takes no damage and no harmful statuses (can still be destroyed).";
+                case Keyword.Immune: return "Reduces every hit it takes by the number shown (Immune 3 takes only 2 from a 5-damage hit) and blocks harmful statuses.";
                 case Keyword.Stealth: return "Cannot be targeted by enemies until it attacks.";
                 case Keyword.Reborn: return "The first time it dies, it returns to the field with 1 HP.";
                 case Keyword.Poison: return "Any unit damaged by this unit is destroyed.";

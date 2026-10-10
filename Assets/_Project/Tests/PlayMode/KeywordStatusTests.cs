@@ -233,6 +233,171 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
+        public void Stealth_FirstAttackIsNotCounterattacked()
+        {
+            CardInstance attacker = PutOnField(P1, "A", 2, 5, Keyword.Stealth);
+            CardInstance defender = PutOnField(P2, "D", 4, 5, Keyword.None);
+
+            Assert.IsTrue(Attack(P1, attacker, defender, null).Success);
+
+            Assert.AreEqual(3, defender.CurrentHealth);
+            Assert.AreEqual(5, attacker.CurrentHealth);
+            Assert.IsFalse(attacker.HasKeyword(Keyword.Stealth));
+        }
+
+        [Test]
+        public void ControlledDefender_CannotCounterattack()
+        {
+            CardInstance stunnedTarget = PutOnField(P2, "S", 4, 5, Keyword.None);
+            CardInstance frozenTarget = PutOnField(P2, "F", 4, 5, Keyword.None);
+            CardInstance disarmedTarget = PutOnField(P2, "D", 4, 5, Keyword.None);
+
+            stunnedTarget.AddStatus(StatusType.Stun, 0, 2);
+            frozenTarget.AddStatus(StatusType.Freeze, 0, 2);
+            disarmedTarget.AddStatus(StatusType.Disarm, 0, 2);
+
+            CardInstance a = PutOnField(P1, "A", 1, 5, Keyword.None);
+            CardInstance b = PutOnField(P1, "B", 1, 5, Keyword.None);
+            CardInstance c = PutOnField(P1, "C", 1, 5, Keyword.None);
+
+            Assert.IsTrue(Attack(P1, a, stunnedTarget, null).Success);
+            Assert.IsTrue(Attack(P1, b, frozenTarget, null).Success);
+            Assert.IsTrue(Attack(P1, c, disarmedTarget, null).Success);
+
+            Assert.AreEqual(5, a.CurrentHealth);
+            Assert.AreEqual(5, b.CurrentHealth);
+            Assert.AreEqual(5, c.CurrentHealth);
+        }
+
+        [Test]
+        public void Burn_AddsTurnsInsteadOfDamage()
+        {
+            CardInstance unit = PutOnField(P2, "B", 1, 9, Keyword.None);
+
+            unit.AddStatus(StatusType.Burn, 1, 1);
+            unit.AddStatus(StatusType.Burn, 1, 1);
+
+            int burns = 0;
+
+            foreach (StatusEffect status in unit.Statuses)
+            {
+                if (status.Type != StatusType.Burn)
+                    continue;
+
+                burns++;
+
+                Assert.AreEqual(1, status.Value);
+                Assert.AreEqual(2, status.Duration);
+            }
+
+            Assert.AreEqual(1, burns);
+
+            StatusProcessor.OnTurnStart(battle, P2);
+
+            Assert.AreEqual(8, unit.CurrentHealth);
+        }
+
+        [Test]
+        public void TargetedSpell_CannotBePlayedWithoutTarget()
+        {
+            CardData data = MakeData("Bolt", 1, 0, 0, Keyword.None);
+
+            data.Type = CardType.Spell;
+            data.Actions = new List<CardActionData>
+            {
+                Action(TriggerType.Play, TargetRule.EnemyUnit,
+                    TargetSelection.Chosen, Effect(EffectType.DealDamage, 2))
+            };
+
+            CardInstance spell = new CardInstance(data);
+
+            P1.Hand.Add(spell);
+
+            ActionResult noTarget = battle.Submit(new PlayCardCommand(P1, spell));
+
+            Assert.IsFalse(noTarget.Success);
+            Assert.IsTrue(P1.Hand.Contains(spell));
+
+            CardInstance enemy = PutOnField(P2, "E", 1, 5, Keyword.None);
+
+            TargetCandidate candidate = new TargetCandidate(
+                P2.PlayerID, false, true, enemy);
+
+            Assert.IsTrue(
+                battle.Submit(new PlayCardCommand(P1, spell, candidate)).Success);
+        }
+
+        [Test]
+        public void AI_DoesNotStunAnAlreadyStunnedUnit()
+        {
+            CardData data = MakeData("Freezer", 1, 0, 0, Keyword.None);
+
+            data.Type = CardType.Spell;
+            data.Actions = new List<CardActionData>
+            {
+                Action(TriggerType.Play, TargetRule.EnemyUnit,
+                    TargetSelection.Chosen, Effect(EffectType.Stun, 1))
+            };
+
+            CardInstance stunned = PutOnField(P2, "Big", 9, 9, Keyword.None);
+            CardInstance fresh = PutOnField(P2, "Small", 1, 1, Keyword.None);
+
+            stunned.AddStatus(StatusType.Stun, 0, 2);
+
+            P1.Hand.Add(new CardInstance(data));
+
+            PlayCardCommand command =
+                AIPlanner.NextCommand(battle, P1) as PlayCardCommand;
+
+            Assert.IsNotNull(command);
+            Assert.AreSame(fresh, command.Target.TargetObject);
+        }
+
+        [UnityTest]
+        public IEnumerator CoinFlip_SecondPlayerCanGoFirst_AndOtherGetsCoin()
+        {
+            BattleSetup.UseCoinFlip = true;
+            BattleSetup.FirstPlayerOverride = 2;
+
+            GameObject other = new GameObject("CoinBattle");
+            BattleManager coin = other.AddComponent<BattleManager>();
+
+            yield return null;
+
+            Assert.AreEqual(2, coin.FirstPlayerID);
+            Assert.AreEqual(2, coin.TurnManager.CurrentPlayerID);
+
+            // ผู้เล่น 2 เริ่มก่อน: จั่ว 3 + จั่วตอนเริ่มเทิร์น
+            Assert.AreEqual(4, coin.Player2.Hand.Count);
+
+            // ผู้เล่น 1 เริ่มหลัง: จั่ว 4 + Coin
+            Assert.AreEqual(5, coin.Player1.Hand.Count);
+
+            bool hasCoin = false;
+
+            foreach (CardInstance card in coin.Player1.Hand.Cards)
+            {
+                if (card.Data.CardID == StarterCardLibrary.CoinId)
+                    hasCoin = true;
+            }
+
+            Assert.IsTrue(hasCoin);
+
+            // รอบเทิร์นนับเมื่อกลับมาถึงคนที่เริ่มก่อน
+            coin.Submit(new EndTurnCommand(coin.Player2));
+
+            Assert.AreEqual(1, coin.TurnManager.CurrentPlayerID);
+            Assert.AreEqual(1, coin.TurnManager.TurnNumber);
+
+            coin.Submit(new EndTurnCommand(coin.Player1));
+
+            Assert.AreEqual(2, coin.TurnManager.CurrentPlayerID);
+            Assert.AreEqual(2, coin.TurnManager.TurnNumber);
+
+            Object.Destroy(other);
+        }
+
+        [Test]
         public void Overwhelm_ExcessDamageHitsNeighbor()
         {
             CardInstance attacker = PutOnField(P1, "A", 5, 5, Keyword.Overwhelm);
@@ -308,8 +473,11 @@ namespace MultiverseCardBattle.Tests
         {
             CardInstance unit = PutOnField(P2, "I", 1, 5, Keyword.Immune);
 
-            Assert.AreEqual(0, battle.DamageUnit(null, unit, 4));
-            Assert.AreEqual(5, unit.CurrentHealth);
+            // Immune 3: โดน 4 เหลือ 1, โดน 3 เหลือ 0
+            Assert.AreEqual(1, battle.DamageUnit(null, unit, 4));
+            Assert.AreEqual(4, unit.CurrentHealth);
+            Assert.AreEqual(0, battle.DamageUnit(null, unit, 3));
+            Assert.AreEqual(4, unit.CurrentHealth);
             Assert.IsFalse(unit.AddStatus(StatusType.Burn, 1, 3));
             Assert.IsTrue(unit.AddStatus(StatusType.AttackUp, 1, 3));
         }

@@ -8,6 +8,9 @@ namespace MultiverseCardBattle.Battle
         public int TurnNumber { get; private set; }
         public int CurrentPlayerID { get; private set; }
 
+        // ผู้เล่นที่เริ่มก่อน (1 หรือ 2)
+        public int FirstPlayerID { get; private set; } = 1;
+
         // จำนวนเทิร์นรวมของทั้งสองฝั่ง (เพิ่มทุกครั้งที่เริ่มเทิร์น)
         public int TotalTurns { get; private set; }
 
@@ -20,10 +23,12 @@ namespace MultiverseCardBattle.Battle
             battleManager = GetComponent<BattleManager>();
         }
 
-        public void StartBattle()
+        public void StartBattle(int firstPlayerID = 1)
         {
+            FirstPlayerID = firstPlayerID == 2 ? 2 : 1;
+
             TurnNumber = 1;
-            CurrentPlayerID = 1;
+            CurrentPlayerID = FirstPlayerID;
             TotalTurns = 0;
 
             StartTurn();
@@ -90,14 +95,14 @@ namespace MultiverseCardBattle.Battle
             if (battleManager.IsOver)
                 return;
 
-            // สลับผู้เล่น
-            if (CurrentPlayerID == 1)
+            // สลับผู้เล่น: ครบรอบเมื่อกลับมาถึงคนที่เริ่มก่อน
+            if (CurrentPlayerID == FirstPlayerID)
             {
-                CurrentPlayerID = 2;
+                CurrentPlayerID = FirstPlayerID == 1 ? 2 : 1;
             }
             else
             {
-                CurrentPlayerID = 1;
+                CurrentPlayerID = FirstPlayerID;
                 TurnNumber++;
             }
 

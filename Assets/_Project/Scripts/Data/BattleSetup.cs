@@ -19,6 +19,13 @@ namespace MultiverseCardBattle.Data
         public static int PlayerHealth;
         public static int EnemyHealth;
 
+        // โยนเหรียญสุ่มว่าใครเริ่มก่อน (ผู้เล่นที่เริ่มหลังได้จั่วเพิ่มและการ์ด Coin)
+        // false = ผู้เล่น 1 เริ่มก่อนเสมอ (ใช้ในเทสต์)
+        public static bool UseCoinFlip;
+
+        // 1 หรือ 2 = บังคับว่าใครเริ่มก่อน (ใช้กับ UseCoinFlip) 0 = สุ่ม
+        public static int FirstPlayerOverride;
+
         // ด่านของ Campaign ที่กำลังเล่น (null = Quick Battle / ทดสอบ)
         public static CampaignStage Stage;
 
@@ -34,6 +41,9 @@ namespace MultiverseCardBattle.Data
             EnemyHealth = 0;
 
             Stage = null;
+
+            UseCoinFlip = false;
+            FirstPlayerOverride = 0;
         }
     }
 }

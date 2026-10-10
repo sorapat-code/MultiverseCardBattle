@@ -232,6 +232,22 @@ namespace MultiverseCardBattle.Cards
         }
 
         /// <summary>ซ่อนตัวด้วย Stealth อยู่หรือไม่ (Marked / Exposed ทำให้ซ่อนไม่ได้)</summary>
+        /// <summary>
+        /// Immune: ลดความเสียหายทุกครั้งที่โดน (0 = ไม่มี Immune)
+        /// </summary>
+        public int ImmuneAmount
+        {
+            get
+            {
+                if (!HasKeyword(Keyword.Immune))
+                    return 0;
+
+                return Data != null
+                    ? Data.EffectiveImmuneAmount
+                    : CardData.DefaultImmuneAmount;
+            }
+        }
+
         public bool IsHidden
         {
             get
@@ -265,6 +281,32 @@ namespace MultiverseCardBattle.Cards
             {
                 // Silence ล้าง Keyword ทั้งหมด
                 Keywords = Keyword.None;
+            }
+
+            // Burn นับเป็นเทิร์น: ติดซ้ำแล้วต่อจำนวนเทิร์น (ความแรงใช้ค่าสูงสุด ไม่รวมกัน)
+            // เช่น Burn 1 สองครั้ง = 1 ดาเมจต่อเทิร์น นาน 2 เทิร์น
+            if (type == StatusType.Burn)
+            {
+                for (int i = 0; i < Statuses.Count; i++)
+                {
+                    StatusEffect existing = Statuses[i];
+
+                    if (existing.Type != StatusType.Burn)
+                        continue;
+
+                    if (value > existing.Value)
+                        existing.Value = value;
+
+                    if (existing.Duration != StatusEffect.Permanent)
+                    {
+                        existing.Duration =
+                            duration == StatusEffect.Permanent
+                                ? StatusEffect.Permanent
+                                : existing.Duration + duration;
+                    }
+
+                    return true;
+                }
             }
 
             if (StatusInfo.Stacks(type) || StatusInfo.Refreshes(type))

@@ -164,12 +164,35 @@ namespace MultiverseCardBattle.Data
             DeckList deck = new DeckList();
 
             deck.Name = string.IsNullOrEmpty(name)
-                ? "Deck " + (Data.Decks.Count + 1)
+                ? NextDeckName()
                 : name;
 
             Data.Decks.Add(deck);
 
             return deck;
+        }
+
+        // "Deck N" ที่เลข N น้อยที่สุดที่ยังไม่มีเด็คไหนใช้ (เริ่มที่ Deck 1)
+        private string NextDeckName()
+        {
+            for (int number = 1; ; number++)
+            {
+                string candidate = "Deck " + number;
+
+                bool used = false;
+
+                foreach (DeckList existing in Data.Decks)
+                {
+                    if (existing.Name == candidate)
+                    {
+                        used = true;
+                        break;
+                    }
+                }
+
+                if (!used)
+                    return candidate;
+            }
         }
 
         public bool RemoveDeck(DeckList deck)

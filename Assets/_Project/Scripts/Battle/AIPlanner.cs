@@ -84,6 +84,10 @@ namespace MultiverseCardBattle.Battle
 
                 CardInstance unit = option.TargetObject as CardInstance;
 
+                // ไม่เลือกเป้าที่ผลของการ์ดไม่มีความหมาย (เช่น Stun ตัวที่ติด Stun อยู่แล้ว)
+                if (unit != null && IsRedundantTarget(card, unit))
+                    continue;
+
                 if (unit != null)
                     score = unit.CurrentAttack * 2 + unit.CurrentHealth;
                 else
@@ -97,6 +101,82 @@ namespace MultiverseCardBattle.Battle
             }
 
             return best;
+        }
+
+        // การ์ดนี้ใช้กับยูนิตตัวนี้แล้วไม่เกิดประโยชน์หรือไม่
+        // (เฉพาะการ์ดที่มีแต่ผลสถานะ/Keyword ถ้ามีดาเมจหรือผลอื่นปนอยู่ถือว่ามีประโยชน์)
+        private static bool IsRedundantTarget(CardInstance card, CardInstance unit)
+        {
+            if (card == null || card.Data == null || card.Data.Actions == null)
+                return false;
+
+            foreach (CardActionData action in card.Data.Actions)
+            {
+                if (action == null ||
+                    action.Trigger != TriggerType.Play ||
+                    action.Selection != TargetSelection.Chosen)
+                    continue;
+
+                if (action.Effects == null || action.Effects.Count == 0)
+                    return false;
+
+                foreach (EffectData effect in action.Effects)
+                {
+                    if (!IsRedundantEffect(effect, unit))
+                        return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsRedundantEffect(EffectData effect, CardInstance unit)
+        {
+            switch (effect.Type)
+            {
+                case EffectType.Stun:
+                    return unit.IsStunned ||
+                        ResistsStatus(unit, StatusType.Stun);
+
+                case EffectType.Silence:
+                    return unit.IsSilenced ||
+                        ResistsStatus(unit, StatusType.Silence);
+
+                case EffectType.Burn:
+                    return ResistsStatus(unit, StatusType.Burn);
+
+                case EffectType.ApplyStatus:
+                    if (ResistsStatus(unit, effect.Status))
+                        return true;
+
+                    // สถานะที่ซ้อนค่าไม่ได้ และติดอยู่แล้ว
+                    return !StatusInfo.Stacks(effect.Status) &&
+                        effect.Status != StatusType.Burn &&
+                        unit.HasStatus(effect.Status);
+
+                case EffectType.AddKeyword:
+                    return (unit.Keywords & effect.Keyword) == effect.Keyword;
+
+                case EffectType.RemoveKeyword:
+                    return (unit.Keywords & effect.Keyword) == Keyword.None;
+
+                default:
+                    return false;
+            }
+        }
+
+        // สถานะเสียที่ยูนิตนี้กันได้ (Immune / Protected / Unstoppable)
+        private static bool ResistsStatus(CardInstance unit, StatusType type)
+        {
+            if (!StatusInfo.IsHarmful(type))
+                return false;
+
+            if (unit.HasKeyword(Keyword.Immune) || unit.HasStatus(StatusType.Protected))
+                return true;
+
+            return unit.HasKeyword(Keyword.Unstoppable) && StatusInfo.StopsAttack(type);
         }
 
         // ---------- โจมตี ----------
@@ -163,10 +243,16 @@ namespace MultiverseCardBattle.Battle
                     attacker.CurrentAttack >= unit.CurrentHealth ||
                     attacker.HasKeyword(Keyword.Poison);
 
+                // ความเสียหายที่ตัวเองจะโดนสวนกลับจริง
+                int counter =
+                    attacker.HasKeyword(Keyword.Stealth) ||
+                    !AttackCommand.CanCounter(unit)
+                        ? 0
+                        : System.Math.Max(0, unit.CurrentAttack - attacker.ImmuneAmount);
+
                 bool survives =
-                    unit.CurrentAttack < attacker.CurrentHealth ||
+                    counter < attacker.CurrentHealth ||
                     attacker.HasKeyword(Keyword.Shield) ||
-                    attacker.HasKeyword(Keyword.Immune) ||
                     (attacker.HasKeyword(Keyword.QuickAttack) &&
                      !unit.HasKeyword(Keyword.QuickAttack) &&
                      killsTarget);

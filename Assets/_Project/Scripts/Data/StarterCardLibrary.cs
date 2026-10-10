@@ -38,6 +38,9 @@ namespace MultiverseCardBattle.Data
             return null;
         }
 
+        // การ์ดที่ผู้เล่นฝั่งเริ่มหลังได้ตอนโยนเหรียญ: +1 Energy ในเทิร์นนั้น
+        public const string CoinId = "TKN_COIN";
+
         private static void Build()
         {
             if (cards != null)
@@ -54,6 +57,18 @@ namespace MultiverseCardBattle.Data
                 1, 1, 1, Keyword.None,
                 CardTag.Spirit | CardTag.Token,
                 CardSource.Token));
+
+            Add(Create(
+                CoinId, "The Coin", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Common,
+                0, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                        Fx(EffectType.GainEnergy, 1))
+                }));
 
             CardData clone = Add(Unit(
                 "TKN_002", "Shadow Clone",

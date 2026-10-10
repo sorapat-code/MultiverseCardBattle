@@ -13,8 +13,8 @@ namespace MultiverseCardBattle.Battle
     {
         private const int MaxLogLines = 60;
 
-        private const int Player1OpeningHand = 3;
-        private const int Player2OpeningHand = 4;
+        private const int FirstOpeningHand = 3;
+        private const int SecondOpeningHand = 4;
 
         [SerializeField]
         private int startingHealth = 30;
@@ -122,15 +122,52 @@ namespace MultiverseCardBattle.Battle
 
             Log("Battle start: " + Player1.Name + " vs " + Player2.Name);
 
-            for (int i = 0; i < Player1OpeningHand; i++)
-                DrawCard(Player1);
+            // โยนเหรียญ: ผู้เล่นที่เริ่มหลังได้จั่วเพิ่ม 1 ใบ และได้การ์ด Coin (+1 Energy)
+            int firstId = 1;
 
-            for (int i = 0; i < Player2OpeningHand; i++)
-                DrawCard(Player2);
+            if (BattleSetup.UseCoinFlip)
+            {
+                firstId = BattleSetup.FirstPlayerOverride == 1 ||
+                          BattleSetup.FirstPlayerOverride == 2
+                    ? BattleSetup.FirstPlayerOverride
+                    : (UnityEngine.Random.value < 0.5f ? 1 : 2);
+            }
+
+            FirstPlayerID = firstId;
+            CoinFlipped = BattleSetup.UseCoinFlip;
+
+            BattlePlayer first = GetPlayer(firstId);
+            BattlePlayer second = GetOpponent(first);
+
+            if (CoinFlipped)
+                Log("Coin flip: " + first.Name + " goes first");
+
+            for (int i = 0; i < FirstOpeningHand; i++)
+                DrawCard(first);
+
+            for (int i = 0; i < SecondOpeningHand; i++)
+                DrawCard(second);
+
+            if (CoinFlipped)
+                GiveCoin(second);
 
             Publish(TriggerType.BattleStart);
 
-            TurnManager.StartBattle();
+            TurnManager.StartBattle(firstId);
+        }
+
+        // ผู้เล่นที่เริ่มก่อน และว่ามีการโยนเหรียญหรือไม่ (ให้ UI แสดงผล)
+        public int FirstPlayerID { get; private set; } = 1;
+        public bool CoinFlipped { get; private set; }
+
+        private void GiveCoin(BattlePlayer player)
+        {
+            CardData coin = StarterCardLibrary.Get(StarterCardLibrary.CoinId);
+
+            if (coin == null)
+                return;
+
+            player.AddToZone(new CardInstance(coin), CardZone.Hand);
         }
 
         // เตรียมเด็ค/ชื่อ/HP จาก BattleSetup (ถ้าไม่มี ใช้เด็คตั้งต้น)
@@ -441,12 +478,21 @@ namespace MultiverseCardBattle.Battle
             if (target.Zone != CardZone.Field)
                 return 0;
 
-            // Immune: ไม่รับความเสียหายทุกชนิด
-            if (target.HasKeyword(Keyword.Immune))
-            {
-                Log(target.Data.CardName + " is immune");
+            // Immune: ลดความเสียหายทุกครั้งที่โดน (เช่น Immune 3 โดน 5 เหลือ 2)
+            int immune = target.ImmuneAmount;
 
-                return 0;
+            if (immune > 0)
+            {
+                amount -= immune;
+
+                if (amount <= 0)
+                {
+                    Log(target.Data.CardName + " is immune");
+
+                    return 0;
+                }
+
+                Log(target.Data.CardName + " blocks " + immune + " damage");
             }
 
             bool exposed = target.HasStatus(StatusType.Exposed);

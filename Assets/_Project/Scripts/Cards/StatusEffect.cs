@@ -253,7 +253,7 @@ namespace MultiverseCardBattle.Cards
                 case StatusType.Root: return "Cannot be returned, shuffled or banished.";
                 case StatusType.Disarm: return "Cannot attack, but other abilities still work.";
                 case StatusType.Confusion: return "Attacks hit a random target, even allies.";
-                case StatusType.Burn: return "Takes damage at the start of its owner's turn.";
+                case StatusType.Burn: return "Takes damage at the start of its owner's turn. Burning again adds turns, not damage.";
                 case StatusType.Poison: return "Takes true damage each turn. Stacks.";
                 case StatusType.Bleed: return "Takes damage each turn. Stacks.";
                 case StatusType.Curse: return "Cannot be healed.";

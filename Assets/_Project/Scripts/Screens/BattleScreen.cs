@@ -608,7 +608,7 @@ namespace MultiverseCardBattle.Screens
                     highlight = CardHighlight.Selected;
                 }
                 else if (myTurn &&
-                    BattleRules.ValidateBasicPlay(battle, Human, card).Success)
+                    BattleRules.ValidatePlayable(battle, Human, card).Success)
                 {
                     highlight = CardHighlight.Ready;
                 }
@@ -1078,7 +1078,7 @@ namespace MultiverseCardBattle.Screens
             }
 
             ActionResult check =
-                BattleRules.ValidateBasicPlay(battle, Human, card);
+                BattleRules.ValidatePlayable(battle, Human, card);
 
             if (!check.Success)
             {

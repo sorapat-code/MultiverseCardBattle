@@ -27,7 +27,7 @@ namespace MultiverseCardBattle.Data
             if (!string.IsNullOrEmpty(data.Description))
                 return data.Description;
 
-            string keywords = KeywordText(data.Keywords);
+            string keywords = KeywordText(data.Keywords, data.EffectiveImmuneAmount);
             string actions = ActionsText(data);
 
             if (keywords.Length > 0 && actions.Length > 0)
@@ -107,7 +107,9 @@ namespace MultiverseCardBattle.Data
             return text.ToString();
         }
 
-        public static string KeywordText(Keyword keywords)
+        public static string KeywordText(
+            Keyword keywords,
+            int immuneAmount = CardData.DefaultImmuneAmount)
         {
             if (keywords == Keyword.None)
                 return "";
@@ -119,8 +121,14 @@ namespace MultiverseCardBattle.Data
                 if (keyword == Keyword.None)
                     continue;
 
-                if ((keywords & keyword) == keyword)
-                    names.Add(KeywordName(keyword));
+                if ((keywords & keyword) != keyword)
+                    continue;
+
+                // Immune แสดงจำนวนดาเมจที่ลดได้ เช่น "Immune 3"
+                names.Add(
+                    keyword == Keyword.Immune
+                        ? KeywordName(keyword) + " " + immuneAmount
+                        : KeywordName(keyword));
             }
 
             return string.Join(", ", names.ToArray());

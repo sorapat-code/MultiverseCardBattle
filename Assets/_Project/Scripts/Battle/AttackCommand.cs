@@ -44,11 +44,14 @@ namespace MultiverseCardBattle.Battle
 
             Attacker.AttacksThisTurn++;
 
+            // ซุ่มโจมตี: ตีจาก Stealth ครั้งแรกจะไม่โดนสวนกลับ
+            bool ambush = Attacker.HasKeyword(Keyword.Stealth);
+
             // โจมตีแล้วหลุด Stealth
             Attacker.RemoveKeyword(Keyword.Stealth);
 
             if (targetUnit != null)
-                AttackUnit(battle, targetUnit);
+                AttackUnit(battle, targetUnit, ambush);
             else
                 AttackLeader(battle, targetLeader);
 
@@ -83,7 +86,19 @@ namespace MultiverseCardBattle.Battle
             targetLeader = pick.TargetObject as BattlePlayer;
         }
 
-        private void AttackUnit(BattleManager battle, CardInstance targetUnit)
+        // ยูนิตที่ถูกควบคุม (Stun / Freeze / Disarm) สวนกลับไม่ได้
+        public static bool CanCounter(CardInstance defender)
+        {
+            return defender != null &&
+                !defender.IsStunned &&
+                !defender.IsFrozen &&
+                !defender.IsDisarmed;
+        }
+
+        private void AttackUnit(
+            BattleManager battle,
+            CardInstance targetUnit,
+            bool ambush)
         {
             BattlePlayer targetOwner = battle.GetPlayer(targetUnit.OwnerID);
 
@@ -104,7 +119,10 @@ namespace MultiverseCardBattle.Battle
                 return;
 
             int attackerDamage = Attacker.CurrentAttack;
-            int counterDamage = targetUnit.CurrentAttack;
+            int counterDamage =
+                ambush || !CanCounter(targetUnit)
+                    ? 0
+                    : targetUnit.CurrentAttack;
             int healthBefore = targetUnit.CurrentHealth;
 
             bool attackerQuick = Attacker.HasKeyword(Keyword.QuickAttack);

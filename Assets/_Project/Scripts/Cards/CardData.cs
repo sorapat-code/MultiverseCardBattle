@@ -39,6 +39,17 @@ namespace MultiverseCardBattle.Cards
         public int Attack;
         public int Health;
 
+        [Header("Immune (ลดความเสียหายทุกครั้งที่โดน 0 = ใช้ค่าตั้งต้น)")]
+
+        public const int DefaultImmuneAmount = 3;
+
+        public int ImmuneAmount;
+
+        public int EffectiveImmuneAmount
+        {
+            get { return ImmuneAmount > 0 ? ImmuneAmount : DefaultImmuneAmount; }
+        }
+
         [Header("Aura (ให้ยูนิตพวกเดียวกันตัวอื่นขณะอยู่บนสนาม)")]
 
         public int AuraAttack;

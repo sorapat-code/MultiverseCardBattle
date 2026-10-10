@@ -301,7 +301,8 @@ namespace MultiverseCardBattle.Screens
 
             StringBuilder body = new StringBuilder();
 
-            string keywords = CardTextGenerator.KeywordText(card.Keywords);
+            string keywords = CardTextGenerator.KeywordText(
+                card.Keywords, data.EffectiveImmuneAmount);
 
             if (keywords.Length > 0)
                 body.Append("<b>").Append(keywords).Append("</b>");

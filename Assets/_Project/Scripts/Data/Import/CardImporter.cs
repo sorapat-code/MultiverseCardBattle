@@ -10,7 +10,7 @@ namespace MultiverseCardBattle.Data.Import
     ///
     /// หัวตาราง (ลำดับอะไรก็ได้ ช่องที่ไม่ใส่ใช้ค่าเริ่มต้น):
     ///   ID, Name, Type, Rarity, Universe, Faction, Tags, Cost, Attack, Health,
-    ///   Keywords, Abilities, AuraAttack, AuraHealth, EvolvesInto, EvolveAfterTurns,
+    ///   Keywords, Abilities, ImmuneAmount, AuraAttack, AuraHealth, EvolvesInto, EvolveAfterTurns,
     ///   Source, Description
     /// ดูรูปแบบเต็มได้ใน docs/CardDatabase.md
     /// </summary>
@@ -61,6 +61,8 @@ namespace MultiverseCardBattle.Data.Import
                 { "keywords", "keywords" }, { "keyword", "keywords" },
                 { "abilities", "abilities" }, { "ability", "abilities" },
                 { "actions", "abilities" }, { "script", "abilities" },
+                { "immuneamount", "immuneamount" },
+                { "immune", "immuneamount" },
                 { "auraattack", "auraattack" },
                 { "aurahealth", "aurahealth" },
                 { "evolvesinto", "evolvesinto" }, { "evolve", "evolvesinto" },
@@ -221,6 +223,7 @@ namespace MultiverseCardBattle.Data.Import
             int cost = 0;
             int attack = 0;
             int health = 0;
+            int immuneAmount = 0;
             int auraAttack = 0;
             int auraHealth = 0;
             int evolveTurns = 0;
@@ -234,6 +237,7 @@ namespace MultiverseCardBattle.Data.Import
             ok &= ReadInt(row, "cost", ref cost, report);
             ok &= ReadInt(row, "attack", ref attack, report);
             ok &= ReadInt(row, "health", ref health, report);
+            ok &= ReadInt(row, "immuneamount", ref immuneAmount, report);
             ok &= ReadInt(row, "auraattack", ref auraAttack, report);
             ok &= ReadInt(row, "aurahealth", ref auraHealth, report);
             ok &= ReadInt(row, "evolveafterturns", ref evolveTurns, report);
@@ -311,6 +315,7 @@ namespace MultiverseCardBattle.Data.Import
             data.Attack = attack;
             data.Health = health;
 
+            data.ImmuneAmount = immuneAmount;
             data.AuraAttack = auraAttack;
             data.AuraHealth = auraHealth;
             data.EvolveAfterTurns = evolveTurns;

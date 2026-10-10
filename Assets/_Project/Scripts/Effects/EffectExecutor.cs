@@ -163,6 +163,8 @@ namespace MultiverseCardBattle.Effects
             }
         }
 
+        private const int MaxEnergyCap = 10;
+
         private static int PositiveOr(int value, int fallback)
         {
             return value > 0 ? value : fallback;
@@ -773,12 +775,9 @@ namespace MultiverseCardBattle.Effects
 
             context.TargetPlayer.CurrentEnergy += effect.Value;
 
-            if (context.TargetPlayer.CurrentEnergy >
-                context.TargetPlayer.MaxEnergy)
-            {
-                context.TargetPlayer.CurrentEnergy =
-                    context.TargetPlayer.MaxEnergy;
-            }
+            // Energy ที่ได้เพิ่ม (เช่น Coin) เกิน Max ของเทิร์นนี้ได้ แต่ไม่เกินเพดาน 10
+            if (context.TargetPlayer.CurrentEnergy > MaxEnergyCap)
+                context.TargetPlayer.CurrentEnergy = MaxEnergyCap;
         }
 
         private static void SpendEnergy(

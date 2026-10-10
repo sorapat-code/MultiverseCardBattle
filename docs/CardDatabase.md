@@ -30,6 +30,7 @@
 | Cost / Attack / Health | ตัวเลข (alias: Atk, HP) |
 | Keywords | แยกด้วย `|` `,` หรือ `+` |
 | Abilities | สคริปต์ความสามารถ (ดูด้านล่าง) |
+| ImmuneAmount | ลดความเสียหายทุกครั้งที่โดน เมื่อการ์ดมี Keyword Immune (ว่าง = 3) เช่น Immune 3 โดนตี 5 เหลือ 2 |
 | AuraAttack / AuraHealth | ออร่าบัฟพวกเดียวกัน (ไม่รวมตัวเอง) |
 | EvolvesInto / EvolveAfterTurns | ID การ์ดที่จะวิวัฒน์เป็น และจำนวนเทิร์นของเจ้าของที่อยู่บนสนาม |
 | Source | `Pack`, `Campaign`, `Event`, `Craft`, `Shop`, `Reward`, `Starter`, `Token`, `Debug` (ว่าง = Token ถ้ามี Tag Token ไม่งั้น Pack) |

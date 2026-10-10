@@ -15,7 +15,7 @@ namespace MultiverseCardBattle.Data.Import
         {
             "ID", "Name", "Type", "Rarity", "Universe", "Faction", "Tags",
             "Cost", "Attack", "Health", "Keywords", "Abilities",
-            "AuraAttack", "AuraHealth", "EvolvesInto", "EvolveAfterTurns",
+            "ImmuneAmount", "AuraAttack", "AuraHealth", "EvolvesInto", "EvolveAfterTurns",
             "Source", "Description"
         };
 
@@ -55,6 +55,7 @@ namespace MultiverseCardBattle.Data.Import
                 Number(card.Health),
                 CardScript.KeywordList(card.Keywords, "|"),
                 CardScript.Format(card.Actions),
+                Number(card.ImmuneAmount),
                 Number(card.AuraAttack),
                 Number(card.AuraHealth),
                 card.EvolvesInto != null ? card.EvolvesInto.CardID : "",
