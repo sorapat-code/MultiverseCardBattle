@@ -55,9 +55,8 @@ namespace MultiverseCardBattle.Cards
         BlackShores,
         Fractsidus,
 
-        // Mythology
-        Olympus,
-        Asgard,
-        Underworld
+        // Jujutsu Kaisen
+        JujutsuHigh,
+        CursedSpirits
     }
 }

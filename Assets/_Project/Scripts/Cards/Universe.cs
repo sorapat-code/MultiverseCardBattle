@@ -15,6 +15,6 @@ namespace MultiverseCardBattle.Cards
 
         Fate,
 
-        Mythology
+        JujutsuKaisen
     }
 }

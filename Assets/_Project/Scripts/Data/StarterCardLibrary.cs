@@ -128,13 +128,13 @@ namespace MultiverseCardBattle.Data
                 Universe.Original, Faction.Neutral, CardRarity.Rare,
                 3, 2, 4, Keyword.Lifesteal, CardTag.Undead | CardTag.Melee));
 
-            Add(Unit("STR_008", "Venom Serpent",
-                Universe.Mythology, Faction.Underworld, CardRarity.Rare,
-                2, 1, 2, Keyword.Poison, CardTag.Beast));
+            Add(Unit("STR_008", "Disaster Curse",
+                Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Rare,
+                2, 1, 2, Keyword.Poison, CardTag.Spirit | CardTag.Demon));
 
-            Add(Unit("STR_009", "Olympian Paladin",
-                Universe.Mythology, Faction.Olympus, CardRarity.Rare,
-                4, 3, 3, Keyword.Shield, CardTag.God | CardTag.Melee));
+            Add(Unit("STR_009", "Megumi Fushiguro",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
+                4, 3, 3, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Melee));
 
             Add(Unit("STR_010", "Soul Society Scout",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Common,
@@ -154,11 +154,11 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.DrawCard, 1))));
 
-            Add(Unit("STR_014", "War Drummer",
-                Universe.Mythology, Faction.Asgard, CardRarity.Common,
-                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Support,
-                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
-                    Fx(EffectType.GainAttack, 1))));
+            Add(Unit("STR_014", "Nobara Kugisaki",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Common,
+                3, 3, 2, Keyword.None, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 1))));
 
             Add(Unit("STR_015", "Death Cultist",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
@@ -179,9 +179,9 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxStatus(EffectType.Burn, 2, 3))));
 
-            Add(Unit("STR_018", "Frost Witch",
-                Universe.Mythology, Faction.Asgard, CardRarity.Rare,
-                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic | CardTag.Ice,
+            Add(Unit("STR_018", "Toge Inumaki",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
+                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxStatus(EffectType.Stun, 0, 1))));
 
@@ -191,9 +191,9 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.Silence))));
 
-            Add(Unit("STR_020", "Ancient Dragon",
-                Universe.Mythology, Faction.Neutral, CardRarity.Legendary,
-                7, 6, 7, Keyword.None, CardTag.Dragon | CardTag.Boss,
+            Add(Unit("STR_020", "Jogo, Volcano Curse",
+                Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Legendary,
+                7, 6, 7, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Fire,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
                     Fx(EffectType.DealDamage, 3))));
 
@@ -201,8 +201,8 @@ namespace MultiverseCardBattle.Data
                 Universe.Original, Faction.Neutral, CardRarity.Epic,
                 6, 6, 6, Keyword.Taunt, CardTag.Machine | CardTag.Elite));
 
-            Add(Unit("STR_022", "Temple Priest",
-                Universe.Mythology, Faction.Olympus, CardRarity.Common,
+            Add(Unit("STR_022", "Shoko Ieiri",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Common,
                 3, 2, 3, Keyword.None, CardTag.Human | CardTag.Support,
                 Act(TriggerType.TurnStart, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.Heal, 2))));
@@ -295,15 +295,15 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DealDamage, 2))));
 
-            Add(Unit("MYT_001", "Zeus",
-                Universe.Mythology, Faction.Olympus, CardRarity.Legendary,
-                9, 7, 7, Keyword.None, CardTag.God | CardTag.Boss | CardTag.Lightning,
+            Add(Unit("MYT_001", "Satoru Gojo",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Legendary,
+                9, 7, 7, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Boss,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
                     Fx(EffectType.DealDamage, 4))));
 
-            Add(Unit("MYT_002", "Hades",
-                Universe.Mythology, Faction.Underworld, CardRarity.Legendary,
-                7, 5, 6, Keyword.None, CardTag.God | CardTag.Undead | CardTag.Dark,
+            Add(Unit("MYT_002", "Ryomen Sukuna",
+                Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Legendary,
+                7, 5, 6, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Dark,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DestroyCard))));
 
@@ -414,22 +414,22 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
                     Fx(EffectType.Adapt, 3))));
 
-            Add(Unit("MYT_003", "Phoenix",
-                Universe.Mythology, Faction.Neutral, CardRarity.Epic,
+            Add(Unit("MYT_003", "Yuji Itadori",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Epic,
                 5, 4, 3, Keyword.Reborn,
-                CardTag.Beast | CardTag.Fire));
+                CardTag.Human | CardTag.Melee));
 
-            Add(Unit("MYT_004", "Athena, Aegis Bearer",
-                Universe.Mythology, Faction.Olympus, CardRarity.Rare,
+            Add(Unit("MYT_004", "Principal Yaga",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
                 4, 2, 5, Keyword.Ward,
-                CardTag.God | CardTag.Support,
+                CardTag.Human | CardTag.Support,
                 Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
                     FxApply(StatusType.Barrier, 2, 0))));
 
-            Add(Unit("MYT_005", "Medusa",
-                Universe.Mythology, Faction.Underworld, CardRarity.Rare,
+            Add(Unit("MYT_005", "Mahito",
+                Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Rare,
                 4, 3, 3, Keyword.None,
-                CardTag.Beast | CardTag.Magic,
+                CardTag.Spirit | CardTag.Demon | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxApply(StatusType.Disarm, 0, 2),
                     FxApply(StatusType.Poison, 1, 3))));

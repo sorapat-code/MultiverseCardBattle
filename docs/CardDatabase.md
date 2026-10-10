@@ -24,8 +24,8 @@
 | Name | ชื่อการ์ด |
 | Type | `Unit`, `Spell`, `Equipment`, `Leader` |
 | Rarity | `Common`, `Rare`, `Epic`, `Legendary`, `Secret` |
-| Universe | `Original`, `Naruto`, `OnePiece`, `Bleach`, `DragonBall`, `JoJo`, `WutheringWaves`, `HonkaiStarRail`, `Fate`, `Mythology` |
-| Faction | `Neutral`, `LeafVillage`, `SandVillage`, `MistVillage`, `CloudVillage`, `StoneVillage`, `Akatsuki`, `Otsutsuki`, `StrawHatPirates`, `RedHairPirates`, `BlackbeardPirates`, `Marines`, `WorldGovernment`, `Revolutionaries`, `SoulSociety`, `Gotei13`, `Arrancar`, `Wandenreich`, `ZFighters`, `FriezaForce`, `RedRibbonArmy`, `StardustCrusaders`, `Passione`, `Morioh`, `DioFollowers`, `Chaldea`, `AstralExpress`, `StellaronHunters`, `IPC`, `XianzhouAlliance`, `Jinzhou`, `BlackShores`, `Fractsidus`, `Olympus`, `Asgard`, `Underworld` |
+| Universe | `Original`, `Naruto`, `OnePiece`, `Bleach`, `DragonBall`, `JoJo`, `WutheringWaves`, `HonkaiStarRail`, `Fate`, `JujutsuKaisen` |
+| Faction | `Neutral`, `LeafVillage`, `SandVillage`, `MistVillage`, `CloudVillage`, `StoneVillage`, `Akatsuki`, `Otsutsuki`, `StrawHatPirates`, `RedHairPirates`, `BlackbeardPirates`, `Marines`, `WorldGovernment`, `Revolutionaries`, `SoulSociety`, `Gotei13`, `Arrancar`, `Wandenreich`, `ZFighters`, `FriezaForce`, `RedRibbonArmy`, `StardustCrusaders`, `Passione`, `Morioh`, `DioFollowers`, `Chaldea`, `AstralExpress`, `StellaronHunters`, `IPC`, `XianzhouAlliance`, `Jinzhou`, `BlackShores`, `Fractsidus`, `JujutsuHigh`, `CursedSpirits` |
 | Tags | แยกด้วย `|` `,` หรือ `+` |
 | Cost / Attack / Health | ตัวเลข (alias: Atk, HP) |
 | Keywords | แยกด้วย `|` `,` หรือ `+` |

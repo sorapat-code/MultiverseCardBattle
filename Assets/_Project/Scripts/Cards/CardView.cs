@@ -554,7 +554,7 @@ namespace MultiverseCardBattle.Screens
                 case Universe.WutheringWaves: return new Color(0.15f, 0.45f, 0.45f, 1f);
                 case Universe.HonkaiStarRail: return new Color(0.3f, 0.3f, 0.6f, 1f);
                 case Universe.Fate: return new Color(0.5f, 0.2f, 0.25f, 1f);
-                case Universe.Mythology: return new Color(0.4f, 0.4f, 0.2f, 1f);
+                case Universe.JujutsuKaisen: return new Color(0.3f, 0.2f, 0.5f, 1f);
                 default: return new Color(0.25f, 0.3f, 0.35f, 1f);
             }
         }
