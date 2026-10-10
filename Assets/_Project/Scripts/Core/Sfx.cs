@@ -27,6 +27,9 @@ namespace MultiverseCardBattle.Core
             new Dictionary<SoundId, AudioClip>();
 
         private static AudioSource source;
+        private static AudioSource musicSource;
+
+        private const float MusicVolume = 0.16f;
 
         public static bool Muted
         {
@@ -46,6 +49,111 @@ namespace MultiverseCardBattle.Core
 
             if (clip != null)
                 source.PlayOneShot(clip, Volume);
+        }
+
+        /// <summary>
+        /// เพลงพื้นหลังเรียบง่าย (อาร์เปจโจคอร์ด Am-F-C-G วน) สร้างจากโค้ด เล่นต่อเนื่องข้ามซีน
+        /// </summary>
+        public static void StartMusic()
+        {
+            if (musicSource == null)
+            {
+                GameObject go = new GameObject("Music");
+
+                Object.DontDestroyOnLoad(go);
+
+                musicSource = go.AddComponent<AudioSource>();
+                musicSource.playOnAwake = false;
+                musicSource.loop = true;
+                musicSource.spatialBlend = 0f;
+                musicSource.volume = MusicVolume;
+                musicSource.clip = BuildMusic();
+            }
+
+            musicSource.mute = Muted;
+
+            if (!musicSource.isPlaying)
+                musicSource.Play();
+        }
+
+        /// <summary>
+        /// เรียกหลังเปลี่ยนการเปิด/ปิดเสียง
+        /// </summary>
+        public static void RefreshMusicMute()
+        {
+            if (musicSource != null)
+                musicSource.mute = Muted;
+        }
+
+        private static AudioClip BuildMusic()
+        {
+            // คอร์ดละ 4 วินาที: ตัวโน้ต 4 ตัวของคอร์ด (ต่ำ -> สูง)
+            float[][] chords =
+            {
+                new[] { 220.00f, 261.63f, 329.63f, 440.00f },   // Am
+                new[] { 174.61f, 220.00f, 261.63f, 349.23f },   // F
+                new[] { 261.63f, 329.63f, 392.00f, 523.25f },   // C
+                new[] { 196.00f, 246.94f, 293.66f, 392.00f }    // G
+            };
+
+            int[] pattern = { 0, 1, 2, 3, 2, 1, 2, 3 };
+
+            const float noteSeconds = 0.5f;
+
+            int noteSamples = Mathf.RoundToInt(noteSeconds * SampleRate);
+            int chordSamples = noteSamples * pattern.Length;
+
+            float[] data = new float[chordSamples * chords.Length];
+
+            for (int c = 0; c < chords.Length; c++)
+            {
+                int chordStart = c * chordSamples;
+
+                // เสียงรองพื้นต่ำๆ ตลอดคอร์ด (ค่อยๆ ดังและเบาลง)
+                float padFrequency = chords[c][0] * 0.5f;
+
+                for (int i = 0; i < chordSamples; i++)
+                {
+                    float t = (float)i / chordSamples;
+
+                    float padEnvelope = Mathf.Sin(Mathf.PI * t);
+
+                    float pad =
+                        Mathf.Sin(2f * Mathf.PI * padFrequency * i / SampleRate) *
+                        padEnvelope * 0.25f;
+
+                    data[chordStart + i] += pad;
+                }
+
+                // โน้ตอาร์เปจโจ
+                for (int n = 0; n < pattern.Length; n++)
+                {
+                    float frequency = chords[c][pattern[n]];
+
+                    int noteStart = chordStart + n * noteSamples;
+
+                    for (int i = 0; i < noteSamples; i++)
+                    {
+                        float t = (float)i / noteSamples;
+
+                        float envelope = Mathf.Pow(1f - t, 2f) *
+                            Mathf.Min(1f, i / (SampleRate * 0.01f));
+
+                        float tone =
+                            Mathf.Sin(2f * Mathf.PI * frequency * i / SampleRate) +
+                            0.3f * Mathf.Sin(4f * Mathf.PI * frequency * i / SampleRate);
+
+                        data[noteStart + i] += tone * envelope * 0.28f;
+                    }
+                }
+            }
+
+            AudioClip clip =
+                AudioClip.Create("music", data.Length, 1, SampleRate, false);
+
+            clip.SetData(data, 0);
+
+            return clip;
         }
 
         private static bool EnsureSource()

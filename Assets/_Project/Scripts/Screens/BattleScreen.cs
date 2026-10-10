@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using MultiverseCardBattle.Battle;
 using MultiverseCardBattle.Cards;
@@ -120,6 +121,8 @@ namespace MultiverseCardBattle.Screens
 
             RunAI();
 
+            HandleHotkeys();
+
             // ไม่ใช่เทิร์นผู้เล่น ล้างการเลือกค้าง
             if (battle.CurrentPlayer != Human &&
                 (selectedHand != null || selectedAttacker != null))
@@ -131,6 +134,20 @@ namespace MultiverseCardBattle.Screens
             {
                 Refresh();
             }
+        }
+
+        private void HandleHotkeys()
+        {
+            Keyboard keyboard = Keyboard.current;
+
+            if (keyboard == null)
+                return;
+
+            if (keyboard.spaceKey.wasPressedThisFrame)
+                OnEndTurnClicked();
+
+            if (keyboard.escapeKey.wasPressedThisFrame)
+                ClearSelectionAndRefresh();
         }
 
         // ---------- AI ----------
@@ -277,7 +294,9 @@ namespace MultiverseCardBattle.Screens
                         ? "Your turn"
                         : "Opponent's turn"));
 
-            hintText.text = hint;
+            hintText.text = string.IsNullOrEmpty(hint)
+                ? "<color=#8A93A6>Space: end turn  -  Esc: cancel</color>"
+                : hint;
 
             RefreshLeader(enemyLeader, Ai, true);
             RefreshLeader(playerLeader, Human, false);

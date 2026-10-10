@@ -23,6 +23,10 @@ namespace MultiverseCardBattle.Screens
         {
             Register();
 
+            // เพลงพื้นหลังไม่ต้องเล่นตอนรันทดสอบอัตโนมัติ
+            if (!Application.isBatchMode)
+                Sfx.StartMusic();
+
             Attach(SceneManager.GetActiveScene());
         }
 

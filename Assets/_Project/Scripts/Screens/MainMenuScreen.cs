@@ -27,6 +27,7 @@ namespace MultiverseCardBattle.Screens
             "Lifesteal - damage dealt heals your Leader.        Poison - any damage it deals destroys a unit.\n" +
             "Stealth - cannot be targeted until it attacks.     DoubleStrike - attacks twice per turn.\n\n" +
             "<b>Status</b>: Stun - cannot attack.  Silence - loses keywords.  Burn - takes damage each turn.  Regen - heals each turn.\n\n" +
+            "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection.  Hover a card to see it larger.\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
             "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.";
 
@@ -186,6 +187,8 @@ namespace MultiverseCardBattle.Screens
 
             SaveManager.Save();
 
+            Sfx.RefreshMusicMute();
+
             RefreshSoundLabel();
 
             // เปิดเสียงแล้วให้ได้ยินตัวอย่าง
@@ -218,6 +221,7 @@ namespace MultiverseCardBattle.Screens
 
             RefreshGold();
             RefreshSoundLabel();
+            Sfx.RefreshMusicMute();
 
             message.text = "Progress reset. Starter collection restored.";
         }
