@@ -51,6 +51,9 @@ namespace MultiverseCardBattle.Effects
             CardInstance targetCard =
                 new CardInstance(targetData);
 
+            // DamageUnit ทำความเสียหายเฉพาะยูนิตที่อยู่บนสนาม
+            targetCard.Zone = CardZone.Field;
+
             // สร้าง Target Candidate
             List<TargetCandidate> candidates =
                 new List<TargetCandidate>();
@@ -160,9 +163,7 @@ namespace MultiverseCardBattle.Effects
             context.SourcePlayer =
                 battle.Player1;
 
-            context.Battle =
-                battle;
-
+            // ไม่ใส่ Battle เพื่อให้เทสต์นี้ไม่ไปสร้าง Discover จริงในการต่อสู้
             context.CardPool =
                 pool;
 

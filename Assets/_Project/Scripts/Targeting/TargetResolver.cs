@@ -11,6 +11,9 @@ namespace MultiverseCardBattle.Targeting
         {
             List<TargetCandidate> results = new List<TargetCandidate>();
 
+            if (candidates == null)
+                return results;
+
             foreach (TargetCandidate candidate in candidates)
             {
                 bool isAlly =
@@ -74,6 +77,39 @@ namespace MultiverseCardBattle.Targeting
                             results.Add(candidate);
                         break;
                 }
+            }
+
+            return results;
+        }
+
+        /// <summary>
+        /// ตัดยูนิตศัตรูที่มี Stealth ออก (ใช้กับการเลือกเป้าหมายแบบ Chosen/Random)
+        /// </summary>
+        public static List<TargetCandidate> RemoveHiddenTargets(
+            List<TargetCandidate> candidates,
+            int ownerPlayerIndex)
+        {
+            List<TargetCandidate> results = new List<TargetCandidate>();
+
+            if (candidates == null)
+                return results;
+
+            foreach (TargetCandidate candidate in candidates)
+            {
+                if (candidate.IsUnit &&
+                    candidate.PlayerIndex != ownerPlayerIndex)
+                {
+                    MultiverseCardBattle.Cards.CardInstance card =
+                        candidate.TargetObject as MultiverseCardBattle.Cards.CardInstance;
+
+                    if (card != null &&
+                        card.HasKeyword(MultiverseCardBattle.Cards.Keyword.Stealth))
+                    {
+                        continue;
+                    }
+                }
+
+                results.Add(candidate);
             }
 
             return results;

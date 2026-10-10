@@ -20,6 +20,14 @@ namespace MultiverseCardBattle.Core
 
         public void LoadScene(GameScene scene)
         {
+            Go(scene);
+        }
+
+        /// <summary>
+        /// โหลดซีนโดยไม่ต้องมี SceneLoader อยู่ในซีน (เรียกจาก UI ได้เลย)
+        /// </summary>
+        public static void Go(GameScene scene)
+        {
             SceneManager.LoadScene(scene.ToString());
         }
     }

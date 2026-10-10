@@ -30,13 +30,59 @@ namespace MultiverseCardBattle.Effects
             int ownerPlayerIndex =
                 context.SourcePlayer.PlayerID;
 
+            // Self = ตัวการ์ดเอง ไม่ว่าจะอยู่ในสนามหรือไม่
+            // (ใช้กับ Spell, ยูนิตที่ตายแล้วยิง Death ฯลฯ)
+            if (action.Target == TargetRule.Self)
+            {
+                if (context.SourceCard != null)
+                {
+                    results.Add(
+                        new TargetCandidate(
+                            ownerPlayerIndex,
+                            false,
+                            true,
+                            context.SourceCard));
+                }
+
+                return results;
+            }
+
             // Resolve Target
             results = TargetResolver.Resolve(
                 action.Target,
                 ownerPlayerIndex,
                 candidates);
 
-            return results;
+            // All = ทุกเป้าหมายที่เข้าเงื่อนไข (พฤติกรรมเดิม)
+            if (action.Selection == TargetSelection.All)
+                return results;
+
+            // Chosen / Random: ต้องตัดยูนิตที่ Stealth ออก
+            results = TargetResolver.RemoveHiddenTargets(
+                results,
+                ownerPlayerIndex);
+
+            if (results.Count == 0)
+                return results;
+
+            // Chosen: ใช้เป้าหมายที่ผู้เล่นเลือกถ้าถูกต้อง
+            if (action.Selection == TargetSelection.Chosen &&
+                context.ChosenTarget != null)
+            {
+                foreach (TargetCandidate candidate in results)
+                {
+                    if (candidate.TargetObject ==
+                        context.ChosenTarget.TargetObject)
+                    {
+                        return new List<TargetCandidate> { candidate };
+                    }
+                }
+            }
+
+            // Random (หรือ Chosen ที่ไม่มีเป้าหมายที่เลือกไว้): สุ่ม 1 เป้าหมาย
+            int index = UnityEngine.Random.Range(0, results.Count);
+
+            return new List<TargetCandidate> { results[index] };
         }
 
         public static void ExecuteAction(
@@ -54,13 +100,16 @@ namespace MultiverseCardBattle.Effects
                 return;
 
             // ตรวจ Conditions ก่อน
-            foreach (ConditionData condition in action.Conditions)
+            if (action.Conditions != null)
             {
-                if (!ConditionEvaluator.Evaluate(
-                    condition,
-                    sourceContext))
+                foreach (ConditionData condition in action.Conditions)
                 {
-                    return;
+                    if (!ConditionEvaluator.Evaluate(
+                        condition,
+                        sourceContext))
+                    {
+                        return;
+                    }
                 }
             }
 
@@ -80,6 +129,9 @@ namespace MultiverseCardBattle.Effects
                         target);
 
                 if (effectContext == null)
+                    continue;
+
+                if (action.Effects == null)
                     continue;
 
                 foreach (EffectData effect in action.Effects)
@@ -112,6 +164,12 @@ namespace MultiverseCardBattle.Effects
 
             context.Battle =
                 sourceContext.Battle;
+
+            context.CardPool =
+                sourceContext.CardPool;
+
+            context.ChosenTarget =
+                sourceContext.ChosenTarget;
 
             // Target เป็น CardInstance
             if (target.TargetObject is CardInstance card)

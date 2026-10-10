@@ -48,6 +48,10 @@ namespace MultiverseCardBattle.Effects
 
         // Other
         Discover,
-        Transform
+        Transform,
+
+        // Status (เพิ่มต่อท้ายเพื่อไม่ให้ค่า Enum ของการ์ดเดิมเลื่อน)
+        Burn,
+        Regen
     }
 }

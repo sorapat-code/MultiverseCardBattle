@@ -29,6 +29,10 @@ namespace MultiverseCardBattle.Cards
         public Faction Faction;
         public CardTag Tags;
 
+        [Header("Keywords")]
+
+        public Keyword Keywords;
+
         [Header("Stats")]
 
         public int Cost;

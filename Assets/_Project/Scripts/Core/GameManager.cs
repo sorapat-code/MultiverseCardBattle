@@ -22,7 +22,8 @@ namespace MultiverseCardBattle.Core
 
         private void Start()
         {
-            SceneLoader.Instance.LoadScene(GameScene.MainMenu);
+            // บูตแล้วไปเมนูหลัก (ไม่ต้องมี SceneLoader ในซีนก็ได้)
+            SceneLoader.Go(GameScene.MainMenu);
         }
     }
 }

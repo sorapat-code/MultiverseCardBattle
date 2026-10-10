@@ -1,5 +1,6 @@
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Battle;
+using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Effects
 {
@@ -22,6 +23,9 @@ namespace MultiverseCardBattle.Effects
 
         // ผลลัพธ์จาก Discover
         public DiscoverResult DiscoverResult;
+
+        // เป้าหมายที่ผู้เล่นเลือกตอนลงการ์ด (Action แบบ Chosen)
+        public TargetCandidate ChosenTarget;
 
         // แหล่งการ์ดสำหรับ Discover
         public CardPool CardPool;

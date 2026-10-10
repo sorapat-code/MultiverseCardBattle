@@ -5,13 +5,20 @@ namespace MultiverseCardBattle.Battle
 {
     public class BattlePlayer
     {
+        public const int MaxFieldSize = 7;
+
         public int PlayerID;
+
+        public string Name;
 
         public int LeaderHealth;
         public int MaxLeaderHealth;
 
         public int CurrentEnergy;
         public int MaxEnergy;
+
+        // นับจำนวนครั้งที่จั่วจากเด็คว่าง (ความเสียหาย Fatigue เพิ่มขึ้นเรื่อยๆ)
+        public int FatigueCounter;
 
         public Deck Deck;
         public Hand Hand;
@@ -24,6 +31,8 @@ namespace MultiverseCardBattle.Battle
         {
             PlayerID = playerID;
 
+            Name = "Player " + playerID;
+
             MaxLeaderHealth = startingHealth;
             LeaderHealth = startingHealth;
 
@@ -31,8 +40,45 @@ namespace MultiverseCardBattle.Battle
             MaxEnergy = 0;
 
             Deck = new Deck();
+            Deck.OwnerID = playerID;
+
             Hand = new Hand();
+            Hand.OwnerID = playerID;
         }
+
+        /// <summary>
+        /// สร้างเด็คจากรายการ CardData แล้วสับ
+        /// </summary>
+        public void LoadDeck(IEnumerable<CardData> cardDataList)
+        {
+            Deck.Clear();
+
+            if (cardDataList != null)
+            {
+                foreach (CardData data in cardDataList)
+                {
+                    if (data == null)
+                        continue;
+
+                    Deck.Add(new CardInstance(data));
+                }
+            }
+
+            Deck.Shuffle();
+        }
+
+        public bool HasTaunt()
+        {
+            for (int i = 0; i < Field.Count; i++)
+            {
+                if (Field[i].HasKeyword(Keyword.Taunt) &&
+                    !Field[i].HasKeyword(Keyword.Stealth))
+                    return true;
+            }
+
+            return false;
+        }
+
         public bool RemoveCard(CardInstance card)
         {
             if (card == null)
@@ -58,6 +104,8 @@ namespace MultiverseCardBattle.Battle
             if (card == null)
                 return;
 
+            card.OwnerID = PlayerID;
+
             switch (zone)
             {
                 case CardZone.Deck:
@@ -65,7 +113,12 @@ namespace MultiverseCardBattle.Battle
                     break;
 
                 case CardZone.Hand:
-                    Hand.Add(card);
+                    // มือเต็ม: การ์ดถูกเผาทิ้งลงสุสาน
+                    if (!Hand.Add(card))
+                    {
+                        card.Zone = CardZone.Graveyard;
+                        Graveyard.Add(card);
+                    }
                     break;
 
                 case CardZone.Field:

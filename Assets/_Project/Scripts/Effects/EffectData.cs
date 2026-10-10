@@ -13,5 +13,11 @@ namespace MultiverseCardBattle.Effects
 
         // ใช้กับ CreateCard / Transform
         public CardData Card;
+
+        // ใช้กับ AddKeyword / RemoveKeyword
+        public Keyword Keyword;
+
+        // จำนวนเทิร์นของสถานะ (Stun / Burn / Regen) 0 = ใช้ค่าเริ่มต้นของสถานะนั้น
+        public int Duration;
     }
 }

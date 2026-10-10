@@ -7,15 +7,26 @@ namespace MultiverseCardBattle.Battle
     {
         private List<CardInstance> cards = new List<CardInstance>();
 
+        // เจ้าของเด็ค (PlayerID) ถ้า > 0 จะกำหนด OwnerID ให้การ์ดที่เข้ามา
+        public int OwnerID;
+
         public int Count
         {
             get { return cards.Count; }
+        }
+
+        public IReadOnlyList<CardInstance> Cards
+        {
+            get { return cards; }
         }
 
         public void Add(CardInstance card)
         {
             if (card == null)
                 return;
+
+            if (OwnerID > 0)
+                card.OwnerID = OwnerID;
 
             card.Zone = CardZone.Deck;
             cards.Add(card);
@@ -33,6 +44,11 @@ namespace MultiverseCardBattle.Battle
             card.Zone = CardZone.Hand;
 
             return card;
+        }
+
+        public void Clear()
+        {
+            cards.Clear();
         }
 
         public void Shuffle()

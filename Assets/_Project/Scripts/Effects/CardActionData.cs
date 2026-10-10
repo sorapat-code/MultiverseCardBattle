@@ -19,6 +19,9 @@ namespace MultiverseCardBattle.Effects
         [Header("Target")]
         public TargetRule Target;
 
+        // วิธีเลือกเป้าหมาย (ค่าเริ่มต้น All = พฤติกรรมเดิม)
+        public TargetSelection Selection;
+
         [Header("Effects")]
         public List<EffectData> Effects = new();
     }
