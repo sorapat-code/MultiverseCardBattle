@@ -163,6 +163,9 @@ namespace MultiverseCardBattle.Battle
         // เหตุการณ์สุ่ม: ผู้เล่นได้การ์ดลับจากการ Summon ในการต่อสู้นี้
         public bool SecretCardSummoned { get; set; }
 
+        // สถิติระหว่างแมตช์ (ใช้ปลดล็อกการ์ดลับ)
+        public readonly BattleStats Stats = new BattleStats();
+
         // ID ของการ์ดลับทั้งหมดที่ผู้เล่นได้ในการต่อสู้นี้
         public readonly List<string> SecretsSummoned = new List<string>();
 
@@ -210,6 +213,8 @@ namespace MultiverseCardBattle.Battle
 
             Player1.LoadDeck(deck1);
             Player2.LoadDeck(deck2);
+
+            Stats.Init(Player1, Player2);
         }
 
         // ---------- ผู้เล่น ----------
@@ -414,6 +419,25 @@ namespace MultiverseCardBattle.Battle
 
             bool wasOnField = card.Zone == CardZone.Field;
 
+            // Last Guardian: ครั้งแรกในแมตช์ที่กำลังจะตาย เหลือ HP 1 แต่เสีย Taunt ชั่วคราว
+            if (!banish && wasOnField &&
+                card.HasPassive(CardPassive.LastGuardian) &&
+                !card.LastGuardianUsed)
+            {
+                card.LastGuardianUsed = true;
+                card.CurrentHealth = 1;
+
+                if (card.HasKeyword(Keyword.Taunt))
+                {
+                    card.RemoveKeyword(Keyword.Taunt);
+                    card.TauntRestoreTurn = TurnManager.TotalTurns + 1;
+                }
+
+                Log(card.Data.CardName + " refuses to fall (1 HP)");
+
+                return true;
+            }
+
             // Reborn: ตายครั้งแรกแล้วกลับมาบนสนามด้วย 1 HP (ความสามารถ Death ยังทำงาน)
             if (!banish && wasOnField && card.HasKeyword(Keyword.Reborn))
             {
@@ -451,7 +475,11 @@ namespace MultiverseCardBattle.Battle
                 Log(card.Data.CardName + " is destroyed");
 
                 if (wasOnField)
+                {
+                    Stats.AddUnitDeath(owner.PlayerID);
+
                     Publish(TriggerType.Death, card: card, player: owner);
+                }
             }
 
             return true;
@@ -603,6 +631,8 @@ namespace MultiverseCardBattle.Battle
 
             if (target.LeaderHealth < 0)
                 target.LeaderHealth = 0;
+
+            Stats.NoteLeaderHealth(target);
 
             Log(target.Name + " takes " + amount + " damage");
 
@@ -796,6 +826,7 @@ namespace MultiverseCardBattle.Battle
 
                     int attackMod =
                         auraAttack +
+                        card.TurnAttackBonus +
                         card.StatusValue(StatusType.AttackUp) -
                         card.StatusValue(StatusType.AttackDown) -
                         card.StatusValue(StatusType.TransformationFatigue);

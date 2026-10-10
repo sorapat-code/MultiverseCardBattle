@@ -261,6 +261,11 @@ namespace MultiverseCardBattle.Data
             Add("secret", "Shadow Monarch",
                 "Something stirs in the shadows when you summon...",
                 p => p.Data.StatSecrets, () => 1, 500, 300, true);
+
+            Add("knight", "A Knight's Duty",
+                "Prove yourself in battle... a knight watches from the abyss.",
+                p => p.GetOwnedCount(StarterCardLibrary.ArtoriasId) > 0 ? 1 : 0,
+                () => 1, 500, 300, true);
         }
     }
 }

@@ -248,6 +248,22 @@ namespace MultiverseCardBattle.Cards
             }
         }
 
+        // ATK โบนัสชั่วคราวจนจบเทิร์น (ล้างทุกครั้งที่เทิร์นจบ)
+        public int TurnAttackBonus;
+
+        // Last Guardian ใช้ไปแล้วในแมตช์นี้
+        public bool LastGuardianUsed;
+
+        // เทิร์น (TotalTurns) ที่ต้องคืน Taunt ให้ -1 = ไม่มี
+        public int TauntRestoreTurn = -1;
+
+        public bool HasPassive(CardPassive passive)
+        {
+            return Data != null &&
+                   !IsSilenced &&
+                   (Data.Passives & passive) != 0;
+        }
+
         // Shadowbound ที่กำลังทำงานอยู่ (BattleManager.RefreshModifiers เป็นผู้ตั้งค่า)
         public bool ShadowActive;
 

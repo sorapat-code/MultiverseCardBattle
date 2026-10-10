@@ -22,5 +22,8 @@ namespace MultiverseCardBattle.Effects
 
         // ใช้กับ ApplyStatus / RemoveStatus
         public StatusType Status;
+
+        // ใช้กับ DealDamage: ฟื้น HP ให้ Leader เจ้าของการ์ด ต่อเป้าหมายแต่ละตัวที่ได้รับความเสียหายจริง
+        public int HealOwnerPerHit;
     }
 }

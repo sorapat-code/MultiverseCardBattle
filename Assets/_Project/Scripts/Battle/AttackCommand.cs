@@ -50,12 +50,57 @@ namespace MultiverseCardBattle.Battle
             // โจมตีแล้วหลุด Stealth
             Attacker.RemoveKeyword(Keyword.Stealth);
 
+            int attackerHealthBefore = Attacker.CurrentHealth;
+            int targetHealthBefore = targetUnit != null ? targetUnit.CurrentHealth : 0;
+
             if (targetUnit != null)
                 AttackUnit(battle, targetUnit, ambush);
             else
                 AttackLeader(battle, targetLeader);
 
+            if (targetUnit != null)
+            {
+                AfterUnitCombat(
+                    battle, targetUnit, attackerHealthBefore, targetHealthBefore);
+            }
+
             return ActionResult.Ok();
+        }
+
+        // หลังต่อสู้ระหว่างยูนิต: Abysswalker (ATK +1 จนจบเทิร์น) และนับชัยชนะสำหรับปลดล็อกการ์ดลับ
+        private void AfterUnitCombat(
+            BattleManager battle,
+            CardInstance targetUnit,
+            int attackerHealthBefore,
+            int targetHealthBefore)
+        {
+            if (Attacker.Zone == CardZone.Field &&
+                Attacker.CurrentHealth < attackerHealthBefore &&
+                Attacker.HasPassive(CardPassive.Abysswalker))
+            {
+                Attacker.TurnAttackBonus++;
+
+                battle.Log(Attacker.Data.CardName + " grows stronger (+1 Attack)");
+            }
+
+            if (targetUnit.Zone == CardZone.Field &&
+                targetUnit.CurrentHealth < targetHealthBefore &&
+                targetUnit.HasPassive(CardPassive.Abysswalker))
+            {
+                targetUnit.TurnAttackBonus++;
+
+                battle.Log(targetUnit.Data.CardName + " grows stronger (+1 Attack)");
+            }
+
+            bool defenderDown =
+                targetUnit.CurrentHealth <= 0 || targetUnit.Zone != CardZone.Field;
+
+            if (defenderDown &&
+                Attacker.CurrentHealth > 0 &&
+                targetUnit.OwnerID != Player.PlayerID)
+            {
+                battle.Stats.AddCombatWin(Player.PlayerID);
+            }
         }
 
         private void Redirect(

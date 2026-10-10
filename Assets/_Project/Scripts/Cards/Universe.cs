@@ -16,6 +16,7 @@ namespace MultiverseCardBattle.Cards
         Fate,
 
         SoloLeveling,
+        DarkSouls,
 
         JujutsuKaisen
     }

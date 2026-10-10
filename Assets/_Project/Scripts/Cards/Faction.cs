@@ -58,6 +58,9 @@ namespace MultiverseCardBattle.Cards
         // Solo Leveling
         ShadowArmy,
 
+        // Dark Souls
+        Lordran,
+
         // Jujutsu Kaisen
         JujutsuHigh,
         CursedSpirits

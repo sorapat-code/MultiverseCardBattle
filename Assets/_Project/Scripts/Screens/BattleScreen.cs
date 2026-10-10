@@ -1549,6 +1549,58 @@ namespace MultiverseCardBattle.Screens
             return text.ToString();
         }
 
+        private List<SecretUnlock> unlockBanners;
+        private int bannerIndex;
+
+        private void ShowUnlockBanner(SecretUnlock unlock)
+        {
+            Image dim = UIFactory.CreatePanel(
+                overlay, "BannerDim", new Color(0f, 0f, 0f, 0.92f));
+
+            UIFactory.Stretch(dim.rectTransform);
+
+            Button next = dim.gameObject.AddComponent<Button>();
+
+            next.transition = Selectable.Transition.None;
+            next.onClick.AddListener(() =>
+            {
+                bannerIndex++;
+                ShowResult();
+            });
+
+            Text title = ScreenKit.AddLabel(
+                overlay, unlock.Title, 64, TextAnchor.MiddleCenter,
+                0.05f, 0.52f, 0.95f, 0.72f, FontStyle.Bold);
+
+            title.color = unlock.Tint;
+            title.raycastTarget = false;
+            UIFactory.AddTextShadow(title);
+
+            Text sub = ScreenKit.AddLabel(
+                overlay, unlock.Subtitle, 34, TextAnchor.MiddleCenter,
+                0.2f, 0.42f, 0.8f, 0.52f);
+
+            sub.raycastTarget = false;
+
+            CardData card = CardRegistry.Get(unlock.CardId);
+
+            string name = card != null ? card.CardName : unlock.CardId;
+
+            Text unlocked = ScreenKit.AddLabel(
+                overlay, "Secret card unlocked: " + name, 36,
+                TextAnchor.MiddleCenter, 0.2f, 0.3f, 0.8f, 0.4f,
+                FontStyle.Bold);
+
+            unlocked.color = UIFactory.Gold;
+            unlocked.raycastTarget = false;
+
+            Text hint = ScreenKit.AddLabel(
+                overlay, "Click to continue", 24, TextAnchor.MiddleCenter,
+                0.3f, 0.12f, 0.7f, 0.2f);
+
+            hint.raycastTarget = false;
+        }
+
         private void ShowResult()
         {
             bool won = battle.Winner == Human;
@@ -1566,6 +1618,12 @@ namespace MultiverseCardBattle.Screens
                 summary.SecretSummoned = battle.SecretCardSummoned;
                 summary.SecretIds.AddRange(battle.SecretsSummoned);
 
+                unlockBanners = SecretCardService.Evaluate(
+                    battle, Human.PlayerID, won, SaveManager.Profile);
+
+                foreach (SecretUnlock unlock in unlockBanners)
+                    summary.SecretIds.Add(unlock.CardId);
+
                 resultLines = CampaignService.OnBattleFinished(won, summary);
 
                 if (battle.Winner != null)
@@ -1576,6 +1634,13 @@ namespace MultiverseCardBattle.Screens
 
             overlay.gameObject.SetActive(true);
             overlay.SetAsLastSibling();
+
+            // การ์ดลับที่ปลดล็อกได้ แสดง Banner ก่อนสรุปผล (คลิกเพื่อไปต่อ)
+            if (unlockBanners != null && bannerIndex < unlockBanners.Count)
+            {
+                ShowUnlockBanner(unlockBanners[bannerIndex]);
+                return;
+            }
 
             Image dim = UIFactory.CreatePanel(
                 overlay, "Dim", new Color(0f, 0f, 0f, 0.85f));

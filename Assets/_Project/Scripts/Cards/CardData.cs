@@ -33,6 +33,9 @@ namespace MultiverseCardBattle.Cards
 
         public Keyword Keywords;
 
+        // ความสามารถพิเศษที่ทำงานในโค้ด (เช่น การ์ดลับ)
+        public CardPassive Passives;
+
         [Header("Stats")]
 
         public int Cost;

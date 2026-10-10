@@ -182,11 +182,18 @@ namespace MultiverseCardBattle.Effects
             {
                 if (context.Battle != null)
                 {
-                    context.Battle.DamageUnit(
+                    int dealt = context.Battle.DamageUnit(
                         context.SourceCard,
                         context.TargetCard,
                         effect.Value,
                         trueDamage);
+
+                    if (dealt > 0 && effect.HealOwnerPerHit > 0 &&
+                        context.SourcePlayer != null)
+                    {
+                        context.Battle.HealLeader(
+                            null, context.SourcePlayer, effect.HealOwnerPerHit);
+                    }
 
                     return;
                 }
@@ -427,6 +434,14 @@ namespace MultiverseCardBattle.Effects
             // ยูนิตบนสนาม: ผ่าน BattleManager เพื่อยิง Trigger Death
             if (context.Battle != null && IsUnitOnField(context.TargetCard))
             {
+                // นับเอฟเฟกต์ที่ทำลายยูนิตศัตรูทันที (ใช้ตรวจเงื่อนไขปลดล็อกการ์ดลับ)
+                if (context.SourcePlayer != null &&
+                    context.TargetCard.OwnerID != context.SourcePlayer.PlayerID)
+                {
+                    context.Battle.Stats.AddInstantDestroy(
+                        context.SourcePlayer.PlayerID);
+                }
+
                 context.Battle.KillUnit(context.TargetCard);
                 return;
             }

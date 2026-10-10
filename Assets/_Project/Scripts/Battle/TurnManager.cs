@@ -90,6 +90,8 @@ namespace MultiverseCardBattle.Battle
 
             StatusProcessor.OnTurnEnd(battleManager, ending);
 
+            ClearTurnEffects();
+
             battleManager.Resolve();
 
             if (battleManager.IsOver)
@@ -107,6 +109,28 @@ namespace MultiverseCardBattle.Battle
             }
 
             StartTurn();
+        }
+
+        // ล้างโบนัสที่ "จนจบเทิร์น" ของทุกยูนิต และคืน Taunt ที่ถูกริบไว้ชั่วคราว
+        private void ClearTurnEffects()
+        {
+            BattlePlayer[] players = { battleManager.Player1, battleManager.Player2 };
+
+            foreach (BattlePlayer player in players)
+            {
+                foreach (CardInstance card in player.Field)
+                {
+                    card.TurnAttackBonus = 0;
+
+                    if (card.TauntRestoreTurn >= 0 && TotalTurns >= card.TauntRestoreTurn)
+                    {
+                        card.TauntRestoreTurn = -1;
+
+                        if (!card.IsSilenced)
+                            card.AddKeyword(Keyword.Taunt);
+                    }
+                }
+            }
         }
 
         private BattlePlayer GetCurrentPlayer()

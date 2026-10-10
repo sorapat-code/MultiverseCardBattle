@@ -44,6 +44,9 @@ namespace MultiverseCardBattle.Data
         // การ์ดลับ: มีโอกาสน้อยมากที่ Summon ในการต่อสู้จะได้การ์ดนี้แทน Token
         public const string SecretId = "EVT_001";
 
+        // การ์ดลับที่ปลดล็อกจากเงื่อนไขในแมตช์ (SecretCardService)
+        public const string ArtoriasId = "EVT_002";
+
         private static void Build()
         {
             if (cards != null)
@@ -121,6 +124,28 @@ namespace MultiverseCardBattle.Data
                     Act(TriggerType.TurnStart, TargetRule.AllyLeader, TargetSelection.All,
                         FxCard(EffectType.Summon, shadowSoldier))
                 }));
+
+            // Artorias: ปลดล็อกด้วยเงื่อนไข "A Knight's Duty" ไม่ใช่การสุ่ม
+            CardData artorias = Create(
+                ArtoriasId, "Artorias the Abysswalker", CardType.Unit,
+                Universe.DarkSouls, Faction.Lordran, CardRarity.Secret,
+                7, 6, 9, Keyword.Taunt | Keyword.Lifesteal | Keyword.Unique,
+                CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Melee | CardTag.Tank,
+                CardSource.Event,
+                new[]
+                {
+                    Act(TriggerType.Summon, TargetRule.AllEnemies, TargetSelection.All,
+                        FxHeal(EffectType.DealDamage, 2, 2))
+                });
+
+            artorias.Passives = CardPassive.Abysswalker | CardPassive.LastGuardian;
+            artorias.Description =
+                "Taunt, Lifesteal, Unique\n" +
+                "Summon: Deal 2 damage to all enemy units. Restore 2 HP to your Leader for each enemy that took damage.\n" +
+                "Abysswalker: Whenever damaged by an attack, +1 ATK until end of turn.\n" +
+                "Last Guardian: Once per match, instead of dying, survive with 1 HP but lose Taunt until the end of next turn.";
+
+            Add(artorias);
 
             // ---------- Units ----------
 
@@ -643,6 +668,15 @@ namespace MultiverseCardBattle.Data
 
             effect.Type = type;
             effect.Value = value;
+
+            return effect;
+        }
+
+        private static EffectData FxHeal(EffectType type, int value, int healOwnerPerHit)
+        {
+            EffectData effect = Fx(type, value);
+
+            effect.HealOwnerPerHit = healOwnerPerHit;
 
             return effect;
         }

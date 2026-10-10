@@ -105,6 +105,11 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   it is hidden from the Collection, packs, Discover and the deck builder. It can only appear when a
   **Summon** effect that creates a new card is used by the human player (5% chance per summoned card,
   `EffectExecutor.SecretCardChance`).
+- `Artorias the Abysswalker` (`EVT_002`) is a Secret/Unique card unlocked by the "A Knight's Duty"
+  condition (`Data/SecretCardService.cs`): win a match in which you win 4+ unit combats as the attacker,
+  lose 3+ units, never drop below 10 Leader HP and never use an instant-destroy effect. Match stats are
+  tracked by `Battle/BattleStats.cs`. Unlocking shows a banner before the result summary, adds 1 copy to the
+  Collection and grants the hidden achievement (500 Gold + 300 Dust). Card-specific passives use `CardPassive`.
 - Disenchant gives Dust (Common 5, Rare 20, Epic 100, Legendary 400). Crafting costs Dust
   (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.
 - Achievements live in `Data/AchievementService.cs`; stats are stored in the save file (version 3).
