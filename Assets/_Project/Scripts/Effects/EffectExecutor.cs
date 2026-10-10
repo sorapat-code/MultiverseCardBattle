@@ -590,7 +590,7 @@ namespace MultiverseCardBattle.Effects
         }
 
         /// <summary>โอกาสที่ Summon (สร้างการ์ดใหม่) ของผู้เล่นจะได้การ์ดลับ</summary>
-        public static float SecretCardChance = 0.01f;
+        public static float SecretCardChance = 0.05f;
 
         /// <summary>ตัวสุ่ม 0-1 (เทสต์แทนค่าได้)</summary>
         public static System.Func<float> RandomValue = () => UnityEngine.Random.value;

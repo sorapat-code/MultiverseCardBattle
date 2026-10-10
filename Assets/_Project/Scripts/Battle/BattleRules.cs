@@ -296,6 +296,10 @@ namespace MultiverseCardBattle.Battle
                 if (unit.IsHidden)
                     continue;
 
+                // Shadowbound: ยูนิตศัตรูโจมตีไม่ได้
+                if (unit.ShadowActive)
+                    continue;
+
                 if (hasTaunt && !unit.HasKeyword(Keyword.Taunt))
                     continue;
 

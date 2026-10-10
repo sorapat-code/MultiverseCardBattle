@@ -157,5 +157,79 @@ namespace MultiverseCardBattle.Tests
             foreach (CardInstance unit in P2.Field)
                 Assert.AreNotEqual(StarterCardLibrary.SecretId, unit.Data.CardID);
         }
+
+        private CardInstance PlaceCard(BattlePlayer owner, string id)
+        {
+            CardInstance card = new CardInstance(StarterCardLibrary.Get(id));
+
+            card.OwnerID = owner.PlayerID;
+
+            battle.SummonUnit(card, owner);
+
+            card.SummonedOnTurn = -100;
+
+            return card;
+        }
+
+        [Test]
+        public void SecretChance_IsFivePercent()
+        {
+            Assert.AreEqual(0.05f, EffectExecutor.SecretCardChance, 0.0001f);
+        }
+
+        [Test]
+        public void Shadowbound_NeedsATokenToActivate()
+        {
+            CardInstance monarch = PlaceCard(P1, StarterCardLibrary.SecretId);
+
+            battle.Resolve();
+
+            // ตอนลงสนามได้ Shadow Soldier 2 ตัว จึงทำงานทันที
+            Assert.IsTrue(monarch.ShadowActive);
+            Assert.IsTrue(monarch.HasKeyword(Keyword.Unstoppable));
+
+            foreach (CardInstance unit in new List<CardInstance>(P1.Field))
+            {
+                if (unit != monarch)
+                    battle.KillUnit(unit);
+            }
+
+            battle.Resolve();
+
+            Assert.IsFalse(monarch.ShadowActive);
+            Assert.IsFalse(monarch.HasKeyword(Keyword.Unstoppable));
+        }
+
+        [Test]
+        public void Shadowbound_UnitCannotBeAttacked_ButLeaderStillCan()
+        {
+            CardInstance monarch = PlaceCard(P2, StarterCardLibrary.SecretId);
+
+            CardInstance attacker = PlaceCard(P1, "STR_001");
+
+            battle.Resolve();
+
+            Assert.IsTrue(monarch.ShadowActive);
+
+            List<MultiverseCardBattle.Targeting.TargetCandidate> targets =
+                BattleRules.GetAttackTargets(battle, P1, attacker);
+
+            foreach (MultiverseCardBattle.Targeting.TargetCandidate candidate in targets)
+                Assert.AreNotEqual(monarch, candidate.TargetObject);
+        }
+
+        [Test]
+        public void Monarch_SummonsShadowSoldierAtTurnStart()
+        {
+            CardInstance monarch = PlaceCard(P1, StarterCardLibrary.SecretId);
+
+            int before = P1.Field.Count;
+
+            battle.TurnManager.EndTurn();
+            battle.TurnManager.EndTurn();
+
+            Assert.AreEqual(P1, battle.CurrentPlayer);
+            Assert.Greater(P1.Field.Count, before);
+        }
     }
 }

@@ -801,6 +801,8 @@ namespace MultiverseCardBattle.Battle
                     ApplyHealthMod(card, auraHealth);
                 }
 
+                RefreshShadowbound(player);
+
                 foreach (CardInstance card in player.Hand.Cards)
                 {
                     int desired =
@@ -812,6 +814,39 @@ namespace MultiverseCardBattle.Battle
 
                     card.CurrentCost = newCost;
                     card.AppliedCostMod = newCost - baseCost;
+                }
+            }
+        }
+
+        // Shadowbound: มี Token ของตัวเองบนสนาม = ได้ Unstoppable + ถูกโจมตีไม่ได้
+        private static void RefreshShadowbound(BattlePlayer player)
+        {
+            bool hasToken = false;
+
+            foreach (CardInstance other in player.Field)
+            {
+                if (other.Data != null && (other.Data.Tags & CardTag.Token) != 0)
+                {
+                    hasToken = true;
+                    break;
+                }
+            }
+
+            foreach (CardInstance card in player.Field)
+            {
+                bool active = hasToken && card.HasKeyword(Keyword.Shadowbound);
+
+                card.ShadowActive = active;
+
+                if (active && !card.HasKeyword(Keyword.Unstoppable))
+                {
+                    card.AddKeyword(Keyword.Unstoppable);
+                    card.GrantedUnstoppable = true;
+                }
+                else if (!active && card.GrantedUnstoppable)
+                {
+                    card.RemoveKeyword(Keyword.Unstoppable);
+                    card.GrantedUnstoppable = false;
                 }
             }
         }

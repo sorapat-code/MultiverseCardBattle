@@ -60,6 +60,9 @@ namespace MultiverseCardBattle.Cards
         Reborn       = 1 << 15,
 
         // ความสามารถ Spellburst ทำงานครั้งแรกที่เจ้าของใช้การ์ด Spell แล้ว Keyword หายไป
-        Spellburst   = 1 << 16
+        Spellburst   = 1 << 16,
+
+        // ขณะเจ้าของมี Token บนสนาม: ได้ Unstoppable และยูนิตศัตรูโจมตีไม่ได้ (เลือกด้วยสเปลได้)
+        Shadowbound  = 1 << 17
     }
 }

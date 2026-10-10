@@ -68,7 +68,7 @@ Trigger [เงื่อนไข, เงื่อนไข:ค่า] @Target[:
 - **Effect**: `DealDamage`, `DealTrueDamage`, `Heal`, `GainAttack`, `GainHealth`, `SetAttack`, `SetHealth`, `ReduceCost`, `IncreaseCost`, `SetCost`, `DrawCard`, `DiscardCard`, `CreateCard`, `DestroyCard`, `Summon`, `ReturnToHand`, `MoveToDeck`, `Banish`, `AddKeyword`, `RemoveKeyword`, `Silence`, `Stun`, `GainEnergy`, `SpendEnergy`, `Discover`, `Transform`, `Burn`, `Regen`, `ApplyStatus`, `RemoveStatus`, `Adapt`
 - **Condition**: `TurnNumber`, `IsFirstTurn`, `SelfHealthLessThan`, `SelfHealthGreaterThan`, `EnergyGreaterThan`, `EnergyLessThan`, `HandCount`, `DeckCount`, `GraveyardCount`, `AllyUnitCount`, `EnemyUnitCount`, `HasTag`, `HasFaction`, `HasUniverse`, `Chance`, `Combo`, `TargetMarked`
 - **Status**: `Stun`, `Silence`, `Burn`, `Regen`, `Freeze`, `Root`, `Disarm`, `Confusion`, `Poison`, `Bleed`, `Curse`, `Marked`, `AttackUp`, `AttackDown`, `DefenseUp`, `DefenseDown`, `Vulnerable`, `Weakness`, `Barrier`, `CostUp`, `CostDown`, `Exposed`, `Protected`, `Blessed`, `Transformed`, `TemporaryTransformation`, `TransformationLock`, `TransformationFatigue`
-- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Poison`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`
+- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Poison`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`, `Shadowbound`
 - **Tag**: `Human`, `Beast`, `Machine`, `Spirit`, `Undead`, `God`, `Demon`, `Dragon`, `Melee`, `Ranged`, `Magic`, `Support`, `Tank`, `Assassin`, `Leader`, `Elite`, `Boss`, `Summon`, `Token`, `Fire`, `Water`, `Wind`, `Earth`, `Lightning`, `Ice`, `Dark`, `Light`
 
 ## ตัวอย่าง
@@ -103,7 +103,7 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
 
 - `Sung Jin-Woo, Shadow Monarch` (`EVT_001`, rarity `Secret`, source `Event`) is not collectible:
   it is hidden from the Collection, packs, Discover and the deck builder. It can only appear when a
-  **Summon** effect that creates a new card is used by the human player (1% chance per summoned card,
+  **Summon** effect that creates a new card is used by the human player (5% chance per summoned card,
   `EffectExecutor.SecretCardChance`).
 - Disenchant gives Dust (Common 5, Rare 20, Epic 100, Legendary 400). Crafting costs Dust
   (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.

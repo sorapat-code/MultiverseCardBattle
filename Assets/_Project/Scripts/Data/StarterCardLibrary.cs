@@ -108,7 +108,7 @@ namespace MultiverseCardBattle.Data
             Add(Create(
                 SecretId, "Sung Jin-Woo, Shadow Monarch", CardType.Unit,
                 Universe.SoloLeveling, Faction.ShadowArmy, CardRarity.Secret,
-                9, 8, 8, Keyword.Charge | Keyword.Lifesteal,
+                9, 8, 8, Keyword.Charge | Keyword.Lifesteal | Keyword.Shadowbound,
                 CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Dark,
                 CardSource.Event,
                 new[]
@@ -117,6 +117,8 @@ namespace MultiverseCardBattle.Data
                         Fx(EffectType.DealDamage, 3)),
                     Act(TriggerType.Summon, TargetRule.AllyLeader, TargetSelection.All,
                         FxCard(EffectType.Summon, shadowSoldier),
+                        FxCard(EffectType.Summon, shadowSoldier)),
+                    Act(TriggerType.TurnStart, TargetRule.AllyLeader, TargetSelection.All,
                         FxCard(EffectType.Summon, shadowSoldier))
                 }));
 

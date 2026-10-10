@@ -24,7 +24,7 @@ namespace MultiverseCardBattle.Screens
             "A unit cannot attack the turn it is played unless it has Charge or Rush.\n\n" +
             "<b>Keywords</b>\n" +
             "Taunt, Charge, Rush, Shield, Lifesteal, Poison, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
-            "Unstoppable, Guard, Ward, Immune, Reborn, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
+            "Unstoppable, Guard, Ward, Immune, Reborn, Shadowbound, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
             "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
             "See <b>Keywords & Status</b> in the main menu for every keyword, status and game term (Discover, Energy, Graveyard...).\n" +
             "While battling, hover a card to see it larger with an explanation of its keywords underneath.\n\n" +

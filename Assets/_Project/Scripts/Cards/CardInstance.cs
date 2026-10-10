@@ -248,6 +248,12 @@ namespace MultiverseCardBattle.Cards
             }
         }
 
+        // Shadowbound ที่กำลังทำงานอยู่ (BattleManager.RefreshModifiers เป็นผู้ตั้งค่า)
+        public bool ShadowActive;
+
+        // Unstoppable ที่ได้จาก Shadowbound (เอาออกได้เมื่อเงื่อนไขหาย)
+        public bool GrantedUnstoppable;
+
         public bool IsHidden
         {
             get
