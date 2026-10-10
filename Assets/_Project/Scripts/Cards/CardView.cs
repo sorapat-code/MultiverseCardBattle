@@ -307,10 +307,28 @@ namespace MultiverseCardBattle.Screens
             {
                 artwork.sprite = null;
                 artwork.color = new Color(0f, 0f, 0f, 0.28f);
-                stateText.text = data.Type.ToString().ToUpper();
+                // ยังไม่มีรูป: แสดงตัวอักษรย่อของชื่อใหญ่ๆ แทน
+                stateText.text = Initials(data.CardName);
+                stateText.fontSize = Font(44);
             }
 
-            stateText.color = new Color(1f, 1f, 1f, 0.35f);
+            stateText.color = new Color(1f, 1f, 1f, 0.5f);
+        }
+
+        private static string Initials(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return "";
+
+            string[] words =
+                name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (words.Length >= 2)
+                return (words[0].Substring(0, 1) + words[1].Substring(0, 1)).ToUpper();
+
+            return name.Length >= 2
+                ? name.Substring(0, 2).ToUpper()
+                : name.ToUpper();
         }
 
         private static string StatusText(CardInstance card)
@@ -373,6 +391,8 @@ namespace MultiverseCardBattle.Screens
         {
             if (string.IsNullOrEmpty(label))
                 return;
+
+            stateText.fontSize = Font(16);
 
             stateText.text = label;
             stateText.color = new Color(1f, 0.9f, 0.4f, 1f);
