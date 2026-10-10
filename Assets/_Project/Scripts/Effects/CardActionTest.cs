@@ -18,7 +18,7 @@ namespace MultiverseCardBattle.Effects
         {
            // ใช้ BattleManager ที่มีอยู่ใน Scene
             BattleManager battle =
-                FindFirstObjectByType<BattleManager>();
+                FindAnyObjectByType<BattleManager>();
 
             if (battle == null)
             {

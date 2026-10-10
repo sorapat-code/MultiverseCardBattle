@@ -79,7 +79,7 @@ namespace MultiverseCardBattle.Screens
                 test.enabled = false;
             }
 
-            battle = FindFirstObjectByType<BattleManager>();
+            battle = FindAnyObjectByType<BattleManager>();
 
             if (battle == null)
             {

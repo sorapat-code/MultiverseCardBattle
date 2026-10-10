@@ -40,7 +40,7 @@ namespace MultiverseCardBattle.Screens
             {
                 case GameScene.Boot:
                     // GameManager ในซีน Boot จะพาไปเมนูเอง ถ้าไม่มีก็พาไปเลย
-                    if (Object.FindFirstObjectByType<GameManager>() == null)
+                    if (Object.FindAnyObjectByType<GameManager>() == null)
                         SceneLoader.Go(GameScene.MainMenu);
                     return;
 
