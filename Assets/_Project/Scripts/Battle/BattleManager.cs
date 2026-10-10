@@ -54,6 +54,21 @@ namespace MultiverseCardBattle.Battle
             get { return PendingDiscover != null; }
         }
 
+        public AdaptRequest PendingAdapt { get; private set; }
+
+        public bool HasPendingAdapt
+        {
+            get { return PendingAdapt != null; }
+        }
+
+        /// <summary>มีตัวเลือกที่ผู้เล่นต้องเลือกก่อน (Discover หรือ Adapt)</summary>
+        public bool HasPendingChoice
+        {
+            get { return PendingDiscover != null || PendingAdapt != null; }
+        }
+
+        private readonly System.Random adaptRng = new System.Random();
+
         public event Action<BattlePlayer> BattleEnded;
 
         private TriggerManager triggerManager;
@@ -339,6 +354,11 @@ namespace MultiverseCardBattle.Battle
 
             card.SummonedOnTurn = TurnManager.TotalTurns;
             card.AttacksThisTurn = 0;
+            card.TurnsOnField = 0;
+
+            // สถานะ Cost ใช้กับการ์ดในมือเท่านั้น
+            card.RemoveStatus(StatusType.CostUp);
+            card.RemoveStatus(StatusType.CostDown);
 
             Publish(TriggerType.Summon, card: card, player: owner);
 
@@ -359,6 +379,27 @@ namespace MultiverseCardBattle.Battle
                 return false;
 
             bool wasOnField = card.Zone == CardZone.Field;
+
+            // Reborn: ตายครั้งแรกแล้วกลับมาบนสนามด้วย 1 HP (ความสามารถ Death ยังทำงาน)
+            if (!banish && wasOnField && card.HasKeyword(Keyword.Reborn))
+            {
+                card.RemoveKeyword(Keyword.Reborn);
+                card.Statuses.Clear();
+
+                card.CurrentHealth = 1;
+
+                if (card.MaxHealth < 1)
+                    card.MaxHealth = 1;
+
+                card.AttacksThisTurn = 0;
+                card.SummonedOnTurn = TurnManager.TotalTurns;
+
+                Log(card.Data.CardName + " is reborn with 1 HP");
+
+                Publish(TriggerType.Death, card: card, player: owner);
+
+                return true;
+            }
 
             if (!owner.RemoveCard(card))
                 return false;
@@ -400,13 +441,49 @@ namespace MultiverseCardBattle.Battle
             if (target.Zone != CardZone.Field)
                 return 0;
 
-            if (!trueDamage && target.HasKeyword(Keyword.Shield))
+            // Immune: ไม่รับความเสียหายทุกชนิด
+            if (target.HasKeyword(Keyword.Immune))
+            {
+                Log(target.Data.CardName + " is immune");
+
+                return 0;
+            }
+
+            bool exposed = target.HasStatus(StatusType.Exposed);
+
+            if (!trueDamage && !exposed && target.HasKeyword(Keyword.Shield))
             {
                 target.RemoveKeyword(Keyword.Shield);
 
                 Log(target.Data.CardName + "'s shield absorbs the damage");
 
                 return 0;
+            }
+
+            if (!trueDamage)
+            {
+                // ผู้โจมตีอ่อนแรง: สร้างความเสียหายลดลงครึ่งหนึ่ง
+                if (source != null && source.HasStatus(StatusType.Weakness))
+                    amount = Mathf.Max(1, amount / 2);
+
+                // เป้าหมายเปราะบาง: ได้รับเพิ่ม 50% (ปัดขึ้น)
+                if (target.HasStatus(StatusType.Vulnerable))
+                    amount += (amount + 1) / 2;
+
+                amount += target.StatusValue(StatusType.DefenseDown);
+
+                if (!exposed)
+                {
+                    int defense = target.StatusValue(StatusType.DefenseUp);
+
+                    if (defense > 0)
+                        amount = Mathf.Max(1, amount - defense);
+
+                    amount = AbsorbWithBarrier(target, amount);
+
+                    if (amount <= 0)
+                        return 0;
+                }
             }
 
             target.CurrentHealth -= amount;
@@ -445,6 +522,27 @@ namespace MultiverseCardBattle.Battle
             return amount;
         }
 
+        // Barrier ดูดซับความเสียหายตามค่าที่เหลือ คืนความเสียหายที่ทะลุเข้าไป
+        private int AbsorbWithBarrier(CardInstance target, int amount)
+        {
+            StatusEffect barrier = target.GetStatus(StatusType.Barrier);
+
+            if (barrier == null)
+                return amount;
+
+            int absorbed = Mathf.Min(barrier.Value, amount);
+
+            barrier.Value -= absorbed;
+            amount -= absorbed;
+
+            Log(target.Data.CardName + "'s barrier absorbs " + absorbed);
+
+            if (barrier.Value <= 0)
+                target.Statuses.Remove(barrier);
+
+            return amount;
+        }
+
         public int DamageLeader(
             CardInstance source,
             BattlePlayer target,
@@ -453,6 +551,10 @@ namespace MultiverseCardBattle.Battle
         {
             if (target == null || amount <= 0)
                 return 0;
+
+            if (!trueDamage && source != null &&
+                source.HasStatus(StatusType.Weakness))
+                amount = Mathf.Max(1, amount / 2);
 
             target.LeaderHealth -= amount;
 
@@ -487,6 +589,13 @@ namespace MultiverseCardBattle.Battle
         {
             if (target == null || amount <= 0)
                 return 0;
+
+            if (target.HasStatus(StatusType.Curse))
+            {
+                Log(target.Data.CardName + " is cursed and cannot be healed");
+
+                return 0;
+            }
 
             int before = target.CurrentHealth;
 
@@ -528,6 +637,184 @@ namespace MultiverseCardBattle.Battle
                 Log(target.Name + " heals " + healed);
 
             return healed;
+        }
+
+        // ---------- Adapt ----------
+
+        /// <summary>
+        /// ผู้เล่นมนุษย์: รอ UI ให้เลือก / AI: สุ่มเลือกทันที
+        /// </summary>
+        public void RequestAdapt(
+            BattlePlayer player,
+            CardInstance card,
+            int optionCount)
+        {
+            if (player == null || card == null)
+                return;
+
+            List<AdaptOption> options = AdaptOption.Roll(
+                optionCount <= 0 ? 3 : optionCount, adaptRng);
+
+            if (options.Count == 0)
+                return;
+
+            if (IsAI(player))
+            {
+                ApplyAdapt(card, options[adaptRng.Next(options.Count)]);
+
+                Touch();
+
+                return;
+            }
+
+            PendingAdapt = new AdaptRequest
+            {
+                Player = player,
+                Card = card,
+                Options = options
+            };
+
+            Touch();
+        }
+
+        public bool ResolveAdapt(int index)
+        {
+            if (PendingAdapt == null)
+                return false;
+
+            if (index < 0 || index >= PendingAdapt.Options.Count)
+                return false;
+
+            ApplyAdapt(PendingAdapt.Card, PendingAdapt.Options[index]);
+
+            PendingAdapt = null;
+
+            Resolve();
+
+            return true;
+        }
+
+        private void ApplyAdapt(CardInstance card, AdaptOption option)
+        {
+            if (card == null || option == null)
+                return;
+
+            if (option.Attack != 0)
+                card.CurrentAttack += option.Attack;
+
+            if (option.Health != 0)
+            {
+                card.MaxHealth += option.Health;
+                card.CurrentHealth += option.Health;
+            }
+
+            if (option.Keyword != Keyword.None)
+                card.AddKeyword(option.Keyword);
+
+            Log(card.Data.CardName + " adapts: " + option.Label);
+        }
+
+        // ---------- Aura / ตัวปรับค่าจากสถานะ ----------
+
+        /// <summary>
+        /// คำนวณ Aura และสถานะที่บวกลบค่า (AttackUp/Down, Fatigue, CostUp/Down) ใหม่
+        /// ใช้วิธีเก็บ "ค่าที่บวกไว้แล้ว" ในการ์ดแล้วปรับเฉพาะส่วนต่าง
+        /// จึงไม่ทับบัฟถาวรจาก Effect อื่น เรียกหลังทุก Command ใน Resolve()
+        /// </summary>
+        public void RefreshModifiers()
+        {
+            BattlePlayer[] players = { Player1, Player2 };
+
+            foreach (BattlePlayer player in players)
+            {
+                int totalAttack = 0;
+                int totalHealth = 0;
+
+                foreach (CardInstance card in player.Field)
+                {
+                    if (!IsAuraSource(card))
+                        continue;
+
+                    totalAttack += card.Data.AuraAttack;
+                    totalHealth += card.Data.AuraHealth;
+                }
+
+                foreach (CardInstance card in player.Field)
+                {
+                    int auraAttack = totalAttack;
+                    int auraHealth = totalHealth;
+
+                    // Aura ให้ "ยูนิตอื่น" ไม่รวมตัวเอง
+                    if (IsAuraSource(card))
+                    {
+                        auraAttack -= card.Data.AuraAttack;
+                        auraHealth -= card.Data.AuraHealth;
+                    }
+
+                    int attackMod =
+                        auraAttack +
+                        card.StatusValue(StatusType.AttackUp) -
+                        card.StatusValue(StatusType.AttackDown) -
+                        card.StatusValue(StatusType.TransformationFatigue);
+
+                    ApplyAttackMod(card, attackMod);
+                    ApplyHealthMod(card, auraHealth);
+                }
+
+                foreach (CardInstance card in player.Hand.Cards)
+                {
+                    int desired =
+                        card.StatusValue(StatusType.CostUp) -
+                        card.StatusValue(StatusType.CostDown);
+
+                    int baseCost = card.CurrentCost - card.AppliedCostMod;
+                    int newCost = Mathf.Max(0, baseCost + desired);
+
+                    card.CurrentCost = newCost;
+                    card.AppliedCostMod = newCost - baseCost;
+                }
+            }
+        }
+
+        private static bool IsAuraSource(CardInstance card)
+        {
+            return card != null &&
+                   card.Data != null &&
+                   !card.IsSilenced &&
+                   (card.Data.AuraAttack != 0 || card.Data.AuraHealth != 0);
+        }
+
+        private static void ApplyAttackMod(CardInstance card, int desired)
+        {
+            int baseAttack = Mathf.Max(0, card.CurrentAttack - card.AppliedAttackMod);
+
+            if (desired < -baseAttack)
+                desired = -baseAttack;
+
+            card.CurrentAttack = baseAttack + desired;
+            card.AppliedAttackMod = desired;
+        }
+
+        private static void ApplyHealthMod(CardInstance card, int desired)
+        {
+            int delta = desired - card.AppliedHealthMod;
+
+            if (delta == 0)
+                return;
+
+            card.MaxHealth += delta;
+
+            if (card.MaxHealth < 1)
+                card.MaxHealth = 1;
+
+            // ได้ HP เพิ่มจาก Aura ทันที (ยกเว้นยูนิตที่ตายแล้วรอเก็บกวาด)
+            if (delta > 0 && card.CurrentHealth > 0)
+                card.CurrentHealth += delta;
+
+            if (card.CurrentHealth > card.MaxHealth)
+                card.CurrentHealth = card.MaxHealth;
+
+            card.AppliedHealthMod = desired;
         }
 
         // ---------- Discover ----------
@@ -599,6 +886,8 @@ namespace MultiverseCardBattle.Battle
             {
             }
 
+            RefreshModifiers();
+
             CheckVictory();
 
             Touch();
@@ -656,6 +945,7 @@ namespace MultiverseCardBattle.Battle
             Winner = winner;
 
             PendingDiscover = null;
+            PendingAdapt = null;
 
             Log(winner == null
                 ? "The battle ends in a draw"

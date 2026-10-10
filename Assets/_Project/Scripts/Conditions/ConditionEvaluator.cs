@@ -80,6 +80,13 @@ namespace MultiverseCardBattle.Conditions
 
                     return enemyPlayer.Field.Count >= condition.Value;
 
+                case ConditionType.Combo:
+                    return player.CardsPlayedThisTurn >= 1;
+
+                case ConditionType.TargetMarked:
+                    return context.TargetCard != null &&
+                           context.TargetCard.HasStatus(StatusType.Marked);
+
                 //Chance
                 case ConditionType.Chance:
                      return Random.Range(0, 100) < condition.Value;

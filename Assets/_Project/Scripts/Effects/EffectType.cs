@@ -52,6 +52,13 @@ namespace MultiverseCardBattle.Effects
 
         // Status (เพิ่มต่อท้ายเพื่อไม่ให้ค่า Enum ของการ์ดเดิมเลื่อน)
         Burn,
-        Regen
+        Regen,
+
+        // สถานะทั่วไป: ใช้ EffectData.Status + Value + Duration
+        ApplyStatus,
+        RemoveStatus,
+
+        // เลือกความสามารถ 1 อย่างจากตัวเลือกเพื่อเพิ่มให้การ์ด (Value = จำนวนตัวเลือก)
+        Adapt
     }
 }

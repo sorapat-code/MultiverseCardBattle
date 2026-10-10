@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using UnityEngine;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Battle
 {
@@ -32,62 +35,181 @@ namespace MultiverseCardBattle.Battle
             if (!check.Success)
                 return check;
 
-            BattlePlayer defender = battle.GetOpponent(Player);
+            CardInstance targetUnit = TargetUnit;
+            BattlePlayer targetLeader = TargetLeader;
+
+            // Confusion: เป้าหมายถูกสุ่มใหม่ (อาจเป็นพวกเดียวกัน)
+            if (Attacker.IsConfused)
+                Redirect(battle, ref targetUnit, ref targetLeader);
 
             Attacker.AttacksThisTurn++;
 
             // โจมตีแล้วหลุด Stealth
             Attacker.RemoveKeyword(Keyword.Stealth);
 
-            if (TargetUnit != null)
+            if (targetUnit != null)
+                AttackUnit(battle, targetUnit);
+            else
+                AttackLeader(battle, targetLeader);
+
+            return ActionResult.Ok();
+        }
+
+        private void Redirect(
+            BattleManager battle,
+            ref CardInstance targetUnit,
+            ref BattlePlayer targetLeader)
+        {
+            List<TargetCandidate> pool =
+                BattleRules.GetAttackTargets(battle, Player, Attacker);
+
+            foreach (CardInstance ally in Player.Field)
             {
-                battle.Log(
-                    Attacker.Data.CardName + " attacks " +
-                    TargetUnit.Data.CardName);
-
-                battle.Publish(
-                    TriggerType.Attack,
-                    card: Attacker,
-                    player: Player,
-                    target: TargetUnit,
-                    targetPlayer: defender);
-
-                // Trigger อาจทำให้ใครตายหรือถูกย้ายไปแล้ว
-                if (Attacker.Zone == CardZone.Field &&
-                    TargetUnit.Zone == CardZone.Field)
+                if (ally != Attacker)
                 {
-                    int attackerDamage = Attacker.CurrentAttack;
-                    int counterDamage = TargetUnit.CurrentAttack;
-
-                    battle.DamageUnit(Attacker, TargetUnit, attackerDamage);
-                    battle.DamageUnit(TargetUnit, Attacker, counterDamage);
+                    pool.Add(new TargetCandidate(
+                        Player.PlayerID, false, true, ally));
                 }
+            }
+
+            if (pool.Count == 0)
+                return;
+
+            TargetCandidate pick = pool[Random.Range(0, pool.Count)];
+
+            battle.Log(Attacker.Data.CardName + " is confused");
+
+            targetUnit = pick.TargetObject as CardInstance;
+            targetLeader = pick.TargetObject as BattlePlayer;
+        }
+
+        private void AttackUnit(BattleManager battle, CardInstance targetUnit)
+        {
+            BattlePlayer targetOwner = battle.GetPlayer(targetUnit.OwnerID);
+
+            battle.Log(
+                Attacker.Data.CardName + " attacks " +
+                targetUnit.Data.CardName);
+
+            battle.Publish(
+                TriggerType.Attack,
+                card: Attacker,
+                player: Player,
+                target: targetUnit,
+                targetPlayer: targetOwner);
+
+            // Trigger อาจทำให้ใครตายหรือถูกย้ายไปแล้ว
+            if (Attacker.Zone != CardZone.Field ||
+                targetUnit.Zone != CardZone.Field)
+                return;
+
+            int attackerDamage = Attacker.CurrentAttack;
+            int counterDamage = targetUnit.CurrentAttack;
+            int healthBefore = targetUnit.CurrentHealth;
+
+            bool attackerQuick = Attacker.HasKeyword(Keyword.QuickAttack);
+            bool defenderQuick = targetUnit.HasKeyword(Keyword.QuickAttack);
+
+            int dealt;
+
+            if (defenderQuick && !attackerQuick)
+            {
+                // ฝ่ายป้องกันตีก่อน ถ้าผู้โจมตีตายก็ไม่ได้ตีกลับ
+                battle.DamageUnit(targetUnit, Attacker, counterDamage);
+
+                dealt = Attacker.CurrentHealth > 0
+                    ? battle.DamageUnit(Attacker, targetUnit, attackerDamage)
+                    : 0;
+            }
+            else if (attackerQuick && !defenderQuick)
+            {
+                // ผู้โจมตีตีก่อน ถ้าเป้าหมายตายก็ไม่โดนตีกลับ
+                dealt = battle.DamageUnit(Attacker, targetUnit, attackerDamage);
+
+                if (targetUnit.CurrentHealth > 0)
+                    battle.DamageUnit(targetUnit, Attacker, counterDamage);
             }
             else
             {
-                battle.Log(
-                    Attacker.Data.CardName + " attacks " + defender.Name);
+                dealt = battle.DamageUnit(Attacker, targetUnit, attackerDamage);
 
-                battle.Publish(
-                    TriggerType.Attack,
-                    card: Attacker,
-                    player: Player,
-                    targetPlayer: defender);
-
-                battle.Publish(
-                    TriggerType.LeaderAttack,
-                    card: Attacker,
-                    player: Player,
-                    targetPlayer: defender);
-
-                if (Attacker.Zone == CardZone.Field)
-                {
-                    battle.DamageLeader(
-                        Attacker, defender, Attacker.CurrentAttack, false);
-                }
+                battle.DamageUnit(targetUnit, Attacker, counterDamage);
             }
 
-            return ActionResult.Ok();
+            int excess = dealt - healthBefore;
+
+            if (excess <= 0)
+                return;
+
+            if (Attacker.HasKeyword(Keyword.Pierce))
+            {
+                // Pierce: ส่วนเกินทะลุไปที่ Leader ของเจ้าของเป้าหมาย
+                battle.Log(Attacker.Data.CardName + " pierces for " + excess);
+
+                battle.DamageLeader(Attacker, targetOwner, excess, false);
+            }
+            else if (Attacker.HasKeyword(Keyword.Overwhelm))
+            {
+                // Overwhelm: ส่วนเกินกระเด็นไปยูนิตข้างเคียง
+                CardInstance neighbor = FindNeighbor(targetOwner, targetUnit);
+
+                if (neighbor != null)
+                {
+                    battle.Log(Attacker.Data.CardName + " overwhelms for " + excess);
+
+                    battle.DamageUnit(Attacker, neighbor, excess, false);
+                }
+            }
+        }
+
+        // ยูนิตถัดไปทางขวา ถ้าไม่มีให้ใช้ทางซ้าย
+        private static CardInstance FindNeighbor(
+            BattlePlayer owner,
+            CardInstance unit)
+        {
+            if (owner == null)
+                return null;
+
+            int index = owner.Field.IndexOf(unit);
+
+            if (index < 0)
+                return null;
+
+            if (index + 1 < owner.Field.Count)
+                return owner.Field[index + 1];
+
+            if (index - 1 >= 0)
+                return owner.Field[index - 1];
+
+            return null;
+        }
+
+        private void AttackLeader(BattleManager battle, BattlePlayer targetLeader)
+        {
+            BattlePlayer defender = targetLeader != null
+                ? targetLeader
+                : battle.GetOpponent(Player);
+
+            battle.Log(
+                Attacker.Data.CardName + " attacks " + defender.Name);
+
+            battle.Publish(
+                TriggerType.Attack,
+                card: Attacker,
+                player: Player,
+                targetPlayer: defender);
+
+            battle.Publish(
+                TriggerType.LeaderAttack,
+                card: Attacker,
+                player: Player,
+                targetPlayer: defender);
+
+            if (Attacker.Zone == CardZone.Field)
+            {
+                battle.DamageLeader(
+                    Attacker, defender, Attacker.CurrentAttack, false);
+            }
         }
     }
 }

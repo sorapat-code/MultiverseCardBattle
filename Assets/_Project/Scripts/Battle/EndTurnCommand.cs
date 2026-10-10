@@ -14,8 +14,8 @@ namespace MultiverseCardBattle.Battle
             if (battle.IsOver)
                 return ActionResult.Fail("The battle is over");
 
-            if (battle.HasPendingDiscover)
-                return ActionResult.Fail("Choose a Discover option first");
+            if (battle.HasPendingChoice)
+                return ActionResult.Fail("Make your choice first");
 
             if (battle.CurrentPlayer != Player)
                 return ActionResult.Fail("It is not your turn");

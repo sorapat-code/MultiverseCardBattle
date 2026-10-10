@@ -19,5 +19,8 @@ namespace MultiverseCardBattle.Effects
 
         // จำนวนเทิร์นของสถานะ (Stun / Burn / Regen) 0 = ใช้ค่าเริ่มต้นของสถานะนั้น
         public int Duration;
+
+        // ใช้กับ ApplyStatus / RemoveStatus
+        public StatusType Status;
     }
 }

@@ -43,6 +43,10 @@ namespace MultiverseCardBattle.Battle
                     Fire(e.Card, e);
                     break;
 
+                case TriggerType.Spellburst:
+                    FireSpellburst(e);
+                    break;
+
                 case TriggerType.TurnStart:
                 case TriggerType.TurnEnd:
                     if (e.Player != null)
@@ -61,6 +65,34 @@ namespace MultiverseCardBattle.Battle
                     FireForPlayer(battle.Player2, e);
                     break;
             }
+        }
+
+        // Spellburst: ยูนิตที่มี Keyword Spellburst ของผู้ใช้ Spell ทำงานครั้งเดียวแล้ว Keyword หาย
+        private void FireSpellburst(GameEvent e)
+        {
+            if (e.Player == null)
+                return;
+
+            foreach (CardInstance card in
+                new List<CardInstance>(e.Player.Field))
+            {
+                if (!card.HasKeyword(Keyword.Spellburst))
+                    continue;
+
+                Fire(card, e);
+
+                card.RemoveKeyword(Keyword.Spellburst);
+            }
+        }
+
+        // Stun ปิดความสามารถแบบ Active (ต้นเทิร์น / จบเทิร์น / ตอนโจมตี)
+        private static bool IsActiveTrigger(TriggerType trigger)
+        {
+            return trigger == TriggerType.TurnStart ||
+                   trigger == TriggerType.TurnEnd ||
+                   trigger == TriggerType.Attack ||
+                   trigger == TriggerType.Hit ||
+                   trigger == TriggerType.LeaderAttack;
         }
 
         private void FireForPlayer(BattlePlayer player, GameEvent e)
@@ -93,6 +125,9 @@ namespace MultiverseCardBattle.Battle
 
             // การ์ดที่ถูก Silence จะไม่ทำ Action ใดๆ
             if (card.IsSilenced)
+                return;
+
+            if (card.IsStunned && IsActiveTrigger(e.Trigger))
                 return;
 
             BattlePlayer owner = battle.GetPlayer(card.OwnerID);

@@ -102,8 +102,7 @@ namespace MultiverseCardBattle.Targeting
                     MultiverseCardBattle.Cards.CardInstance card =
                         candidate.TargetObject as MultiverseCardBattle.Cards.CardInstance;
 
-                    if (card != null &&
-                        card.HasKeyword(MultiverseCardBattle.Cards.Keyword.Stealth))
+                    if (card != null && card.IsHidden)
                     {
                         continue;
                     }

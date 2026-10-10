@@ -20,6 +20,9 @@ namespace MultiverseCardBattle.Battle
         // นับจำนวนครั้งที่จั่วจากเด็คว่าง (ความเสียหาย Fatigue เพิ่มขึ้นเรื่อยๆ)
         public int FatigueCounter;
 
+        // จำนวนการ์ดที่ใช้ไปแล้วในเทิร์นนี้ (ใช้กับ Combo)
+        public int CardsPlayedThisTurn;
+
         public Deck Deck;
         public Hand Hand;
 
@@ -72,7 +75,22 @@ namespace MultiverseCardBattle.Battle
             for (int i = 0; i < Field.Count; i++)
             {
                 if (Field[i].HasKeyword(Keyword.Taunt) &&
-                    !Field[i].HasKeyword(Keyword.Stealth))
+                    !Field[i].IsHidden)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// มียูนิต Guard (ที่ไม่ได้ซ่อนตัว) อยู่ ศัตรูจึงโจมตี Leader ของผู้เล่นนี้ไม่ได้
+        /// </summary>
+        public bool HasGuard()
+        {
+            for (int i = 0; i < Field.Count; i++)
+            {
+                if (Field[i].HasKeyword(Keyword.Guard) &&
+                    !Field[i].IsHidden)
                     return true;
             }
 

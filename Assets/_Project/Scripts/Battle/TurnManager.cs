@@ -45,6 +45,8 @@ namespace MultiverseCardBattle.Battle
             foreach (CardInstance card in player.Field)
                 card.AttacksThisTurn = 0;
 
+            player.CardsPlayedThisTurn = 0;
+
             Debug.Log(
                 $"Turn {TurnNumber} | " +
                 $"Player {CurrentPlayerID} Turn Start | " +

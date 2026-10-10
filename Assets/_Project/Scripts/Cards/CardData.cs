@@ -39,6 +39,17 @@ namespace MultiverseCardBattle.Cards
         public int Attack;
         public int Health;
 
+        [Header("Aura (ให้ยูนิตพวกเดียวกันตัวอื่นขณะอยู่บนสนาม)")]
+
+        public int AuraAttack;
+        public int AuraHealth;
+
+        [Header("Evolve")]
+
+        // เปลี่ยนเป็นร่างนี้เมื่ออยู่บนสนามครบ EvolveAfterTurns เทิร์นของเจ้าของ
+        public CardData EvolvesInto;
+        public int EvolveAfterTurns;
+
         [Header("Actions")]
 
         public List<CardActionData> Actions = new();

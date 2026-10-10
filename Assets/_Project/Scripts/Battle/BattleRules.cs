@@ -105,8 +105,8 @@ namespace MultiverseCardBattle.Battle
             if (battle.IsOver)
                 return ActionResult.Fail("The battle is over");
 
-            if (battle.HasPendingDiscover)
-                return ActionResult.Fail("Choose a Discover option first");
+            if (battle.HasPendingChoice)
+                return ActionResult.Fail("Make your choice first");
 
             if (battle.CurrentPlayer != player)
                 return ActionResult.Fail("It is not your turn");
@@ -184,8 +184,8 @@ namespace MultiverseCardBattle.Battle
             if (battle.IsOver)
                 return ActionResult.Fail("The battle is over");
 
-            if (battle.HasPendingDiscover)
-                return ActionResult.Fail("Choose a Discover option first");
+            if (battle.HasPendingChoice)
+                return ActionResult.Fail("Make your choice first");
 
             if (battle.CurrentPlayer != player)
                 return ActionResult.Fail("It is not your turn");
@@ -197,6 +197,12 @@ namespace MultiverseCardBattle.Battle
 
             if (attacker.IsStunned)
                 return ActionResult.Fail("That unit is stunned");
+
+            if (attacker.IsFrozen)
+                return ActionResult.Fail("That unit is frozen");
+
+            if (attacker.IsDisarmed)
+                return ActionResult.Fail("That unit is disarmed");
 
             if (attacker.CurrentAttack <= 0)
                 return ActionResult.Fail("That unit has no attack");
@@ -213,7 +219,7 @@ namespace MultiverseCardBattle.Battle
         }
 
         /// <summary>
-        /// เป้าหมายที่ยูนิตตัวนี้โจมตีได้ตามกติกา (Taunt, Stealth, Rush)
+        /// เป้าหมายที่ยูนิตตัวนี้โจมตีได้ตามกติกา (Taunt, Guard, Stealth, Rush)
         /// </summary>
         public static List<TargetCandidate> GetAttackTargets(
             BattleManager battle,
@@ -236,10 +242,11 @@ namespace MultiverseCardBattle.Battle
                 attacker.HasKeyword(Keyword.Rush);
 
             bool hasTaunt = enemy.HasTaunt();
+            bool hasGuard = enemy.HasGuard();
 
             foreach (CardInstance unit in enemy.Field)
             {
-                if (unit.HasKeyword(Keyword.Stealth))
+                if (unit.IsHidden)
                     continue;
 
                 if (hasTaunt && !unit.HasKeyword(Keyword.Taunt))
@@ -249,7 +256,8 @@ namespace MultiverseCardBattle.Battle
                     enemy.PlayerID, false, true, unit));
             }
 
-            if (!hasTaunt && !unitsOnly)
+            // Guard: ขณะมี Guard อยู่ โจมตี Leader ไม่ได้
+            if (!hasTaunt && !hasGuard && !unitsOnly)
             {
                 targets.Add(new TargetCandidate(
                     enemy.PlayerID, true, false, enemy));

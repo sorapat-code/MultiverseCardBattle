@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace MultiverseCardBattle.Cards
@@ -9,6 +10,9 @@ namespace MultiverseCardBattle.Cards
         public int InstanceID { get; private set; }
 
         public CardData Data;
+
+        // ร่างเดิมก่อนแปลงร่าง (null = ยังไม่เคยแปลง) ใช้กลับร่างเดิม / ตอนกลับเข้ามือ
+        public CardData OriginalData;
 
         // เจ้าของการ์ด (PlayerID) 0 = ยังไม่มีเจ้าของ
         public int OwnerID;
@@ -27,6 +31,14 @@ namespace MultiverseCardBattle.Cards
         public int SummonedOnTurn = -1;
 
         public int AttacksThisTurn;
+
+        // จำนวนเทิร์นของเจ้าของที่ยูนิตนี้อยู่บนสนามจนจบเทิร์น (ใช้กับ Evolve)
+        public int TurnsOnField;
+
+        // ค่าที่ Aura / สถานะบวกลบไว้อยู่ตอนนี้ (BattleManager.RefreshModifiers คำนวณใหม่เอง)
+        public int AppliedAttackMod;
+        public int AppliedHealthMod;
+        public int AppliedCostMod;
 
         public CardInstance(CardData data)
         {
@@ -58,6 +70,11 @@ namespace MultiverseCardBattle.Cards
             Statuses.Clear();
 
             AttacksThisTurn = 0;
+            TurnsOnField = 0;
+
+            AppliedAttackMod = 0;
+            AppliedHealthMod = 0;
+            AppliedCostMod = 0;
         }
 
         public void TransformTo(CardData data)
@@ -68,6 +85,50 @@ namespace MultiverseCardBattle.Cards
             Data = data;
 
             ApplyBaseStats(data);
+        }
+
+        /// <summary>
+        /// Evolve: เปลี่ยนเป็นร่างใหม่ แต่คงความเสียหายที่สะสมไว้และสถานะเดิม
+        /// </summary>
+        public void EvolveTo(CardData data)
+        {
+            if (data == null)
+                return;
+
+            int damage = MaxHealth - CurrentHealth;
+            int attacks = AttacksThisTurn;
+            int turns = TurnsOnField;
+
+            List<StatusEffect> kept = new List<StatusEffect>(Statuses);
+
+            Data = data;
+
+            ApplyBaseStats(data);
+
+            Statuses.AddRange(kept);
+
+            AttacksThisTurn = attacks;
+            TurnsOnField = turns;
+
+            if (IsSilenced)
+                Keywords = Keyword.None;
+
+            CurrentHealth = Math.Max(1, MaxHealth - damage);
+        }
+
+        /// <summary>
+        /// กลับเป็นร่างเดิม (ถ้าเคยแปลงร่าง) คืน true ถ้ามีการเปลี่ยน
+        /// ไม่รีเซ็ตค่า ให้เรียก ApplyBaseStats ต่อเอง
+        /// </summary>
+        public bool RestoreOriginalForm()
+        {
+            if (OriginalData == null)
+                return false;
+
+            Data = OriginalData;
+            OriginalData = null;
+
+            return true;
         }
 
         // ---------- Keyword ----------
@@ -103,20 +164,102 @@ namespace MultiverseCardBattle.Cards
             return false;
         }
 
+        public StatusEffect GetStatus(StatusType type)
+        {
+            for (int i = 0; i < Statuses.Count; i++)
+            {
+                if (Statuses[i].Type == type)
+                    return Statuses[i];
+            }
+
+            return null;
+        }
+
+        /// <summary>ผลรวมค่า (Value) ของสถานะชนิดนี้ทั้งหมด</summary>
+        public int StatusValue(StatusType type)
+        {
+            int total = 0;
+
+            for (int i = 0; i < Statuses.Count; i++)
+            {
+                if (Statuses[i].Type == type)
+                    total += Statuses[i].Value;
+            }
+
+            return total;
+        }
+
         public bool IsSilenced
         {
             get { return HasStatus(StatusType.Silence); }
         }
 
+        // Unstoppable ไม่ถูกหยุดด้วย Stun / Freeze / Disarm / Confusion
         public bool IsStunned
         {
-            get { return HasStatus(StatusType.Stun); }
+            get
+            {
+                return HasStatus(StatusType.Stun) &&
+                       !HasKeyword(Keyword.Unstoppable);
+            }
         }
 
-        public void AddStatus(StatusType type, int value, int duration)
+        public bool IsFrozen
+        {
+            get
+            {
+                return HasStatus(StatusType.Freeze) &&
+                       !HasKeyword(Keyword.Unstoppable);
+            }
+        }
+
+        public bool IsDisarmed
+        {
+            get
+            {
+                return HasStatus(StatusType.Disarm) &&
+                       !HasKeyword(Keyword.Unstoppable);
+            }
+        }
+
+        public bool IsConfused
+        {
+            get
+            {
+                return HasStatus(StatusType.Confusion) &&
+                       !HasKeyword(Keyword.Unstoppable);
+            }
+        }
+
+        /// <summary>ซ่อนตัวด้วย Stealth อยู่หรือไม่ (Marked / Exposed ทำให้ซ่อนไม่ได้)</summary>
+        public bool IsHidden
+        {
+            get
+            {
+                return HasKeyword(Keyword.Stealth) &&
+                       !HasStatus(StatusType.Marked) &&
+                       !HasStatus(StatusType.Exposed);
+            }
+        }
+
+        /// <summary>
+        /// ติดสถานะ คืน false ถ้าถูกกัน (Immune / Protected / Unstoppable)
+        /// </summary>
+        public bool AddStatus(StatusType type, int value, int duration)
         {
             if (type == StatusType.None)
-                return;
+                return false;
+
+            if (StatusInfo.IsHarmful(type))
+            {
+                if (HasKeyword(Keyword.Immune) ||
+                    HasStatus(StatusType.Protected))
+                    return false;
+
+                if (HasKeyword(Keyword.Unstoppable) &&
+                    StatusInfo.StopsAttack(type))
+                    return false;
+            }
 
             if (type == StatusType.Silence)
             {
@@ -124,26 +267,34 @@ namespace MultiverseCardBattle.Cards
                 Keywords = Keyword.None;
             }
 
-            // Stun / Silence ไม่ซ้อนกัน แค่ต่ออายุ
-            if (type == StatusType.Stun || type == StatusType.Silence)
+            if (StatusInfo.Stacks(type) || StatusInfo.Refreshes(type))
             {
                 for (int i = 0; i < Statuses.Count; i++)
                 {
-                    if (Statuses[i].Type != type)
+                    StatusEffect existing = Statuses[i];
+
+                    if (existing.Type != type)
                         continue;
 
-                    if (Statuses[i].Duration != StatusEffect.Permanent &&
+                    if (StatusInfo.Stacks(type))
+                        existing.Value += value;
+                    else if (value > existing.Value)
+                        existing.Value = value;
+
+                    if (existing.Duration != StatusEffect.Permanent &&
                         (duration == StatusEffect.Permanent ||
-                         duration > Statuses[i].Duration))
+                         duration > existing.Duration))
                     {
-                        Statuses[i].Duration = duration;
+                        existing.Duration = duration;
                     }
 
-                    return;
+                    return true;
                 }
             }
 
             Statuses.Add(new StatusEffect(type, value, duration));
+
+            return true;
         }
 
         public void RemoveStatus(StatusType type)

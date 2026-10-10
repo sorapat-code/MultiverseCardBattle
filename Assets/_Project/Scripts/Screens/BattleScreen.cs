@@ -154,7 +154,7 @@ namespace MultiverseCardBattle.Screens
 
         private void RunAI()
         {
-            if (battle.IsOver || battle.HasPendingDiscover)
+            if (battle.IsOver || battle.HasPendingChoice)
                 return;
 
             if (battle.CurrentPlayer != Ai)
@@ -284,7 +284,7 @@ namespace MultiverseCardBattle.Screens
             bool myTurn =
                 battle.CurrentPlayer == Human &&
                 !battle.IsOver &&
-                !battle.HasPendingDiscover;
+                !battle.HasPendingChoice;
 
             turnText.text =
                 "Turn " + battle.TurnManager.TurnNumber + " - " +
@@ -412,6 +412,12 @@ namespace MultiverseCardBattle.Screens
 
             if (check.Message.Contains("stunned"))
                 return "STUNNED";
+
+            if (check.Message.Contains("frozen"))
+                return "FROZEN";
+
+            if (check.Message.Contains("disarmed"))
+                return "DISARMED";
 
             if (check.Message.Contains("just summoned"))
                 return "SLEEPING";
@@ -619,6 +625,13 @@ namespace MultiverseCardBattle.Screens
                 return;
             }
 
+            if (battle.HasPendingAdapt &&
+                battle.PendingAdapt.Player == Human)
+            {
+                ShowAdapt();
+                return;
+            }
+
             overlay.gameObject.SetActive(false);
         }
 
@@ -655,6 +668,57 @@ namespace MultiverseCardBattle.Screens
                 view.SetHighlight(CardHighlight.Ready);
                 view.Clicked += OnDiscoverClicked;
             }
+        }
+
+        private void ShowAdapt()
+        {
+            ScreenKit.ClearNow(overlay);
+
+            overlay.gameObject.SetActive(true);
+            overlay.SetAsLastSibling();
+
+            Image dim = UIFactory.CreatePanel(
+                overlay, "Dim", new Color(0f, 0f, 0f, 0.8f));
+
+            UIFactory.Stretch(dim.rectTransform);
+
+            AdaptRequest request = battle.PendingAdapt;
+
+            ScreenKit.AddLabel(
+                overlay,
+                "ADAPT - choose an ability for " + request.Card.Data.CardName,
+                40, TextAnchor.MiddleCenter, 0.1f, 0.68f, 0.9f, 0.85f,
+                FontStyle.Bold);
+
+            int count = request.Options.Count;
+            float width = 0.2f;
+            float gap = 0.03f;
+            float total = count * width + (count - 1) * gap;
+            float x = 0.5f - total / 2f;
+
+            for (int i = 0; i < count; i++)
+            {
+                int index = i;
+
+                ScreenKit.AddButton(
+                    overlay,
+                    request.Options[i].Label,
+                    () => OnAdaptClicked(index),
+                    UIFactory.Accent,
+                    x, 0.4f, x + width, 0.55f, 32);
+
+                x += width + gap;
+            }
+        }
+
+        private void OnAdaptClicked(int index)
+        {
+            if (battle == null || !battle.HasPendingAdapt)
+                return;
+
+            Sfx.Play(SoundId.Play);
+
+            battle.ResolveAdapt(index);
         }
 
         private void ShowResult()
@@ -709,7 +773,7 @@ namespace MultiverseCardBattle.Screens
         {
             return battle != null &&
                 !battle.IsOver &&
-                !battle.HasPendingDiscover &&
+                !battle.HasPendingChoice &&
                 battle.CurrentPlayer == Human;
         }
 

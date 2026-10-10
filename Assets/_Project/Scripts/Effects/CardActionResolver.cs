@@ -123,6 +123,10 @@ namespace MultiverseCardBattle.Effects
             // Execute ทุก Effect กับทุก Target
             foreach (TargetCandidate target in targets)
             {
+                // Ward กัน Effect ที่เลือกเป้าหมายจากศัตรูได้ 1 ครั้ง
+                if (IsWardBlocked(action, sourceContext, target))
+                    continue;
+
                 EffectContext effectContext =
                     CreateTargetContext(
                         sourceContext,
@@ -144,6 +148,35 @@ namespace MultiverseCardBattle.Effects
                         effectContext);
                 }
             }
+        }
+
+        private static bool IsWardBlocked(
+            CardActionData action,
+            EffectContext sourceContext,
+            TargetCandidate target)
+        {
+            // เฉพาะ Effect ที่ "เลือก" เป้าหมาย (Chosen / Random) ไม่ใช่ทุกเป้าหมาย
+            if (action.Selection == TargetSelection.All)
+                return false;
+
+            CardInstance card = target.TargetObject as CardInstance;
+
+            if (card == null || !card.HasKeyword(Keyword.Ward))
+                return false;
+
+            if (sourceContext.SourcePlayer == null ||
+                card.OwnerID == sourceContext.SourcePlayer.PlayerID)
+                return false;
+
+            card.RemoveKeyword(Keyword.Ward);
+
+            if (sourceContext.Battle != null)
+            {
+                sourceContext.Battle.Log(
+                    card.Data.CardName + "'s ward blocks the effect");
+            }
+
+            return true;
         }
 
         private static EffectContext CreateTargetContext(

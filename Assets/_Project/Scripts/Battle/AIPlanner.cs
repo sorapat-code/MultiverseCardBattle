@@ -165,7 +165,11 @@ namespace MultiverseCardBattle.Battle
 
                 bool survives =
                     unit.CurrentAttack < attacker.CurrentHealth ||
-                    attacker.HasKeyword(Keyword.Shield);
+                    attacker.HasKeyword(Keyword.Shield) ||
+                    attacker.HasKeyword(Keyword.Immune) ||
+                    (attacker.HasKeyword(Keyword.QuickAttack) &&
+                     !unit.HasKeyword(Keyword.QuickAttack) &&
+                     killsTarget);
 
                 // แลกที่ได้เปรียบ: ฆ่าได้และตัวเองรอด หรือฆ่าตัวที่แพงกว่า
                 if (killsTarget && (survives || unit.CurrentCost > attacker.CurrentCost))

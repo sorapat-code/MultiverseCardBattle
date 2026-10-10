@@ -67,6 +67,16 @@ namespace MultiverseCardBattle.Editor
 
         private static void RemapReferences(CardData asset)
         {
+            // Evolve ชี้ไปที่ร่างใหม่ ซึ่งต้องเป็น asset ด้วย
+            if (asset.EvolvesInto != null)
+            {
+                CardData evolved = AssetDatabase.LoadAssetAtPath<CardData>(
+                    Folder + "/" + asset.EvolvesInto.CardID + ".asset");
+
+                if (evolved != null)
+                    asset.EvolvesInto = evolved;
+            }
+
             foreach (CardActionData action in asset.Actions)
             {
                 foreach (EffectData effect in action.Effects)

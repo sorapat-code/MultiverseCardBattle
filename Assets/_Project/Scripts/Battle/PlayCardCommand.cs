@@ -65,6 +65,18 @@ namespace MultiverseCardBattle.Battle
                 Player.AddToZone(Card, CardZone.Graveyard);
             }
 
+            // Spellburst: ยูนิตของผู้เล่นที่มี Keyword นี้ทำงานเมื่อใช้ Spell
+            if (Card.Data.Type == CardType.Spell)
+            {
+                battle.Publish(
+                    TriggerType.Spellburst,
+                    card: Card,
+                    player: Player);
+            }
+
+            // นับหลังจบ Effect เพื่อให้ Combo ดูเฉพาะการ์ดที่ใช้ "ก่อนหน้า"
+            Player.CardsPlayedThisTurn++;
+
             return ActionResult.Ok();
         }
     }

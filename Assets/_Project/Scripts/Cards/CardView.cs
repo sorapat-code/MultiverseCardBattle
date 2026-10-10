@@ -343,7 +343,7 @@ namespace MultiverseCardBattle.Screens
                 if (text.Length > 0)
                     text.Append(", ");
 
-                text.Append(status.Type);
+                text.Append(StatusInfo.DisplayName(status.Type));
 
                 if (status.Value > 0)
                     text.Append(' ').Append(status.Value);

@@ -31,6 +31,12 @@ namespace MultiverseCardBattle.Conditions
         HasUniverse,
 
         // Random
-        Chance
+        Chance,
+
+        // Combo: เจ้าของใช้การ์ดอื่นมาก่อนแล้วในเทิร์นนี้
+        Combo,
+
+        // เป้าหมาย (ของ Trigger) ติดสถานะ Marked อยู่
+        TargetMarked
     }
 }

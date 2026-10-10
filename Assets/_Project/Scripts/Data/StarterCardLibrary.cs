@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Conditions;
 using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Targeting;
 
@@ -59,6 +60,23 @@ namespace MultiverseCardBattle.Data
                 Universe.Naruto, Faction.LeafVillage, CardRarity.Common,
                 1, 1, 1, Keyword.None,
                 CardTag.Human | CardTag.Token,
+                CardSource.Token));
+
+
+            // ร่างแปลงของ Goku (Transformation ชั่วคราว)
+            CardData superGoku = Add(Unit(
+                "TKN_003", "Super Saiyan Goku",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
+                8, 7, 8, Keyword.DoubleStrike | Keyword.Unstoppable,
+                CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Token,
+                CardSource.Token));
+
+            // ร่างวิวัฒนาการของ Ichigo (Evolve)
+            CardData bankai = Add(Unit(
+                "TKN_004", "Ichigo, Bankai",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
+                6, 7, 7, Keyword.QuickAttack | Keyword.Pierce,
+                CardTag.Human | CardTag.Spirit | CardTag.Melee | CardTag.Token,
                 CardSource.Token));
 
             // ---------- Units ----------
@@ -274,6 +292,133 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DestroyCard))));
 
+
+            // ---------- Keyword / Status Showcase ----------
+            // การ์ดที่ใช้ Keyword และสถานะใหม่ (Pierce, Quick Attack, Aura, Evolve ฯลฯ)
+
+            Add(Unit("NAR_003", "Rock Lee",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Rare,
+                3, 3, 2, Keyword.Rush | Keyword.QuickAttack,
+                CardTag.Human | CardTag.Melee));
+
+            Add(Unit("NAR_004", "Itachi Uchiha",
+                Universe.Naruto, Faction.Akatsuki, CardRarity.Epic,
+                5, 4, 4, Keyword.Stealth,
+                CardTag.Human | CardTag.Assassin | CardTag.Dark,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Confusion, 0, 2))));
+
+            Add(Unit("OPC_003", "Sanji",
+                Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
+                4, 3, 3, Keyword.None,
+                CardTag.Human | CardTag.Melee | CardTag.Fire,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 1)),
+                ActIf(ConditionType.Combo, 1,
+                    TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 2))));
+
+            Add(Unit("OPC_004", "Jinbe",
+                Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
+                4, 3, 6, Keyword.Guard,
+                CardTag.Human | CardTag.Tank,
+                Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    FxApply(StatusType.DefenseUp, 2, 3))));
+
+            CardData shikai = Add(Unit("BLE_003", "Ichigo, Shikai",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Rare,
+                4, 3, 4, Keyword.QuickAttack,
+                CardTag.Human | CardTag.Spirit | CardTag.Melee));
+
+            // Evolve: อยู่บนสนามครบ 2 เทิร์นแล้วปลดปล่อย Bankai
+            shikai.EvolvesInto = bankai;
+            shikai.EvolveAfterTurns = 2;
+
+            Add(Unit("BLE_004", "Kenpachi Zaraki",
+                Universe.Bleach, Faction.Gotei13, CardRarity.Epic,
+                6, 6, 5, Keyword.Unstoppable | Keyword.Rush,
+                CardTag.Human | CardTag.Elite | CardTag.Melee));
+
+            Add(Unit("DBZ_003", "Goku, Saiyan Warrior",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Epic,
+                5, 4, 5, Keyword.None,
+                CardTag.Human | CardTag.Elite | CardTag.Melee,
+                ActIf(ConditionType.SelfHealthLessThan, 15,
+                    TriggerType.TurnStart, TargetRule.Self, TargetSelection.All,
+                    FxTransform(superGoku, 3))));
+
+            Add(Unit("DBZ_004", "Frieza",
+                Universe.DragonBall, Faction.FriezaForce, CardRarity.Epic,
+                7, 5, 6, Keyword.None,
+                CardTag.Elite | CardTag.Boss | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    FxStatus(EffectType.Burn, 1, 3))));
+
+            Add(Unit("DBZ_005", "Whis",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
+                8, 3, 8, Keyword.Immune | Keyword.Guard,
+                CardTag.God | CardTag.Elite | CardTag.Support));
+
+            Add(Unit("JJB_003", "Star Platinum",
+                Universe.JoJo, Faction.StardustCrusaders, CardRarity.Epic,
+                7, 6, 5, Keyword.QuickAttack | Keyword.Overwhelm,
+                CardTag.Spirit | CardTag.Melee));
+
+            CardData gilgamesh = Add(Unit("FAT_002", "Gilgamesh",
+                Universe.Fate, Faction.Chaldea, CardRarity.Legendary,
+                8, 6, 6, Keyword.Ward,
+                CardTag.Human | CardTag.Elite | CardTag.Light));
+
+            // Aura: ยูนิตพวกเดียวกันตัวอื่นได้ +1 Attack ขณะ Gilgamesh อยู่บนสนาม
+            gilgamesh.AuraAttack = 1;
+
+            Add(Unit("FAT_003", "Medea, Witch of Betrayal",
+                Universe.Fate, Faction.Chaldea, CardRarity.Rare,
+                3, 2, 3, Keyword.Spellburst,
+                CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Spellburst, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1))));
+
+            Add(Unit("HSR_003", "Dan Heng",
+                Universe.HonkaiStarRail, Faction.AstralExpress, CardRarity.Rare,
+                3, 3, 3, Keyword.Pierce,
+                CardTag.Human | CardTag.Ranged | CardTag.Wind));
+
+            Add(Unit("HSR_004", "Silver Wolf",
+                Universe.HonkaiStarRail, Faction.StellaronHunters, CardRarity.Epic,
+                4, 2, 4, Keyword.None,
+                CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Vulnerable, 0, 3),
+                    FxApply(StatusType.AttackDown, 2, 3))));
+
+            Add(Unit("WUW_002", "Rover, Resonator",
+                Universe.WutheringWaves, Faction.BlackShores, CardRarity.Epic,
+                4, 3, 3, Keyword.None,
+                CardTag.Human | CardTag.Melee,
+                Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    Fx(EffectType.Adapt, 3))));
+
+            Add(Unit("MYT_003", "Phoenix",
+                Universe.Mythology, Faction.Neutral, CardRarity.Epic,
+                5, 4, 3, Keyword.Reborn,
+                CardTag.Beast | CardTag.Fire));
+
+            Add(Unit("MYT_004", "Athena, Aegis Bearer",
+                Universe.Mythology, Faction.Olympus, CardRarity.Rare,
+                4, 2, 5, Keyword.Ward,
+                CardTag.God | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxApply(StatusType.Barrier, 2, 0))));
+
+            Add(Unit("MYT_005", "Medusa",
+                Universe.Mythology, Faction.Underworld, CardRarity.Rare,
+                4, 3, 3, Keyword.None,
+                CardTag.Beast | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Disarm, 0, 2),
+                    FxApply(StatusType.Poison, 1, 3))));
+
             // ---------- Spells ----------
 
             Add(Spell("SPL_001", "Lightning Bolt", CardRarity.Common, 1,
@@ -317,6 +462,34 @@ namespace MultiverseCardBattle.Data
             Add(Spell("SPL_010", "Divine Blessing", CardRarity.Rare, 2,
                 Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
                     FxKeyword(EffectType.AddKeyword, Keyword.Shield))));
+
+            Add(Spell("SPL_011", "Hex of Ruin", CardRarity.Common, 2,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Weakness, 0, 3),
+                    FxApply(StatusType.Curse, 0, 3),
+                    FxApply(StatusType.Marked, 0, 3))));
+
+            Add(Spell("SPL_012", "Frozen Prison", CardRarity.Rare, 2,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Freeze, 0, 2),
+                    FxApply(StatusType.Root, 0, 2))));
+
+            Add(Spell("SPL_013", "Rejuvenation", CardRarity.Rare, 3,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxStatus(EffectType.Regen, 2, 3),
+                    FxApply(StatusType.Blessed, 0, 3))));
+
+            Add(Spell("SPL_014", "Opportunist", CardRarity.Common, 2,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 2)),
+                ActIf(ConditionType.Combo, 1,
+                    TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1))));
+
+            Add(Spell("SPL_015", "Sanctuary", CardRarity.Rare, 3,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxApply(StatusType.Protected, 0, 2),
+                    FxApply(StatusType.DefenseUp, 1, 2))));
         }
 
         // ---------- ตัวช่วยสร้างการ์ด ----------
@@ -445,6 +618,49 @@ namespace MultiverseCardBattle.Data
             EffectData effect = Fx(type);
 
             effect.Keyword = keyword;
+
+            return effect;
+        }
+
+
+        // Action ที่ทำงานเมื่อเข้าเงื่อนไข (เช่น Combo)
+        private static CardActionData ActIf(
+            ConditionType condition,
+            int conditionValue,
+            TriggerType trigger,
+            TargetRule rule,
+            TargetSelection selection,
+            params EffectData[] effects)
+        {
+            CardActionData action = Act(trigger, rule, selection, effects);
+
+            ConditionData data = new ConditionData();
+
+            data.Condition = condition;
+            data.Value = conditionValue;
+
+            action.Conditions.Add(data);
+
+            return action;
+        }
+
+        // ApplyStatus: Value = ความแรง, Duration 0 = ค่าเริ่มต้นของสถานะ
+        private static EffectData FxApply(StatusType status, int value, int duration)
+        {
+            EffectData effect = Fx(EffectType.ApplyStatus, value);
+
+            effect.Status = status;
+            effect.Duration = duration;
+
+            return effect;
+        }
+
+        // Transform ชั่วคราว (duration > 0) หรือถาวร (0)
+        private static EffectData FxTransform(CardData card, int duration)
+        {
+            EffectData effect = FxCard(EffectType.Transform, card);
+
+            effect.Duration = duration;
 
             return effect;
         }

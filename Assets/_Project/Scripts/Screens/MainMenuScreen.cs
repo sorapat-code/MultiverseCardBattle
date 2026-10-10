@@ -22,11 +22,10 @@ namespace MultiverseCardBattle.Screens
             "<b>Attack</b>: click one of your ready units (green outline), then click an enemy unit or the enemy Leader. " +
             "A unit cannot attack the turn it is played unless it has Charge or Rush.\n\n" +
             "<b>Keywords</b>\n" +
-            "Taunt - enemies must attack this unit first.      Charge - can attack right away.\n" +
-            "Rush - can attack enemy units right away.          Shield - blocks the next damage.\n" +
-            "Lifesteal - damage dealt heals your Leader.        Poison - any damage it deals destroys a unit.\n" +
-            "Stealth - cannot be targeted until it attacks.     DoubleStrike - attacks twice per turn.\n\n" +
-            "<b>Status</b>: Stun - cannot attack.  Silence - loses keywords.  Burn - takes damage each turn.  Regen - heals each turn.\n\n" +
+            "Taunt, Charge, Rush, Shield, Lifesteal, Poison, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
+            "Unstoppable, Guard, Ward, Immune, Reborn, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
+            "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
+            "See <b>Keywords & Status</b> in the main menu for what every one of them does.\n\n" +
             "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection.  Hover a card to see it larger.\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
             "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.";
@@ -35,6 +34,7 @@ namespace MultiverseCardBattle.Screens
         private RectTransform mainPanel;
         private RectTransform shopPanel;
         private RectTransform helpPanel;
+        private RectTransform glossaryPanel;
 
         private Text message;
         private Text goldText;
@@ -55,10 +55,12 @@ namespace MultiverseCardBattle.Screens
             mainPanel = CreatePanel("MainPanel");
             shopPanel = CreatePanel("ShopPanel");
             helpPanel = CreatePanel("HelpPanel");
+            glossaryPanel = CreatePanel("GlossaryPanel");
 
             BuildMain();
             BuildShop();
             BuildHelp();
+            BuildGlossary();
 
             Show(mainPanel);
         }
@@ -77,6 +79,7 @@ namespace MultiverseCardBattle.Screens
             mainPanel.gameObject.SetActive(panel == mainPanel);
             shopPanel.gameObject.SetActive(panel == shopPanel);
             helpPanel.gameObject.SetActive(panel == helpPanel);
+            glossaryPanel.gameObject.SetActive(panel == glossaryPanel);
 
             RefreshGold();
         }
@@ -167,6 +170,10 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(mainPanel, "Collection",
                 () => SceneLoader.Go(GameScene.Collection),
                 UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+
+            ScreenKit.AddButton(mainPanel, "Keywords & Status",
+                () => Show(glossaryPanel),
+                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
 
             message = ScreenKit.AddLabel(
                 mainPanel, "", 26, TextAnchor.MiddleCenter,
@@ -304,6 +311,37 @@ namespace MultiverseCardBattle.Screens
                 : "No new cards this time - extra copies added.";
 
             RefreshGold();
+        }
+
+        // ---------- Keyword / Status ----------
+
+        private void BuildGlossary()
+        {
+            UIFactory.CreateTitle(glossaryPanel, "KEYWORDS & STATUS");
+
+            RectTransform content;
+
+            ScreenKit.AddScroll(
+                glossaryPanel, "GlossaryScroll",
+                0.06f, 0.14f, 0.94f, 0.88f, out content);
+
+            UIFactory.AddVertical(content, 0f, 24);
+
+            Text text = UIFactory.CreateText(
+                content, GameGlossary.Build(), 24, UIFactory.TextColor,
+                TextAnchor.UpperLeft);
+
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+
+            ContentSizeFitter fitter =
+                text.gameObject.AddComponent<ContentSizeFitter>();
+
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            ScreenKit.AddButton(glossaryPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
         // ---------- วิธีเล่น ----------

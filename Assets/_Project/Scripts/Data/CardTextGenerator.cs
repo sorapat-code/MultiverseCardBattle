@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Conditions;
 using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Targeting;
 
@@ -72,12 +73,35 @@ namespace MultiverseCardBattle.Data
                 if (text.Length > 0)
                     text.Append('\n');
 
-                string prefix = TriggerPrefix(action.Trigger);
+                string prefix = ActionPrefix(action, data);
 
                 if (prefix.Length > 0)
                     text.Append(prefix).Append(' ');
 
                 text.Append(string.Join(", ", parts.ToArray())).Append('.');
+            }
+
+            // Aura: ให้ยูนิตพวกเดียวกันตัวอื่นขณะอยู่บนสนาม
+            if (data.AuraAttack != 0 || data.AuraHealth != 0)
+            {
+                if (text.Length > 0)
+                    text.Append('\n');
+
+                text.Append("Aura: other allies get ")
+                    .Append(Signed(data.AuraAttack)).Append('/')
+                    .Append(Signed(data.AuraHealth)).Append('.');
+            }
+
+            // Evolve: เปลี่ยนร่างเมื่ออยู่บนสนามครบเทิร์น
+            if (data.EvolvesInto != null)
+            {
+                if (text.Length > 0)
+                    text.Append('\n');
+
+                text.Append("Evolve: becomes ")
+                    .Append(data.EvolvesInto.CardName)
+                    .Append(" after ").Append(data.EvolveAfterTurns)
+                    .Append(data.EvolveAfterTurns == 1 ? " turn." : " turns.");
             }
 
             return text.ToString();
@@ -96,10 +120,51 @@ namespace MultiverseCardBattle.Data
                     continue;
 
                 if ((keywords & keyword) == keyword)
-                    names.Add(keyword.ToString());
+                    names.Add(KeywordName(keyword));
             }
 
             return string.Join(", ", names.ToArray());
+        }
+
+        /// <summary>ชื่อ Keyword สำหรับแสดงผล เช่น QuickAttack -> Quick Attack</summary>
+        public static string KeywordName(Keyword keyword)
+        {
+            string raw = keyword.ToString();
+            StringBuilder name = new StringBuilder();
+
+            for (int i = 0; i < raw.Length; i++)
+            {
+                if (i > 0 && char.IsUpper(raw[i]) && char.IsLower(raw[i - 1]))
+                    name.Append(' ');
+
+                name.Append(raw[i]);
+            }
+
+            return name.ToString();
+        }
+
+        // Battlecry / Deathrattle / Combo / Spellburst ได้จาก Trigger และเงื่อนไขของ Action
+        private static string ActionPrefix(CardActionData action, CardData data)
+        {
+            if (action.Conditions != null)
+            {
+                foreach (ConditionData condition in action.Conditions)
+                {
+                    if (condition != null && condition.Condition == ConditionType.Combo)
+                        return "Combo:";
+                }
+            }
+
+            if (action.Trigger == TriggerType.Play && data.Type == CardType.Unit)
+                return "Battlecry:";
+
+            if (action.Trigger == TriggerType.Death && data.Type == CardType.Unit)
+                return "Deathrattle:";
+
+            if (action.Trigger == TriggerType.Spellburst)
+                return "Spellburst:";
+
+            return TriggerPrefix(action.Trigger);
         }
 
         private static string TriggerPrefix(TriggerType trigger)
@@ -121,6 +186,7 @@ namespace MultiverseCardBattle.Data
                 case TriggerType.Heal: return "When healed:";
                 case TriggerType.LeaderAttack: return "On leader attack:";
                 case TriggerType.OnTarget: return "When targeted:";
+                case TriggerType.Spellburst: return "Spellburst:";
                 default: return "";
             }
         }
@@ -267,7 +333,22 @@ namespace MultiverseCardBattle.Data
                     return "discover a card";
 
                 case EffectType.Transform:
-                    return "transform " + target + " into " + CardName(effect.Card);
+                    return "transform " + target + " into " + CardName(effect.Card) +
+                        (effect.Duration > 0
+                            ? " for " + effect.Duration + " turns"
+                            : "");
+
+                case EffectType.ApplyStatus:
+                    return "give " + target + " " +
+                        StatusInfo.DisplayName(effect.Status) +
+                        (value > 0 ? " " + value : "");
+
+                case EffectType.RemoveStatus:
+                    return "remove " + StatusInfo.DisplayName(effect.Status) +
+                        " from " + target;
+
+                case EffectType.Adapt:
+                    return "Adapt";
 
                 default:
                     return "";

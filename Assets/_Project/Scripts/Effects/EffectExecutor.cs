@@ -139,6 +139,19 @@ namespace MultiverseCardBattle.Effects
                         PositiveOr(effect.Duration, DefaultStatusDuration));
                     break;
 
+                case EffectType.ApplyStatus:
+                    ApplyGenericStatus(effect, context);
+                    break;
+
+                case EffectType.RemoveStatus:
+                    if (context.TargetCard != null)
+                        context.TargetCard.RemoveStatus(effect.Status);
+                    break;
+
+                case EffectType.Adapt:
+                    Adapt(effect, context);
+                    break;
+
                 // Resource
                 case EffectType.GainEnergy:
                     GainEnergy(effect, context);
@@ -428,11 +441,30 @@ namespace MultiverseCardBattle.Effects
                 CardZone.Graveyard);
         }
 
+        // Root: ย้ายโซนไม่ได้
+        private static bool IsRooted(EffectContext context)
+        {
+            if (context.TargetCard == null ||
+                !context.TargetCard.HasStatus(StatusType.Root))
+                return false;
+
+            if (context.Battle != null)
+            {
+                context.Battle.Log(
+                    context.TargetCard.Data.CardName + " is rooted");
+            }
+
+            return true;
+        }
+
         private static void ReturnToHand(
             EffectData effect,
             EffectContext context)
         {
             if (context.TargetCard == null)
+                return;
+
+            if (IsRooted(context))
                 return;
 
             if (context.TargetPlayer == null)
@@ -442,7 +474,8 @@ namespace MultiverseCardBattle.Effects
                 context.TargetCard))
                 return;
 
-            // การ์ดที่กลับเข้ามือจะกลับเป็นค่าเริ่มต้น (บัฟ/สถานะหาย)
+            // การ์ดที่กลับเข้ามือจะกลับเป็นค่าเริ่มต้น (บัฟ/สถานะหาย) และกลับร่างเดิม
+            context.TargetCard.RestoreOriginalForm();
             context.TargetCard.ApplyBaseStats(context.TargetCard.Data);
 
             context.TargetPlayer.AddToZone(
@@ -457,6 +490,9 @@ namespace MultiverseCardBattle.Effects
             if (context.TargetCard == null)
                 return;
 
+            if (IsRooted(context))
+                return;
+
             if (context.TargetPlayer == null)
                 return;
 
@@ -464,6 +500,7 @@ namespace MultiverseCardBattle.Effects
                 context.TargetCard))
                 return;
 
+            context.TargetCard.RestoreOriginalForm();
             context.TargetCard.ApplyBaseStats(context.TargetCard.Data);
 
             context.TargetPlayer.AddToZone(
@@ -476,6 +513,9 @@ namespace MultiverseCardBattle.Effects
             EffectContext context)
         {
             if (context.TargetCard == null)
+                return;
+
+            if (IsRooted(context))
                 return;
 
             if (context.Battle != null && IsUnitOnField(context.TargetCard))
@@ -592,7 +632,54 @@ namespace MultiverseCardBattle.Effects
             if (context.TargetCard == null)
                 return;
 
-            context.TargetCard.TransformTo(effect.Card);
+            CardInstance target = context.TargetCard;
+
+            if (target.HasStatus(StatusType.TransformationLock))
+            {
+                if (context.Battle != null)
+                {
+                    context.Battle.Log(
+                        target.Data.CardName + " cannot transform right now");
+                }
+
+                return;
+            }
+
+            // จำร่างแรกไว้ เพื่อกลับร่างเดิมเมื่อหมดเวลา / กลับเข้ามือ
+            CardData original =
+                target.OriginalData != null ? target.OriginalData : target.Data;
+
+            string from = target.Data.CardName;
+            int attacks = target.AttacksThisTurn;
+
+            target.TransformTo(effect.Card);
+
+            // แปลงร่างไม่ทำให้ได้โจมตีเพิ่ม
+            target.AttacksThisTurn = attacks;
+
+            if (original != effect.Card)
+            {
+                target.OriginalData = original;
+
+                target.AddStatus(
+                    StatusType.Transformed, 0, StatusEffect.Permanent);
+
+                if (effect.Duration > 0)
+                {
+                    target.AddStatus(
+                        StatusType.TemporaryTransformation, 0, effect.Duration);
+                }
+            }
+            else
+            {
+                target.OriginalData = null;
+            }
+
+            if (context.Battle != null)
+            {
+                context.Battle.Log(
+                    from + " transforms into " + effect.Card.CardName);
+            }
         }
 
         // ---------- Keyword / Status ----------
@@ -626,7 +713,53 @@ namespace MultiverseCardBattle.Effects
             if (context.TargetCard == null)
                 return;
 
-            context.TargetCard.AddStatus(type, value, duration);
+            bool applied =
+                context.TargetCard.AddStatus(type, value, duration);
+
+            if (!applied && context.Battle != null)
+            {
+                context.Battle.Log(
+                    context.TargetCard.Data.CardName + " resists " +
+                    StatusInfo.DisplayName(type));
+            }
+        }
+
+        // สถานะทั่วไป: Value = ความแรง (ซ้อนได้บางชนิด), Duration 0 = ค่าเริ่มต้นของสถานะ
+        private static void ApplyGenericStatus(
+            EffectData effect,
+            EffectContext context)
+        {
+            StatusType type = effect.Status;
+
+            if (type == StatusType.None)
+                return;
+
+            int value = effect.Value;
+
+            if (StatusInfo.Stacks(type) && value <= 0)
+                value = 1;
+
+            int duration = effect.Duration > 0
+                ? effect.Duration
+                : StatusInfo.DefaultDuration(type);
+
+            ApplyStatus(context, type, value, duration);
+        }
+
+        // Adapt: ให้เจ้าของการ์ดเลือก 1 ใน N ความสามารถ (ต้องมี Battle)
+        private static void Adapt(
+            EffectData effect,
+            EffectContext context)
+        {
+            if (context.Battle == null ||
+                context.TargetCard == null ||
+                context.SourcePlayer == null)
+                return;
+
+            context.Battle.RequestAdapt(
+                context.SourcePlayer,
+                context.TargetCard,
+                effect.Value);
         }
 
         // ---------- Resource ----------
