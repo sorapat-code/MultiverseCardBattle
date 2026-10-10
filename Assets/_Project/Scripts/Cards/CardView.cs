@@ -53,6 +53,9 @@ namespace MultiverseCardBattle.Screens
         private Image attackBox;
         private Image healthBox;
 
+        private Image typeBox;
+        private Text typeText;
+
         private float scale = 1f;
 
         // ---------- สร้าง ----------
@@ -148,6 +151,24 @@ namespace MultiverseCardBattle.Screens
             nameText.resizeTextForBestFit = true;
             nameText.resizeTextMinSize = 7;
             nameText.resizeTextMaxSize = Font(16);
+
+            // ป้ายประเภทการ์ด (UNIT / SPELL ...) ใต้ชื่อ
+            typeBox = UIFactory.CreateRoundedPanel(
+                root, "TypeBox", new Color(0.2f, 0.45f, 0.8f, 0.95f), 4f * scale);
+
+            UIFactory.SetAnchors(typeBox.rectTransform, 0.26f, 0.845f, 0.62f, 0.9f);
+
+            typeBox.raycastTarget = false;
+
+            typeText = UIFactory.CreateText(
+                typeBox.transform, "", Font(10), Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(typeText.rectTransform);
+
+            typeText.resizeTextForBestFit = true;
+            typeText.resizeTextMinSize = 6;
+            typeText.resizeTextMaxSize = Font(10);
 
             // กล่องข้อความด้านล่าง
             Image bodyBox = UIFactory.CreateRoundedPanel(
@@ -377,6 +398,9 @@ namespace MultiverseCardBattle.Screens
             nameText.text = data.CardName;
             nameText.color = Color.white;
 
+            typeText.text = TypeLabel(data.Type);
+            typeBox.color = TypeColor(data.Type);
+
             if (data.Artwork != null)
             {
                 Sprite sprite = data.Artwork;
@@ -532,6 +556,28 @@ namespace MultiverseCardBattle.Screens
                 case Universe.Fate: return new Color(0.5f, 0.2f, 0.25f, 1f);
                 case Universe.Mythology: return new Color(0.4f, 0.4f, 0.2f, 1f);
                 default: return new Color(0.25f, 0.3f, 0.35f, 1f);
+            }
+        }
+
+        private static string TypeLabel(CardType type)
+        {
+            switch (type)
+            {
+                case CardType.Spell: return "SPELL";
+                case CardType.Equipment: return "EQUIPMENT";
+                case CardType.Leader: return "LEADER";
+                default: return "UNIT";
+            }
+        }
+
+        private static Color TypeColor(CardType type)
+        {
+            switch (type)
+            {
+                case CardType.Spell: return new Color(0.62f, 0.3f, 0.85f, 0.95f);
+                case CardType.Equipment: return new Color(0.85f, 0.55f, 0.15f, 0.95f);
+                case CardType.Leader: return new Color(0.85f, 0.2f, 0.3f, 0.95f);
+                default: return new Color(0.2f, 0.45f, 0.8f, 0.95f);
             }
         }
 

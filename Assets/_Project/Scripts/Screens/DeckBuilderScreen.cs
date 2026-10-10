@@ -24,6 +24,8 @@ namespace MultiverseCardBattle.Screens
             new Dictionary<string, CardView>();
 
         private RectTransform deckList;
+        private RectTransform collectionGrid;
+        private CardFilterBar filters;
         private Text deckTitle;
         private Text countText;
         private Text statusText;
@@ -72,15 +74,20 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(root, "Use Deck", UseDeck,
                 UIFactory.Accent, 0.84f, 0.93f, 0.97f, 0.99f, 24);
 
-            // คอลเลกชัน (ซ้าย)
-            RectTransform grid;
+            // คอลเลกชัน (ซ้าย) พร้อมแถบกรอง
+            filters = new CardFilterBar(
+                root, 0.02f, 0.855f, 0.62f, 0.915f,
+                id => profile.GetOwnedCount(id));
+
+            filters.Changed += OnFilterChanged;
 
             ScreenKit.AddScroll(
-                root, "Collection", 0.02f, 0.12f, 0.62f, 0.91f, out grid);
+                root, "Collection", 0.02f, 0.12f, 0.62f, 0.845f,
+                out collectionGrid);
 
-            UIFactory.AddGrid(grid, CardSize, 10f, 10);
+            UIFactory.AddGrid(collectionGrid, CardSize, 10f, 10);
 
-            BuildCollection(grid);
+            BuildCollection(collectionGrid);
 
             // รายการในเด็ค (ขวา)
             countText = ScreenKit.AddLabel(
@@ -120,8 +127,15 @@ namespace MultiverseCardBattle.Screens
 
             cards.Sort(CollectionScreen.CompareCards);
 
+            ScreenKit.ClearNow(grid);
+
+            views.Clear();
+
             foreach (CardData data in cards)
             {
+                if (!filters.Matches(data))
+                    continue;
+
                 CardView view = CardView.Create(grid, CardSize);
 
                 view.ShowData(data);
@@ -129,6 +143,13 @@ namespace MultiverseCardBattle.Screens
 
                 views[data.CardID] = view;
             }
+        }
+
+        private void OnFilterChanged()
+        {
+            BuildCollection(collectionGrid);
+
+            RefreshAll();
         }
 
         // ---------- แก้เด็ค ----------

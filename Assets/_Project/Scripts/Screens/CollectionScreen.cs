@@ -16,8 +16,7 @@ namespace MultiverseCardBattle.Screens
 
         private RectTransform grid;
         private Text summary;
-        private Button filterButton;
-        private bool ownedOnly;
+        private CardFilterBar filters;
 
         private void Start()
         {
@@ -25,8 +24,14 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.CreateTitle(root, "COLLECTION");
 
+            filters = new CardFilterBar(
+                root, 0.03f, 0.835f, 0.97f, 0.89f,
+                id => SaveManager.Profile.GetOwnedCount(id));
+
+            filters.Changed += Rebuild;
+
             ScreenKit.AddScroll(
-                root, "CardGrid", 0.03f, 0.13f, 0.97f, 0.89f, out grid);
+                root, "CardGrid", 0.03f, 0.13f, 0.97f, 0.825f, out grid);
 
             UIFactory.AddGrid(grid, CardSize, 14f, 14);
 
@@ -37,20 +42,6 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(root, "Back",
                 () => SceneLoader.Go(GameScene.MainMenu),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
-
-            filterButton = ScreenKit.AddButton(root, "Show: All",
-                ToggleFilter,
-                UIFactory.Accent, 0.8f, 0.03f, 0.97f, 0.11f, 24);
-
-            Rebuild();
-        }
-
-        private void ToggleFilter()
-        {
-            ownedOnly = !ownedOnly;
-
-            UIFactory.SetButtonLabel(
-                filterButton, ownedOnly ? "Show: Owned" : "Show: All");
 
             Rebuild();
         }
@@ -73,6 +64,7 @@ namespace MultiverseCardBattle.Screens
 
             int ownedKinds = 0;
             int totalCopies = 0;
+            int shown = 0;
 
             foreach (CardData data in cards)
             {
@@ -84,8 +76,10 @@ namespace MultiverseCardBattle.Screens
                     totalCopies += owned;
                 }
 
-                if (ownedOnly && owned == 0)
+                if (!filters.Matches(data))
                     continue;
+
+                shown++;
 
                 CardView view = CardView.Create(grid, CardSize);
 
@@ -95,7 +89,8 @@ namespace MultiverseCardBattle.Screens
 
             summary.text =
                 "Unique cards: " + ownedKinds + " / " + cards.Count +
-                "   Total copies: " + totalCopies;
+                "   Total copies: " + totalCopies +
+                "   Showing: " + shown;
         }
 
         public static int CompareCards(CardData a, CardData b)

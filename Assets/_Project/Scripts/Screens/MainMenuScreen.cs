@@ -16,6 +16,7 @@ namespace MultiverseCardBattle.Screens
 
         private const string HelpText =
             "<b>Goal</b>: reduce the enemy Leader's HP to 0.\n\n" +
+            "<b>Start</b>: a coin flip decides who goes first. The second player draws an extra card and gets The Coin (+1 Energy).\n" +
             "<b>Turns</b>: each turn you draw a card and gain 1 max Energy (up to 10). Cards cost Energy.\n" +
             "<b>Play</b>: click a card in your hand. Units join your field (max 7); spells act immediately. " +
             "If a card needs a target, click a highlighted (red) target.\n" +
@@ -25,8 +26,10 @@ namespace MultiverseCardBattle.Screens
             "Taunt, Charge, Rush, Shield, Lifesteal, Poison, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
             "Unstoppable, Guard, Ward, Immune, Reborn, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
             "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
-            "See <b>Keywords & Status</b> in the main menu for what every one of them does.\n\n" +
-            "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection.  Hover a card to see it larger.\n\n" +
+            "See <b>Keywords & Status</b> in the main menu for every keyword, status and game term (Discover, Energy, Graveyard...).\n" +
+            "While battling, hover a card to see it larger with an explanation of its keywords underneath.\n\n" +
+            "<b>Battle tools</b>: the Graveyard buttons show destroyed cards, and Opp. Hand shows the cards in your opponent's hand.\n" +
+            "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection or close a window.  Hover a card to see it larger.\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
             "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.";
 
@@ -354,9 +357,13 @@ namespace MultiverseCardBattle.Screens
                 helpPanel, "HelpBackground", UIFactory.Panel,
                 0.06f, 0.14f, 0.94f, 0.88f);
 
-            ScreenKit.AddLabel(
+            Text help = ScreenKit.AddLabel(
                 helpPanel, HelpText, 24, TextAnchor.UpperLeft,
                 0.08f, 0.16f, 0.92f, 0.86f);
+
+            help.resizeTextForBestFit = true;
+            help.resizeTextMinSize = 14;
+            help.resizeTextMaxSize = 24;
 
             ScreenKit.AddButton(helpPanel, "Back",
                 () => Show(mainPanel),

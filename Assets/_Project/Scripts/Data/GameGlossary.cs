@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Conditions;
+using MultiverseCardBattle.Effects;
 
 namespace MultiverseCardBattle.Data
 {
@@ -33,6 +36,30 @@ namespace MultiverseCardBattle.Data
                 default: return "";
             }
         }
+
+        // ศัพท์พื้นฐานของเกม (กติกา โซน การกระทำ)
+        private static readonly string[][] GameTerms =
+        {
+            new[] { "Leader", "Your hero. If its HP reaches 0 you lose. Units can attack it." },
+            new[] { "Energy", "Spent to play cards. Max Energy grows by 1 each turn (up to 10) and refills at turn start." },
+            new[] { "Coin flip", "A coin decides who goes first. The player who goes second draws 1 extra card and gets The Coin (+1 Energy once)." },
+            new[] { "Unit", "A card that stays on the field, attacks, and has Attack and Health." },
+            new[] { "Spell", "A one-shot card. It acts immediately and goes to the Graveyard. If it needs a target and none exists, it cannot be played." },
+            new[] { "Token", "A card created by an effect (for example a Spirit Wisp). It cannot be put in a deck." },
+            new[] { "Hand", "Cards you can play. Holds up to 10; extra draws are burned." },
+            new[] { "Deck", "Cards you draw from at turn start. With an empty deck you take Fatigue damage that grows each draw." },
+            new[] { "Field", "Where units fight. Holds up to 7 units per player." },
+            new[] { "Graveyard", "Where destroyed units and used spells go. Click Graveyard in battle to look inside." },
+            new[] { "Opp. Hand", "A button in battle that shows the cards in the opponent's hand." },
+            new[] { "Summon", "Puts a unit directly onto the field (if there is room)." },
+            new[] { "Draw", "Take the top card of your deck into your hand." },
+            new[] { "Discover", "Shows 3 random cards. Choose 1 and it is added to your hand." },
+            new[] { "Counterattack", "When a unit attacks another unit, the defender hits back. Stunned, Frozen and Disarmed units cannot counterattack, and a Stealth unit's first attack is not countered." },
+            new[] { "Sleeping", "A unit cannot attack the turn it is played unless it has Charge or Rush." },
+            new[] { "True damage", "Damage that ignores Shield, Barrier and Defense." },
+            new[] { "Heal", "Restores HP, never above the maximum." },
+            new[] { "Target", "Some cards need you to click a target. If there is none, a spell cannot be played; a unit can still be played but its effect does nothing." }
+        };
 
         /// <summary>Keyword ที่เกิดจากชนิดของ Action ไม่ใช่ flag</summary>
         private static readonly string[][] AbilityKeywords =
@@ -86,6 +113,11 @@ namespace MultiverseCardBattle.Data
         {
             StringBuilder text = new StringBuilder();
 
+            Heading(text, "Game terms");
+
+            foreach (string[] term in GameTerms)
+                Entry(text, term[0], term[1]);
+
             for (int g = 0; g < KeywordGroups.Length; g++)
             {
                 Heading(text, KeywordGroupTitles[g]);
@@ -116,6 +148,184 @@ namespace MultiverseCardBattle.Data
             }
 
             return text.ToString();
+        }
+
+        /// <summary>
+        /// คำอธิบายศัพท์ที่ปรากฏบนการ์ดใบนี้ (Keyword, สถานะที่ติดอยู่, ความสามารถพิเศษ)
+        /// ใช้แสดงใต้การ์ดพรีวิวตอนเอาเมาส์ชี้ ผู้เล่นจะได้ไม่ต้องจำศัพท์เอง
+        /// instance เป็น null ได้ (การ์ดที่ยังไม่ลงสนาม)
+        /// </summary>
+        public static string HintsFor(CardData data, CardInstance instance)
+        {
+            if (data == null)
+                return "";
+
+            List<string[]> terms = new List<string[]>();
+
+            Keyword keywords = instance != null ? instance.Keywords : data.Keywords;
+
+            foreach (Keyword keyword in Enum.GetValues(typeof(Keyword)))
+            {
+                if (keyword == Keyword.None || (keywords & keyword) != keyword)
+                    continue;
+
+                string description = KeywordDescription(keyword);
+
+                if (keyword == Keyword.Immune)
+                {
+                    description = "Reduces every hit by " + data.EffectiveImmuneAmount +
+                        " (a 5-damage hit deals " +
+                        Math.Max(0, 5 - data.EffectiveImmuneAmount) +
+                        "). Blocks harmful statuses.";
+                }
+
+                AddTerm(terms, CardTextGenerator.KeywordName(keyword), description);
+            }
+
+            if (instance != null)
+            {
+                foreach (StatusEffect status in instance.Statuses)
+                {
+                    AddTerm(terms, StatusInfo.DisplayName(status.Type),
+                        StatusInfo.Description(status.Type));
+                }
+            }
+
+            if (data.AuraAttack != 0 || data.AuraHealth != 0)
+                AddTerm(terms, "Aura", AbilityText("Aura"));
+
+            if (data.EvolvesInto != null)
+                AddTerm(terms, "Evolve", AbilityText("Evolve"));
+
+            if (data.Actions != null)
+            {
+                foreach (CardActionData action in data.Actions)
+                {
+                    if (action == null)
+                        continue;
+
+                    if (action.Trigger == TriggerType.Play && data.Type == CardType.Unit)
+                        AddTerm(terms, "Battlecry", AbilityText("Battlecry"));
+                    else if (action.Trigger == TriggerType.Death)
+                        AddTerm(terms, "Deathrattle", AbilityText("Deathrattle"));
+                    else if (action.Trigger == TriggerType.Spellburst)
+                        AddTerm(terms, "Spellburst", KeywordDescription(Keyword.Spellburst));
+
+                    if (action.Conditions != null)
+                    {
+                        foreach (ConditionData condition in action.Conditions)
+                        {
+                            if (condition.Condition == ConditionType.Combo)
+                                AddTerm(terms, "Combo", AbilityText("Combo"));
+                        }
+                    }
+
+                    if (action.Effects == null)
+                        continue;
+
+                    foreach (EffectData effect in action.Effects)
+                        AddEffectTerm(terms, effect);
+                }
+            }
+
+            StringBuilder text = new StringBuilder();
+
+            // ไม่ยาวเกินพื้นที่แสดงผล
+            for (int i = 0; i < terms.Count && i < 7; i++)
+            {
+                if (text.Length > 0)
+                    text.Append('\n');
+
+                text.Append("<b>").Append(terms[i][0]).Append("</b>: ")
+                    .Append(terms[i][1]);
+            }
+
+            return text.ToString();
+        }
+
+        private static void AddEffectTerm(List<string[]> terms, EffectData effect)
+        {
+            switch (effect.Type)
+            {
+                case EffectType.Discover:
+                    AddTerm(terms, "Discover", "Shows 3 random cards. Choose 1 and it is added to your hand.");
+                    break;
+
+                case EffectType.Adapt:
+                    AddTerm(terms, "Adapt", AbilityText("Adapt"));
+                    break;
+
+                case EffectType.Transform:
+                    AddTerm(terms, "Transformation", AbilityText("Transformation"));
+                    break;
+
+                case EffectType.Summon:
+                    AddTerm(terms, "Summon", "Puts a unit directly onto the field (if there is room).");
+                    break;
+
+                case EffectType.DealTrueDamage:
+                    AddTerm(terms, "True damage", "Ignores Shield, Barrier and Defense.");
+                    break;
+
+                case EffectType.Stun:
+                    AddTerm(terms, "Stun", StatusInfo.Description(StatusType.Stun));
+                    break;
+
+                case EffectType.Silence:
+                    AddTerm(terms, "Silence", StatusInfo.Description(StatusType.Silence));
+                    break;
+
+                case EffectType.Burn:
+                    AddTerm(terms, "Burn", StatusInfo.Description(StatusType.Burn));
+                    break;
+
+                case EffectType.Regen:
+                    AddTerm(terms, "Regeneration", StatusInfo.Description(StatusType.Regen));
+                    break;
+
+                case EffectType.ApplyStatus:
+                    AddTerm(terms, StatusInfo.DisplayName(effect.Status),
+                        StatusInfo.Description(effect.Status));
+                    break;
+
+                case EffectType.AddKeyword:
+                case EffectType.RemoveKeyword:
+                    foreach (Keyword keyword in Enum.GetValues(typeof(Keyword)))
+                    {
+                        if (keyword != Keyword.None &&
+                            (effect.Keyword & keyword) == keyword)
+                        {
+                            AddTerm(terms, CardTextGenerator.KeywordName(keyword),
+                                KeywordDescription(keyword));
+                        }
+                    }
+                    break;
+            }
+        }
+
+        private static string AbilityText(string name)
+        {
+            foreach (string[] pair in AbilityKeywords)
+            {
+                if (pair[0] == name)
+                    return pair[1];
+            }
+
+            return "";
+        }
+
+        private static void AddTerm(List<string[]> terms, string name, string description)
+        {
+            if (string.IsNullOrEmpty(description))
+                return;
+
+            foreach (string[] existing in terms)
+            {
+                if (existing[0] == name)
+                    return;
+            }
+
+            terms.Add(new[] { name, description });
         }
 
         private static void Heading(StringBuilder text, string title)

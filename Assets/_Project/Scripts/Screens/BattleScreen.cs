@@ -24,7 +24,7 @@ namespace MultiverseCardBattle.Screens
         private static readonly Vector2 PreviewCardSize = new Vector2(250f, 350f);
 
         private const float AIActionDelay = 0.6f;
-        private const int MaxLogLinesShown = 16;
+        private const int MaxLogLinesShown = 14;
 
         private BattleManager battle;
 
@@ -37,6 +37,13 @@ namespace MultiverseCardBattle.Screens
         private Text turnText;
         private Text hintText;
         private Text logText;
+        private Text termsText;
+
+        // ป้ายประกาศผลโยนเหรียญตอนเริ่ม
+        private RectTransform bannerRoot;
+        private Text bannerText;
+        private float bannerTimer;
+        private bool bannerShown;
 
         private Button enemyLeader;
         private Button playerLeader;
@@ -59,6 +66,9 @@ namespace MultiverseCardBattle.Screens
         private PileKind openPile = PileKind.None;
         private RectTransform pileOverlay;
         private ScrollRect pileScroll;
+        private string pileSignature = "";
+        private PileKind builtPile = PileKind.None;
+        private float pileScrollValue = 1f;
         private Button enemyHandButton;
         private Button enemyGraveButton;
         private Button playerGraveButton;
@@ -150,6 +160,8 @@ namespace MultiverseCardBattle.Screens
                 return;
             }
 
+            UpdateBanner();
+
             RunAI();
 
             HandleHotkeys();
@@ -164,6 +176,39 @@ namespace MultiverseCardBattle.Screens
             if (dirty || battle.StateVersion != lastVersion)
             {
                 Refresh();
+            }
+        }
+
+        private void UpdateBanner()
+        {
+            if (!bannerShown)
+            {
+                bannerShown = true;
+
+                if (battle.CoinFlipped)
+                {
+                    bool youFirst = battle.FirstPlayerID == Human.PlayerID;
+
+                    bannerText.text =
+                        "<color=#FFD070>COIN FLIP</color>\n" +
+                        (youFirst
+                            ? "You go first"
+                            : Ai.Name + " goes first\n" +
+                              "<size=24>You get The Coin (+1 Energy)</size>");
+
+                    bannerRoot.gameObject.SetActive(true);
+                    bannerRoot.SetAsLastSibling();
+
+                    bannerTimer = 3f;
+                }
+            }
+
+            if (bannerTimer > 0f)
+            {
+                bannerTimer -= Time.unscaledDeltaTime;
+
+                if (bannerTimer <= 0f)
+                    bannerRoot.gameObject.SetActive(false);
             }
         }
 
@@ -244,8 +289,17 @@ namespace MultiverseCardBattle.Screens
                 0.005f, 0.01f, 0.17f, 0.99f);
 
             logText = ScreenKit.AddLabel(
-                root, "", 17, TextAnchor.LowerLeft,
-                0.01f, 0.02f, 0.165f, 0.58f);
+                root, "", 16, TextAnchor.LowerLeft,
+                0.01f, 0.02f, 0.165f, 0.33f);
+
+            // คำอธิบายศัพท์ของการ์ดที่ชี้อยู่ (ไม่ต้องจำศัพท์เอง)
+            termsText = ScreenKit.AddLabel(
+                root, "", 15, TextAnchor.UpperLeft,
+                0.01f, 0.34f, 0.165f, 0.59f);
+
+            termsText.resizeTextForBestFit = true;
+            termsText.resizeTextMinSize = 9;
+            termsText.resizeTextMaxSize = 15;
 
             previewZone = UIFactory.CreateZone(
                 root, "PreviewZone", 0.005f, 0.60f, 0.17f, 0.99f);
@@ -321,6 +375,26 @@ namespace MultiverseCardBattle.Screens
             cancelButton = ScreenKit.AddButton(
                 root, "Cancel", ClearSelectionAndRefresh,
                 UIFactory.Muted, 0.19f, 0.275f, 0.31f, 0.355f, 24);
+
+            // ป้ายผลโยนเหรียญ (หายเองหลังไม่กี่วินาที)
+            bannerRoot = UIFactory.CreateRect("CoinBanner", root);
+
+            UIFactory.SetAnchors(bannerRoot, 0.3f, 0.43f, 0.7f, 0.57f);
+
+            Image bannerBack = UIFactory.CreateRoundedPanel(
+                bannerRoot, "Back", new Color(0f, 0f, 0f, 0.82f), 16f);
+
+            UIFactory.Stretch(bannerBack.rectTransform);
+
+            bannerBack.raycastTarget = false;
+
+            bannerText = UIFactory.CreateText(
+                bannerRoot, "", 34, Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(bannerText.rectTransform);
+
+            bannerRoot.gameObject.SetActive(false);
 
             // หน้าต่างดูกองทิ้ง / มือศัตรู
             pileOverlay = UIFactory.CreateRect("PileOverlay", root);
@@ -634,12 +708,17 @@ namespace MultiverseCardBattle.Screens
                 return;
 
             previewView.SetHighlight(CardHighlight.None);
+
+            termsText.text = GameGlossary.HintsFor(view.Data, view.Instance);
         }
 
         private void HidePreview(CardView view)
         {
             if (previewView != null)
                 previewView.gameObject.SetActive(false);
+
+            if (termsText != null)
+                termsText.text = "";
         }
 
         // วาดใหม่หลังสถานะเปลี่ยน: อัปเดตค่าบนพรีวิว หรือซ่อนถ้าการ์ดหายไปแล้ว
@@ -656,9 +735,16 @@ namespace MultiverseCardBattle.Screens
             if (shown.Zone == CardZone.Field ||
                 shown.Zone == CardZone.Hand ||
                 shown.Zone == CardZone.Graveyard)
+            {
                 previewView.ShowInstance(shown);
+
+                termsText.text = GameGlossary.HintsFor(shown.Data, shown);
+            }
             else
+            {
                 previewView.gameObject.SetActive(false);
+                termsText.text = "";
+            }
         }
 
         // ---------- ตัวเลขลอย / เสียง ----------
@@ -924,6 +1010,8 @@ namespace MultiverseCardBattle.Screens
             {
                 pileOverlay.gameObject.SetActive(false);
                 pileScroll = null;
+                pileSignature = "";
+                builtPile = PileKind.None;
                 return;
             }
 
@@ -950,9 +1038,23 @@ namespace MultiverseCardBattle.Screens
                     break;
             }
 
-            // จำตำแหน่งเลื่อนไว้ ไม่ให้เด้งกลับขึ้นบนทุกครั้งที่สถานะเปลี่ยน
-            float scrollPosition =
-                pileScroll != null ? pileScroll.verticalNormalizedPosition : 1f;
+            // สร้างหน้าต่างใหม่เฉพาะเมื่อรายการหรือค่าบนการ์ดเปลี่ยนจริง
+            // (ไม่งั้นสร้างทิ้งสร้างใหม่ทุกครั้งที่สถานะเปลี่ยน ทำให้รายการกระพริบ/หาย)
+            string signature = BuildPileSignature(cards);
+
+            if (pileOverlay.gameObject.activeSelf &&
+                builtPile == openPile &&
+                signature == pileSignature)
+            {
+                return;
+            }
+
+            // เปิดกองเดิมซ้ำ = จำตำแหน่งเลื่อนไว้ กองใหม่ = เริ่มที่บนสุด
+            float scrollPosition = builtPile == openPile ? pileScrollValue : 1f;
+
+            pileSignature = signature;
+            builtPile = openPile;
+            pileScroll = null;
 
             ScreenKit.ClearNow(pileOverlay);
 
@@ -998,14 +1100,41 @@ namespace MultiverseCardBattle.Screens
                     view.HoverExited += HidePreview;
                 }
 
+                pileScroll.onValueChanged.AddListener(
+                    position => pileScrollValue = position.y);
+
+                Canvas.ForceUpdateCanvases();
+
                 LayoutRebuilder.ForceRebuildLayoutImmediate(content);
 
-                pileScroll.verticalNormalizedPosition = scrollPosition;
+                // เลื่อนกลับเฉพาะเมื่อเนื้อหายาวกว่าหน้าต่าง (ไม่งั้นการ์ดจะหลุดจอ)
+                bool scrollable =
+                    content.rect.height > pileScroll.viewport.rect.height + 1f;
+
+                pileScroll.verticalNormalizedPosition =
+                    scrollable ? Mathf.Clamp01(scrollPosition) : 1f;
             }
 
             ScreenKit.AddButton(
                 pileOverlay, "Close", () => TogglePile(openPile),
                 UIFactory.Accent, 0.4f, 0.03f, 0.6f, 0.11f, 28);
+        }
+
+        // ลายเซ็นของรายการ: ID + ค่าที่แสดงบนการ์ด ใช้เทียบว่าต้องวาดใหม่หรือไม่
+        private static string BuildPileSignature(List<CardInstance> cards)
+        {
+            StringBuilder text = new StringBuilder();
+
+            foreach (CardInstance card in cards)
+            {
+                text.Append(card.InstanceID).Append(':')
+                    .Append(card.CurrentCost).Append(':')
+                    .Append(card.CurrentAttack).Append(':')
+                    .Append(card.CurrentHealth).Append(':')
+                    .Append((int)card.Keywords).Append(';');
+            }
+
+            return text.ToString();
         }
 
         private void ShowResult()
