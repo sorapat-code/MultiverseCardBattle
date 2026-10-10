@@ -132,7 +132,7 @@ namespace MultiverseCardBattle.Screens
             Image nameBox = UIFactory.CreateRoundedPanel(
                 root, "NameBox", new Color(0f, 0f, 0f, 0.5f), 5f * scale);
 
-            UIFactory.SetAnchors(nameBox.rectTransform, 0.22f, 0.9f, 0.96f, 0.975f);
+            UIFactory.SetAnchors(nameBox.rectTransform, 0.2f, 0.9f, 0.96f, 0.975f);
 
             nameBox.raycastTarget = false;
 
@@ -153,7 +153,7 @@ namespace MultiverseCardBattle.Screens
             Image bodyBox = UIFactory.CreateRoundedPanel(
                 root, "BodyBox", new Color(0f, 0f, 0f, 0.58f), 6f * scale);
 
-            UIFactory.SetAnchors(bodyBox.rectTransform, 0.06f, 0.19f, 0.94f, 0.46f);
+            UIFactory.SetAnchors(bodyBox.rectTransform, 0.06f, 0.16f, 0.94f, 0.44f);
 
             bodyBox.raycastTarget = false;
 
@@ -172,30 +172,30 @@ namespace MultiverseCardBattle.Screens
             bodyText.resizeTextMaxSize = Font(14);
 
             // ค่าใช้จ่าย (วงกลมซ้ายบน)
-            Image costBox = AddCircle(root, "CostBox", 0.14f, 0.89f, 0.3f,
+            Image costBox = AddCircle(root, "CostBox", 0.12f, 0.9f, 0.22f,
                 new Color(0.1f, 0.65f, 0.85f, 1f), size);
 
             costText = UIFactory.CreateText(
-                costBox.transform, "0", Font(24), Color.white,
+                costBox.transform, "0", Font(18), Color.white,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             UIFactory.Stretch(costText.rectTransform);
 
             // พลังโจมตี (ซ้ายล่าง) / พลังชีวิต (ขวาล่าง)
-            attackBox = AddCircle(root, "AttackBox", 0.14f, 0.11f, 0.3f,
+            attackBox = AddCircle(root, "AttackBox", 0.11f, 0.075f, 0.18f,
                 new Color(0.8f, 0.15f, 0.15f, 1f), size);
 
             attackText = UIFactory.CreateText(
-                attackBox.transform, "0", Font(24), Color.white,
+                attackBox.transform, "0", Font(15), Color.white,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             UIFactory.Stretch(attackText.rectTransform);
 
-            healthBox = AddCircle(root, "HealthBox", 0.86f, 0.11f, 0.3f,
+            healthBox = AddCircle(root, "HealthBox", 0.89f, 0.075f, 0.18f,
                 new Color(0.12f, 0.75f, 0.3f, 1f), size);
 
             healthText = UIFactory.CreateText(
-                healthBox.transform, "0", Font(24), Color.white,
+                healthBox.transform, "0", Font(15), Color.white,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             UIFactory.Stretch(healthText.rectTransform);
@@ -205,7 +205,7 @@ namespace MultiverseCardBattle.Screens
                 root, "", Font(22), new Color(1f, 0.9f, 0.4f, 1f),
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
-            UIFactory.SetAnchors(badgeText.rectTransform, 0.3f, 0.02f, 0.7f, 0.17f);
+            UIFactory.SetAnchors(badgeText.rectTransform, 0.3f, 0.0f, 0.7f, 0.15f);
 
             AddShadow(badgeText);
         }
@@ -240,7 +240,7 @@ namespace MultiverseCardBattle.Screens
             Outline ring = image.gameObject.AddComponent<Outline>();
 
             ring.effectColor = new Color(1f, 1f, 1f, 0.85f);
-            ring.effectDistance = new Vector2(1.5f, -1.5f);
+            ring.effectDistance = new Vector2(1f, -1f);
 
             return image;
         }
