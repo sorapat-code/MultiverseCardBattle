@@ -10,11 +10,18 @@ namespace MultiverseCardBattle.Screens
     /// </summary>
     public static class ScreenBootstrap
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void Init()
+        // ลงทะเบียนก่อนโหลดซีนแรก เพื่อให้ได้ sceneLoaded ของซีนแรกด้วย
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Register()
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Init()
+        {
+            Register();
 
             Attach(SceneManager.GetActiveScene());
         }
@@ -22,6 +29,15 @@ namespace MultiverseCardBattle.Screens
         private static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Attach(scene);
+        }
+
+        /// <summary>
+        /// ใส่หน้าจอให้ซีนที่กำลังใช้งาน (เรียกซ้ำได้ ไม่สร้างซ้ำ)
+        /// สคริปต์ที่อยู่ในซีนเองเรียกใช้เป็นตัวสำรองได้
+        /// </summary>
+        public static void AttachToActiveScene()
+        {
+            Attach(SceneManager.GetActiveScene());
         }
 
         private static void Attach(Scene scene)
@@ -35,6 +51,8 @@ namespace MultiverseCardBattle.Screens
 
             if (GameObject.Find(objectName) != null)
                 return;
+
+            Debug.Log("ScreenBootstrap: building screen for scene " + id);
 
             switch (id)
             {

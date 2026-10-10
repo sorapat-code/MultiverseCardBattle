@@ -62,6 +62,9 @@ namespace MultiverseCardBattle.Battle
 
         private void Awake()
         {
+            // ตัวสำรอง: ถ้าซีนนี้ยังไม่มีหน้าจอต่อสู้ ให้สร้าง
+            MultiverseCardBattle.Screens.ScreenBootstrap.AttachToActiveScene();
+
             Player1 = new BattlePlayer(1, startingHealth);
             Player2 = new BattlePlayer(2, startingHealth);
 
