@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Data.Import;
 
 namespace MultiverseCardBattle.Data
 {
@@ -98,8 +99,24 @@ namespace MultiverseCardBattle.Data
             foreach (CardData data in loaded)
                 Register(data);
 
+            // การ์ดจากไฟล์ CSV (Resources/CardDatabase) มาก่อนการ์ดที่สร้างจากโค้ด
+            // ถ้า ID ซ้ำ ไฟล์ CSV จะถูกใช้แทน  โดยหาการ์ดอ้างอิง (Token ฯลฯ)
+            // จากที่ลงทะเบียนแล้วหรือจากโค้ด
+            foreach (CardData data in CardDatabase.LoadFromResources(FindForImport))
+                Register(data);
+
             foreach (CardData data in StarterCardLibrary.All)
                 Register(data);
+        }
+
+        private static CardData FindForImport(string cardId)
+        {
+            CardData data;
+
+            if (byId != null && byId.TryGetValue(cardId, out data))
+                return data;
+
+            return StarterCardLibrary.Get(cardId);
         }
 
         private static void Register(CardData data)

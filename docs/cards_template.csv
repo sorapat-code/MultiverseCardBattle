@@ -1,0 +1,21 @@
+﻿# Multiverse Card Battle - card template (see docs/CardDatabase.md)
+# Lines starting with # are ignored. Copy rows, change the ID, and fill in your own cards.
+ID,Name,Type,Rarity,Universe,Faction,Tags,Cost,Attack,Health,Keywords,Abilities,AuraAttack,AuraHealth,EvolvesInto,EvolveAfterTurns,Source,Description
+EX_001,Example Soldier,Unit,Common,Original,Neutral,Human|Melee,2,2,3,Taunt,,,,,,,
+EX_002,Example Archer,Unit,Common,Original,Neutral,Human|Ranged,3,3,2,,Play @EnemyUnit:Chosen -> DealDamage(2),,,,,,
+EX_003,Example Healer,Unit,Common,Original,Neutral,Human|Support,2,1,3,,TurnStart @AllyLeader -> Heal(2),,,,,,
+EX_004,Example Bomber,Unit,Rare,Original,Neutral,Machine,3,2,2,,Death @AllEnemies -> DealDamage(1),,,,,,
+EX_005,Example Thief,Unit,Rare,Original,Neutral,Human|Assassin,3,3,2,Stealth|QuickAttack,Play @EnemyUnit:Chosen -> DealDamage(1) | Play [Combo] @EnemyUnit:Chosen -> DealDamage(2),,,,,,
+EX_006,Example Poisoner,Unit,Rare,Original,Neutral,Human|Magic,4,2,4,,"Play @EnemyUnit:Chosen -> ApplyStatus(Poison,2,3); ApplyStatus(Weakness,0,3)",,,,,,
+EX_007,Example Summoner,Unit,Epic,Original,Neutral,Human|Magic,5,3,4,,Play @AllyLeader -> Summon(EX_T01); Summon(EX_T01),,,,,,
+EX_008,Example Shapeshifter,Unit,Epic,Original,Neutral,Human,5,4,5,,"TurnStart [SelfHealthLessThan:15] @Self -> Transform(EX_T02,2)",,,,,,
+EX_009,Example Apprentice,Unit,Rare,Original,Neutral,Human,3,2,3,QuickAttack,,,,EX_T03,2,,
+EX_010,Example Commander,Unit,Epic,Original,Neutral,Human|Elite,5,3,5,,,1,,,,,
+EX_011,Example Fireball,Spell,Common,Original,Neutral,Magic|Fire,3,,,,Play @EnemyUnit:Chosen -> DealDamage(4),,,,,,
+EX_012,Example Adapter,Unit,Epic,Original,Neutral,Beast,4,3,3,,Play @Self -> Adapt(3),,,,,,
+EX_013,Example Scholar,Unit,Rare,Original,Neutral,Human|Magic,3,2,3,Spellburst,Spellburst @AllyLeader -> DrawCard(1),,,,,,
+EX_014,Example Frost Prison,Spell,Rare,Original,Neutral,Magic|Ice,2,,,,"Play @EnemyUnit:Chosen -> ApplyStatus(Freeze,0,2); ApplyStatus(Root,0,2)",,,,,,
+EX_015,Example Guardian,Unit,Epic,Original,Neutral,Human|Tank,6,3,8,Ward|Guard|Reborn,,,,,,,
+EX_T01,Example Spirit,Unit,Common,Original,Neutral,Spirit|Token,1,1,1,,,,,,,,
+EX_T02,Example Super Form,Unit,Legendary,Original,Neutral,Human|Elite|Token,8,7,8,DoubleStrike|Unstoppable,,,,,,,
+EX_T03,Example Master,Unit,Epic,Original,Neutral,Human|Elite|Token,6,6,6,QuickAttack|Pierce,,,,,,,
