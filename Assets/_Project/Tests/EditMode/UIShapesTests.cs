@@ -32,5 +32,28 @@ namespace MultiverseCardBattle.Tests
             Assert.AreEqual(0f, texture.GetPixel(0, 0).a, 0.01f);
             Assert.AreEqual(1f, texture.GetPixel(32, 32).a, 0.01f);
         }
+
+        [Test]
+        public void FantasySprites_AreBuilt()
+        {
+            Assert.IsNotNull(UIShapes.Bevel);
+            Assert.IsNotNull(UIShapes.Ring);
+            Assert.IsNotNull(UIShapes.MenuBackdrop);
+            Assert.IsNotNull(UIShapes.BattleBackdrop);
+            Assert.IsNotNull(UIShapes.Divider);
+        }
+
+        [Test]
+        public void PortraitName_StripsSymbolsAndLowercases()
+        {
+            Assert.AreEqual("portrait_darkking", UIArt.PortraitName("Dark King"));
+            Assert.AreEqual("portrait_", UIArt.PortraitName(""));
+        }
+
+        [Test]
+        public void UIArt_MissingFileReturnsNull()
+        {
+            Assert.IsNull(UIArt.Get("this_file_does_not_exist"));
+        }
     }
 }

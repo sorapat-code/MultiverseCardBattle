@@ -50,9 +50,13 @@ namespace MultiverseCardBattle.Screens
         {
             RectTransform root = UIFactory.CreateScreenRoot("DeckBuilderCanvas");
 
-            ScreenKit.AddLabel(
+            Text heading = ScreenKit.AddLabel(
                 root, "DECK BUILDER", 44, TextAnchor.MiddleLeft,
                 0.03f, 0.92f, 0.3f, 1f, FontStyle.Bold);
+
+            heading.color = UIFactory.Gold;
+
+            UIFactory.AddTextShadow(heading);
 
             // แถบเลือกเด็ค
             ScreenKit.AddButton(root, "<", () => ChangeDeck(-1),
@@ -61,6 +65,8 @@ namespace MultiverseCardBattle.Screens
             deckTitle = ScreenKit.AddLabel(
                 root, "", 28, TextAnchor.MiddleCenter,
                 0.365f, 0.93f, 0.595f, 0.99f, FontStyle.Bold);
+
+            deckTitle.color = UIFactory.Gold;
 
             ScreenKit.AddButton(root, ">", () => ChangeDeck(1),
                 UIFactory.Accent, 0.6f, 0.93f, 0.64f, 0.99f);
@@ -93,6 +99,8 @@ namespace MultiverseCardBattle.Screens
             countText = ScreenKit.AddLabel(
                 root, "", 28, TextAnchor.MiddleCenter,
                 0.64f, 0.84f, 0.98f, 0.91f, FontStyle.Bold);
+
+            countText.color = UIFactory.Gold;
 
             ScreenKit.AddScroll(
                 root, "DeckList", 0.64f, 0.26f, 0.98f, 0.84f, out deckList);

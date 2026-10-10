@@ -39,6 +39,8 @@ namespace MultiverseCardBattle.Screens
                 root, "", 26, TextAnchor.MiddleCenter,
                 0.3f, 0.02f, 0.7f, 0.11f);
 
+            summary.color = UIFactory.Gold;
+
             ScreenKit.AddButton(root, "Back",
                 () => SceneLoader.Go(GameScene.MainMenu),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);

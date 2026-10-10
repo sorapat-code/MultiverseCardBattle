@@ -45,8 +45,9 @@ namespace MultiverseCardBattle.Screens
             bool unlocked = CampaignService.IsUnlocked(stage);
             bool cleared = profile.IsStageCompleted(stage.Id);
 
-            Image row = UIFactory.CreatePanel(
-                content, "Stage_" + stage.Id, UIFactory.Panel);
+            Image row = UIFactory.CreateFramedPanel(
+                content, "Stage_" + stage.Id,
+                unlocked ? UIFactory.Panel : new Color(0.1f, 0.08f, 0.07f, 0.9f));
 
             row.rectTransform.sizeDelta = new Vector2(0f, RowHeight);
 
@@ -79,11 +80,63 @@ namespace MultiverseCardBattle.Screens
                     .Append("\" first");
             }
 
+            // รูปศัตรู: ใช้ Resources/UI/portrait_<ชื่อ> ถ้ามี ไม่งั้นตัวอักษรย่อ
+            Image ring = UIFactory.CreatePanel(row.transform, "PortraitRing", UIFactory.Gold);
+
+            UIShapes.MakeCircle(ring);
+
+            ring.raycastTarget = false;
+
+            UIFactory.SetAnchors(ring.rectTransform, 0.015f, 0.12f, 0.015f, 0.12f);
+
+            ring.rectTransform.anchorMin = new Vector2(0.012f, 0.5f);
+            ring.rectTransform.anchorMax = new Vector2(0.012f, 0.5f);
+            ring.rectTransform.pivot = new Vector2(0f, 0.5f);
+            ring.rectTransform.anchoredPosition = Vector2.zero;
+            ring.rectTransform.sizeDelta = new Vector2(96f, 96f);
+
+            Image face = UIFactory.CreatePanel(
+                ring.transform, "Portrait", new Color(0.1f, 0.07f, 0.05f, 1f));
+
+            UIShapes.MakeCircle(face);
+
+            face.raycastTarget = false;
+
+            UIFactory.Stretch(face.rectTransform);
+
+            face.rectTransform.offsetMin = new Vector2(4f, 4f);
+            face.rectTransform.offsetMax = new Vector2(-4f, -4f);
+
+            face.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+
+            Sprite art = UIArt.Get(UIArt.PortraitName(stage.EnemyName)) ??
+                UIArt.Get("portrait_enemy");
+
+            if (art != null)
+            {
+                Image art2 = UIFactory.CreatePanel(face.transform, "Art", Color.white);
+
+                art2.sprite = art;
+                art2.raycastTarget = false;
+
+                UIFactory.Stretch(art2.rectTransform);
+            }
+            else
+            {
+                Text initial = UIFactory.CreateText(
+                    face.transform,
+                    string.IsNullOrEmpty(stage.EnemyName)
+                        ? "?" : stage.EnemyName.Substring(0, 1).ToUpperInvariant(),
+                    48, UIFactory.Gold, TextAnchor.MiddleCenter, FontStyle.Bold);
+
+                UIFactory.Stretch(initial.rectTransform);
+            }
+
             Text label = UIFactory.CreateText(
                 row.transform, text.ToString(), 24, UIFactory.TextColor,
                 TextAnchor.MiddleLeft);
 
-            UIFactory.SetAnchors(label.rectTransform, 0.02f, 0.05f, 0.76f, 0.95f);
+            UIFactory.SetAnchors(label.rectTransform, 0.105f, 0.05f, 0.78f, 0.95f);
 
             Button play = ScreenKit.AddButton(
                 row.transform,

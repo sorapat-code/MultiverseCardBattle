@@ -102,15 +102,47 @@ namespace MultiverseCardBattle.Screens
 
         private void BuildMain()
         {
-            UIFactory.CreateTitle(mainPanel, "MULTIVERSE CARD BATTLE");
+            Sprite logo = UIArt.Get("logo");
 
-            ScreenKit.AddLabel(
+            if (logo != null)
+            {
+                // มีไฟล์โลโก้ใน Resources/UI/logo ให้ใช้แทนข้อความ
+                Image logoImage = UIFactory.CreatePanel(
+                    mainPanel, "Logo", Color.white);
+
+                logoImage.sprite = logo;
+                logoImage.preserveAspect = true;
+                logoImage.raycastTarget = false;
+
+                UIFactory.SetAnchors(
+                    logoImage.rectTransform, 0.25f, 0.84f, 0.75f, 1f);
+            }
+            else
+            {
+                Text title = UIFactory.CreateTitle(
+                    mainPanel, "MULTIVERSE CARD BATTLE");
+
+                title.fontSize = 72;
+            }
+
+            Text subtitle = ScreenKit.AddLabel(
                 mainPanel, "Heroes from every universe, one battlefield", 28,
-                TextAnchor.MiddleCenter, 0.2f, 0.82f, 0.8f, 0.9f);
+                TextAnchor.MiddleCenter, 0.2f, 0.82f, 0.8f, 0.89f,
+                FontStyle.Italic);
+
+            subtitle.color = UIFactory.GoldDim;
+
+            ScreenKit.AddPanel(
+                mainPanel, "ButtonFrame", new Color(0f, 0f, 0f, 0.35f),
+                0.19f, 0.2f, 0.81f, 0.795f);
 
             goldText = ScreenKit.AddLabel(
                 mainPanel, "", 30, TextAnchor.MiddleRight,
                 0.74f, 0.93f, 0.98f, 0.99f, FontStyle.Bold);
+
+            goldText.color = UIFactory.Gold;
+
+            UIFactory.AddTextShadow(goldText);
 
             // คอลัมน์ซ้าย: เล่น
             float y = 0.68f;
@@ -245,6 +277,8 @@ namespace MultiverseCardBattle.Screens
             shopGoldText = ScreenKit.AddLabel(
                 shopPanel, "", 34, TextAnchor.MiddleCenter,
                 0.3f, 0.80f, 0.7f, 0.88f, FontStyle.Bold);
+
+            shopGoldText.color = UIFactory.Gold;
 
             ScreenKit.AddButton(shopPanel,
                 "Buy Pack  (" + PackService.PackPrice + " Gold)",

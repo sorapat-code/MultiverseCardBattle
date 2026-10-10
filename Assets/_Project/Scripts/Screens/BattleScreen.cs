@@ -73,6 +73,7 @@ namespace MultiverseCardBattle.Screens
         private Button enemyGraveButton;
         private Button playerGraveButton;
         private Text playerDeckLabel;
+        private Text enemyDeckLabel;
 
         private class LeaderWidget
         {
@@ -80,8 +81,10 @@ namespace MultiverseCardBattle.Screens
             public Text Title;
             public Image HpFill;
             public Text HpText;
-            public Image EnergyFill;
             public Text EnergyText;
+            public Image PortraitArt;
+            public Text PortraitInitial;
+            public Image[] Crystals;
         }
 
         // พรีวิวการ์ดใบใหญ่ตอนเอาเมาส์ชี้
@@ -281,118 +284,127 @@ namespace MultiverseCardBattle.Screens
 
         private void BuildUI()
         {
-            root = UIFactory.CreateScreenRoot("BattleCanvas");
+            root = UIFactory.CreateScreenRoot("BattleCanvas", true);
 
-            // บันทึกการต่อสู้ (ซ้าย)
+            // ----- แถบข้างซ้าย: พรีวิวการ์ด + คำอธิบายศัพท์ + บันทึกการต่อสู้ -----
             ScreenKit.AddPanel(
-                root, "LogPanel", new Color(0f, 0f, 0f, 0.35f),
-                0.005f, 0.01f, 0.17f, 0.99f);
+                root, "SidePanel", new Color(0f, 0f, 0f, 0.42f),
+                0.005f, 0.01f, 0.168f, 0.99f);
 
             logText = ScreenKit.AddLabel(
                 root, "", 16, TextAnchor.LowerLeft,
-                0.01f, 0.02f, 0.165f, 0.33f);
+                0.012f, 0.02f, 0.162f, 0.32f);
 
-            // คำอธิบายศัพท์ของการ์ดที่ชี้อยู่ (ไม่ต้องจำศัพท์เอง)
             termsText = ScreenKit.AddLabel(
                 root, "", 15, TextAnchor.UpperLeft,
-                0.01f, 0.34f, 0.165f, 0.59f);
+                0.012f, 0.335f, 0.162f, 0.585f);
 
             termsText.resizeTextForBestFit = true;
             termsText.resizeTextMinSize = 9;
             termsText.resizeTextMaxSize = 15;
 
+            UIFactory.CreateDivider(root, 0.012f, 0.328f, 0.162f, 0.334f);
+            UIFactory.CreateDivider(root, 0.012f, 0.588f, 0.162f, 0.594f);
+
             previewZone = UIFactory.CreateZone(
-                root, "PreviewZone", 0.005f, 0.60f, 0.17f, 0.99f);
+                root, "PreviewZone", 0.005f, 0.60f, 0.168f, 0.99f);
 
             previewView = CardView.Create(previewZone, PreviewCardSize);
 
             previewView.SetInteractable(false);
             previewView.gameObject.SetActive(false);
 
-            // แถบบน
+            // ----- แถบบน -----
             turnText = ScreenKit.AddLabel(
                 root, "", 30, TextAnchor.MiddleLeft,
-                0.19f, 0.945f, 0.4f, 1f, FontStyle.Bold);
+                0.18f, 0.945f, 0.40f, 0.995f, FontStyle.Bold);
+
+            UIFactory.AddTextShadow(turnText);
 
             hintText = ScreenKit.AddLabel(
                 root, "", 24, TextAnchor.MiddleCenter,
-                0.41f, 0.945f, 0.87f, 1f);
+                0.40f, 0.945f, 0.88f, 0.995f);
+
+            UIFactory.AddTextShadow(hintText);
 
             ScreenKit.AddButton(root, "Concede", Concede,
-                UIFactory.Danger, 0.88f, 0.95f, 0.99f, 0.995f, 22);
+                UIFactory.Danger, 0.90f, 0.95f, 0.99f, 0.993f, 22);
 
-            // Leader ศัตรู / ผู้เล่น
+            // ----- สนาม: พื้นหลังโซน + เส้นกลาง -----
+            ScreenKit.AddPanel(
+                root, "EnemyLane", new Color(0.7f, 0.2f, 0.2f, 0.13f),
+                0.175f, 0.525f, 0.865f, 0.765f);
+
+            ScreenKit.AddPanel(
+                root, "PlayerLane", new Color(0.2f, 0.45f, 0.75f, 0.13f),
+                0.175f, 0.27f, 0.865f, 0.515f);
+
+            UIFactory.CreateDivider(root, 0.19f, 0.5175f, 0.85f, 0.5235f);
+
+            ScreenKit.AddPanel(
+                root, "HandLane", new Color(0f, 0f, 0f, 0.35f),
+                0.34f, 0.0f, 0.865f, 0.262f);
+
+            enemyField = CreateRow(root, "EnemyField", 0.175f, 0.525f, 0.865f, 0.765f, 8f);
+            playerField = CreateRow(root, "PlayerField", 0.175f, 0.27f, 0.865f, 0.515f, 8f);
+            handZone = CreateRow(root, "Hand", 0.345f, 0.0f, 0.86f, 0.262f, 4f);
+
+            // ----- Leader ทั้งสองฝั่ง -----
             enemyWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Ai),
-                0.345f, 0.84f, 0.665f, 0.94f);
+                0.443f, 0.785f, 0.598f, 0.935f);
 
             playerWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Human),
-                0.345f, 0.265f, 0.665f, 0.365f);
+                0.178f, 0.05f, 0.333f, 0.20f);
 
             enemyLeader = enemyWidget.Button;
             playerLeader = playerWidget.Button;
 
-            // ปุ่มดูกองทิ้ง / มือศัตรู
+            // ----- คอลัมน์ขวา: กองการ์ด / จบเทิร์น -----
             enemyHandButton = ScreenKit.AddButton(
                 root, "Opp. Hand", () => TogglePile(PileKind.EnemyHand),
-                UIFactory.Muted, 0.675f, 0.89f, 0.785f, 0.94f, 20);
+                UIFactory.Muted, 0.875f, 0.87f, 0.995f, 0.93f, 20);
 
             enemyGraveButton = ScreenKit.AddButton(
                 root, "Graveyard", () => TogglePile(PileKind.EnemyGraveyard),
-                UIFactory.Muted, 0.675f, 0.84f, 0.785f, 0.885f, 20);
+                UIFactory.Muted, 0.875f, 0.80f, 0.995f, 0.86f, 20);
 
-            playerGraveButton = ScreenKit.AddButton(
-                root, "Graveyard", () => TogglePile(PileKind.PlayerGraveyard),
-                UIFactory.Muted, 0.675f, 0.315f, 0.785f, 0.365f, 20);
-
-            playerDeckLabel = ScreenKit.AddLabel(
-                root, "", 20, TextAnchor.MiddleCenter,
-                0.675f, 0.265f, 0.785f, 0.31f);
-
-            // พื้นหลังโซนการ์ด
-            ScreenKit.AddPanel(
-                root, "EnemyLane", new Color(0.75f, 0.3f, 0.3f, 0.10f),
-                0.18f, 0.60f, 0.99f, 0.84f);
-
-            ScreenKit.AddPanel(
-                root, "PlayerLane", new Color(0.3f, 0.6f, 0.9f, 0.10f),
-                0.18f, 0.365f, 0.99f, 0.60f);
-
-            ScreenKit.AddPanel(
-                root, "HandLane", new Color(0f, 0f, 0f, 0.28f),
-                0.18f, 0.0f, 0.99f, 0.265f);
-
-            // โซนการ์ด
-            enemyField = CreateRow(root, "EnemyField", 0.18f, 0.60f, 0.99f, 0.84f, 8f);
-            playerField = CreateRow(root, "PlayerField", 0.18f, 0.365f, 0.99f, 0.60f, 8f);
-            handZone = CreateRow(root, "Hand", 0.18f, 0.0f, 0.99f, 0.265f, 4f);
+            enemyDeckLabel = AddPileLabel(0.875f, 0.745f, 0.995f, 0.79f);
 
             endTurnButton = ScreenKit.AddButton(
                 root, "END TURN", OnEndTurnClicked,
-                UIFactory.Success, 0.80f, 0.275f, 0.98f, 0.355f, 28);
+                UIFactory.Success, 0.875f, 0.42f, 0.995f, 0.55f, 30);
 
             cancelButton = ScreenKit.AddButton(
                 root, "Cancel", ClearSelectionAndRefresh,
-                UIFactory.Muted, 0.19f, 0.275f, 0.31f, 0.355f, 24);
+                UIFactory.Muted, 0.875f, 0.34f, 0.995f, 0.40f, 22);
+
+            playerGraveButton = ScreenKit.AddButton(
+                root, "Graveyard", () => TogglePile(PileKind.PlayerGraveyard),
+                UIFactory.Muted, 0.875f, 0.14f, 0.995f, 0.20f, 20);
+
+            playerDeckLabel = AddPileLabel(0.875f, 0.085f, 0.995f, 0.13f);
 
             // ป้ายผลโยนเหรียญ (หายเองหลังไม่กี่วินาที)
             bannerRoot = UIFactory.CreateRect("CoinBanner", root);
 
             UIFactory.SetAnchors(bannerRoot, 0.3f, 0.43f, 0.7f, 0.57f);
 
-            Image bannerBack = UIFactory.CreateRoundedPanel(
-                bannerRoot, "Back", new Color(0f, 0f, 0f, 0.82f), 16f);
+            Image bannerBack = UIFactory.CreateFramedPanel(
+                bannerRoot, "Back", new Color(0.05f, 0.03f, 0.02f, 0.9f), 16f);
 
             UIFactory.Stretch(bannerBack.rectTransform);
 
             bannerBack.raycastTarget = false;
 
             bannerText = UIFactory.CreateText(
-                bannerRoot, "", 34, Color.white,
+                bannerRoot, "", 36, UIFactory.TextColor,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             UIFactory.Stretch(bannerText.rectTransform);
+
+            UIFactory.AddTextShadow(bannerText);
 
             bannerRoot.gameObject.SetActive(false);
 
@@ -411,6 +423,23 @@ namespace MultiverseCardBattle.Screens
             overlay.gameObject.SetActive(false);
         }
 
+        // ป้ายจำนวนการ์ดในกอง (กรอบเล็ก)
+        private Text AddPileLabel(float xMin, float yMin, float xMax, float yMax)
+        {
+            ScreenKit.AddPanel(
+                root, "PilePanel", new Color(0f, 0f, 0f, 0.4f),
+                xMin, yMin, xMax, yMax);
+
+            Text label = ScreenKit.AddLabel(
+                root, "", 20, TextAnchor.MiddleCenter,
+                xMin, yMin, xMax, yMax, FontStyle.Bold);
+
+            label.color = UIFactory.Gold;
+
+            return label;
+        }
+
+        // แผง Leader: รูป (วงกลมกรอบทอง) + ชื่อ + แถบ HP + คริสตัล Energy
         private LeaderWidget CreateLeaderWidget(
             UnityEngine.Events.UnityAction onClick,
             float xMin, float yMin, float xMax, float yMax)
@@ -421,54 +450,138 @@ namespace MultiverseCardBattle.Screens
                 root, "", onClick, UIFactory.Panel,
                 xMin, yMin, xMax, yMax, 22);
 
+            Transform panel = widget.Button.transform;
+
+            // ข้อความของปุ่มเดิมใช้เป็นชื่อ
             widget.Title = widget.Button.GetComponentInChildren<Text>();
             widget.Title.alignment = TextAnchor.MiddleLeft;
+            widget.Title.resizeTextForBestFit = true;
+            widget.Title.resizeTextMinSize = 12;
+            widget.Title.resizeTextMaxSize = 24;
 
-            UIFactory.SetAnchors(
-                widget.Title.rectTransform, 0.03f, 0.56f, 0.97f, 0.98f);
+            UIFactory.SetAnchors(widget.Title.rectTransform, 0.34f, 0.66f, 0.97f, 0.95f);
 
-            widget.HpFill = AddBar(
-                widget.Button.transform, "Hp", 0.30f, 0.54f,
-                new Color(0.25f, 0.75f, 0.35f, 1f), out widget.HpText);
+            // รูป Leader: วงทองรอบนอก > วงมืดตัดมุม > รูป/ตัวอักษรย่อ
+            Image goldRing = UIFactory.CreatePanel(panel, "PortraitRing", UIFactory.Gold);
 
-            widget.EnergyFill = AddBar(
-                widget.Button.transform, "Energy", 0.05f, 0.27f,
-                new Color(0.2f, 0.55f, 0.95f, 1f), out widget.EnergyText);
+            UIShapes.MakeCircle(goldRing);
+
+            goldRing.raycastTarget = false;
+
+            RectTransform ringRect = goldRing.rectTransform;
+
+            ringRect.anchorMin = new Vector2(0f, 1f);
+            ringRect.anchorMax = new Vector2(0f, 1f);
+            ringRect.pivot = new Vector2(0f, 1f);
+            ringRect.anchoredPosition = new Vector2(10f, -10f);
+            ringRect.sizeDelta = new Vector2(88f, 88f);
+
+            Image inner = UIFactory.CreatePanel(
+                goldRing.transform, "Portrait", new Color(0.1f, 0.07f, 0.05f, 1f));
+
+            UIShapes.MakeCircle(inner);
+
+            inner.raycastTarget = false;
+
+            UIFactory.Stretch(inner.rectTransform);
+
+            inner.rectTransform.offsetMin = new Vector2(4f, 4f);
+            inner.rectTransform.offsetMax = new Vector2(-4f, -4f);
+
+            inner.gameObject.AddComponent<Mask>().showMaskGraphic = true;
+
+            widget.PortraitArt = UIFactory.CreatePanel(inner.transform, "Art", Color.white);
+
+            widget.PortraitArt.raycastTarget = false;
+
+            UIFactory.Stretch(widget.PortraitArt.rectTransform);
+
+            widget.PortraitArt.enabled = false;
+
+            widget.PortraitInitial = UIFactory.CreateText(
+                inner.transform, "", 44, UIFactory.Gold,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(widget.PortraitInitial.rectTransform);
+
+            // แถบ HP
+            Image hpBack = UIFactory.CreatePanel(
+                panel, "HpBack", new Color(0f, 0f, 0f, 0.55f));
+
+            UIShapes.MakeRounded(hpBack, 6f);
+
+            hpBack.raycastTarget = false;
+
+            UIFactory.SetAnchors(hpBack.rectTransform, 0.34f, 0.40f, 0.97f, 0.62f);
+
+            widget.HpFill = UIFactory.CreatePanel(
+                hpBack.transform, "HpFill", new Color(0.25f, 0.75f, 0.35f, 1f));
+
+            UIShapes.MakeRounded(widget.HpFill, 6f);
+
+            widget.HpFill.raycastTarget = false;
+
+            UIFactory.Stretch(widget.HpFill.rectTransform);
+
+            widget.HpText = UIFactory.CreateText(
+                hpBack.transform, "", 17, Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(widget.HpText.rectTransform);
+
+            UIFactory.AddTextShadow(widget.HpText);
+
+            // คริสตัล Energy
+            RectTransform crystalRow = UIFactory.CreateZone(
+                panel, "Crystals", 0.04f, 0.05f, 0.76f, 0.32f);
+
+            UIFactory.AddHorizontalRow(crystalRow, 4f, TextAnchor.MiddleLeft);
+
+            widget.Crystals = new Image[MaxCrystals];
+
+            for (int i = 0; i < MaxCrystals; i++)
+            {
+                Image crystal = UIFactory.CreatePanel(
+                    crystalRow, "Crystal" + i, Color.white);
+
+                UIShapes.MakeCircle(crystal);
+
+                crystal.raycastTarget = false;
+                crystal.rectTransform.sizeDelta = new Vector2(22f, 22f);
+
+                UIFactory.AddRing(crystal.transform, new Color(0f, 0f, 0f, 0.6f), 11f);
+
+                widget.Crystals[i] = crystal;
+            }
+
+            widget.EnergyText = UIFactory.CreateText(
+                panel, "", 20, UIFactory.Gold, TextAnchor.MiddleRight, FontStyle.Bold);
+
+            UIFactory.SetAnchors(widget.EnergyText.rectTransform, 0.74f, 0.05f, 0.97f, 0.32f);
+
+            UIFactory.AddTextShadow(widget.EnergyText);
 
             return widget;
         }
 
-        // แถบความคืบหน้า: พื้นหลัง + แถบสี + ข้อความกลางแถบ
-        private static Image AddBar(
-            Transform parent, string name, float yMin, float yMax,
-            Color color, out Text label)
+        private const int MaxCrystals = 10;
+
+        // ตั้งรูป Leader (ถ้ามีไฟล์ใน Resources/UI) ไม่งั้นใช้ตัวอักษรย่อของชื่อ
+        private static void SetPortrait(LeaderWidget widget, string name, Sprite art)
         {
-            Image back = UIFactory.CreatePanel(
-                parent, name + "Back", new Color(0f, 0f, 0f, 0.45f));
+            if (art != null)
+            {
+                widget.PortraitArt.enabled = true;
+                widget.PortraitArt.sprite = art;
+                widget.PortraitInitial.text = "";
 
-            UIFactory.SetAnchors(back.rectTransform, 0.03f, yMin, 0.97f, yMax);
+                return;
+            }
 
-            back.raycastTarget = false;
+            widget.PortraitArt.enabled = false;
 
-            Image fill = UIFactory.CreatePanel(back.transform, name + "Fill", color);
-
-            UIFactory.Stretch(fill.rectTransform);
-
-            fill.raycastTarget = false;
-
-            label = UIFactory.CreateText(
-                back.transform, "", 17, Color.white,
-                TextAnchor.MiddleCenter, FontStyle.Bold);
-
-            UIFactory.Stretch(label.rectTransform);
-
-            return fill;
-        }
-
-        private static void SetBar(Image fill, float ratio)
-        {
-            fill.rectTransform.anchorMax =
-                new Vector2(Mathf.Clamp01(ratio), 1f);
+            widget.PortraitInitial.text =
+                string.IsNullOrEmpty(name) ? "?" : name.Substring(0, 1).ToUpperInvariant();
         }
 
         private static RectTransform CreateRow(
@@ -535,6 +648,9 @@ namespace MultiverseCardBattle.Screens
             UIFactory.SetButtonLabel(
                 endTurnButton, myTurn ? "END TURN" : "...");
 
+            endTurnButton.GetComponent<Image>().color =
+                myTurn && !HasMovesLeft() ? UIFactory.Gold : UIFactory.Success;
+
             cancelButton.gameObject.SetActive(
                 selectedHand != null || selectedAttacker != null);
 
@@ -542,6 +658,23 @@ namespace MultiverseCardBattle.Screens
 
             RefreshOverlay();
             RefreshPile();
+        }
+
+        private bool HasMovesLeft()
+        {
+            foreach (CardInstance card in Human.Hand.Cards)
+            {
+                if (BattleRules.ValidatePlayable(battle, Human, card).Success)
+                    return true;
+            }
+
+            foreach (CardInstance unit in Human.Field)
+            {
+                if (BattleRules.CanAttack(battle, Human, unit))
+                    return true;
+            }
+
+            return false;
         }
 
         private string BuildLog()
@@ -563,15 +696,13 @@ namespace MultiverseCardBattle.Screens
 
         private void RefreshLeader(LeaderWidget widget, BattlePlayer player)
         {
-            widget.Title.text =
-                "<b>" + player.Name + "</b>     Hand " + player.Hand.Count +
-                "   Deck " + player.Deck.Count;
+            widget.Title.text = "<b>" + player.Name + "</b>";
 
             float hp = player.MaxLeaderHealth > 0
-                ? (float)player.LeaderHealth / player.MaxLeaderHealth
+                ? Mathf.Clamp01((float)player.LeaderHealth / player.MaxLeaderHealth)
                 : 0f;
 
-            SetBar(widget.HpFill, hp);
+            widget.HpFill.rectTransform.anchorMax = new Vector2(hp, 1f);
 
             widget.HpFill.color =
                 hp > 0.5f
@@ -583,14 +714,30 @@ namespace MultiverseCardBattle.Screens
             widget.HpText.text =
                 "HP " + player.LeaderHealth + " / " + player.MaxLeaderHealth;
 
-            float energy = player.MaxEnergy > 0
-                ? (float)player.CurrentEnergy / player.MaxEnergy
-                : 0f;
+            for (int i = 0; i < widget.Crystals.Length; i++)
+            {
+                Color color;
 
-            SetBar(widget.EnergyFill, energy);
+                if (i < player.CurrentEnergy)
+                    color = new Color(0.35f, 0.85f, 1f, 1f);
+                else if (i < player.MaxEnergy)
+                    color = new Color(0.08f, 0.28f, 0.34f, 1f);
+                else
+                    color = new Color(1f, 1f, 1f, 0.12f);
+
+                widget.Crystals[i].color = color;
+            }
 
             widget.EnergyText.text =
-                "Energy " + player.CurrentEnergy + " / " + player.MaxEnergy;
+                player.CurrentEnergy + "/" + player.MaxEnergy;
+
+            SetPortrait(
+                widget,
+                player.Name,
+                player == Human
+                    ? UIArt.Get("portrait_player")
+                    : (UIArt.Get(UIArt.PortraitName(player.Name)) ??
+                       UIArt.Get("portrait_enemy")));
 
             bool isTarget = IsActiveTarget(player);
 
@@ -664,6 +811,21 @@ namespace MultiverseCardBattle.Screens
         private void RefreshHand(bool myTurn)
         {
             ScreenKit.ClearNow(handZone);
+
+            HorizontalLayoutGroup handLayout =
+                handZone.GetComponent<HorizontalLayoutGroup>();
+
+            if (handLayout != null)
+            {
+                int count = Human.Hand.Count;
+                float width = handZone.rect.width > 10f ? handZone.rect.width : 1000f;
+
+                handLayout.spacing = count > 1
+                    ? Mathf.Clamp(
+                        (width - count * HandCardSize.x) / (count - 1),
+                        -HandCardSize.x * 0.45f, 6f)
+                    : 6f;
+            }
 
             foreach (CardInstance card in Human.Hand.Cards)
             {
@@ -992,6 +1154,7 @@ namespace MultiverseCardBattle.Screens
                 playerGraveButton, "Graveyard " + Human.Graveyard.Count);
 
             playerDeckLabel.text = "Deck " + Human.Deck.Count;
+            enemyDeckLabel.text = "Deck " + Ai.Deck.Count;
 
             Tint(enemyHandButton, openPile == PileKind.EnemyHand);
             Tint(enemyGraveButton, openPile == PileKind.EnemyGraveyard);
@@ -1165,9 +1328,15 @@ namespace MultiverseCardBattle.Screens
                 ? "DRAW"
                 : (won ? "VICTORY" : "DEFEAT");
 
-            ScreenKit.AddLabel(
+            Text titleText = ScreenKit.AddLabel(
                 overlay, title, 90, TextAnchor.MiddleCenter,
                 0.2f, 0.62f, 0.8f, 0.82f, FontStyle.Bold);
+
+            titleText.color = battle.Winner != null && !won
+                ? new Color(0.9f, 0.3f, 0.28f, 1f)
+                : UIFactory.Gold;
+
+            UIFactory.AddTextShadow(titleText);
 
             ScreenKit.AddLabel(
                 overlay, string.Join("\n", resultLines), 30,
