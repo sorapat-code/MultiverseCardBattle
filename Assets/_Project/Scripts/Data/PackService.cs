@@ -61,6 +61,8 @@ namespace MultiverseCardBattle.Data
 
             profile.TrySpendGold(PackPrice);
 
+            profile.Data.StatPacks++;
+
             List<PackPull> pulls = new List<PackPull>();
 
             foreach (CardData card in cards)

@@ -103,7 +103,8 @@ namespace MultiverseCardBattle.Data
         /// <summary>
         /// เรียกเมื่อการต่อสู้จบ: บันทึกความคืบหน้า/รางวัล/Gold คืนข้อความสรุปให้แสดง
         /// </summary>
-        public static List<string> OnBattleFinished(bool playerWon)
+        public static List<string> OnBattleFinished(
+            bool playerWon, BattleSummary summary = null)
         {
             List<string> lines = new List<string>();
 
@@ -148,6 +149,39 @@ namespace MultiverseCardBattle.Data
             profile.AddGold(gold);
 
             lines.Add("Gold +" + gold);
+
+            // สถิติสำหรับ Achievement
+            profile.Data.StatBattles++;
+
+            if (playerWon)
+                profile.Data.StatWins++;
+
+            if (summary != null)
+            {
+                if (summary.SecretSummoned)
+                    profile.Data.StatSecrets++;
+
+                if (playerWon)
+                {
+                    if (summary.PlayerMaxHealth > 0 &&
+                        summary.PlayerHealth >= summary.PlayerMaxHealth)
+                    {
+                        profile.Data.StatFlawlessWins++;
+                    }
+
+                    if (summary.PlayerHealth > 0 && summary.PlayerHealth <= 3)
+                        profile.Data.StatComebackWins++;
+
+                    if (summary.Turns > 0 && summary.Turns <= 6)
+                        profile.Data.StatFastWins++;
+
+                    if (summary.OpponentDeckOut)
+                        profile.Data.StatDeckOutWins++;
+                }
+            }
+
+            lines.AddRange(
+                AchievementService.ToLines(AchievementService.Check(profile)));
 
             SaveManager.Save();
 

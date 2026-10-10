@@ -46,11 +46,10 @@ namespace MultiverseCardBattle.Core
                     if (data != null && data.Decks != null && data.Decks.Count > 0)
                     {
                         // เซฟเก่าที่ยังไม่มี Gold: แจก Gold เริ่มต้นให้ครั้งเดียว
-                        if (data.Version < SaveData.CurrentVersion)
-                        {
+                        if (data.Version < 2)
                             data.Gold += PlayerProfile.StartingGold;
-                            data.Version = SaveData.CurrentVersion;
-                        }
+
+                        data.Version = SaveData.CurrentVersion;
 
                         profile = new PlayerProfile(data);
                     }

@@ -558,7 +558,15 @@ namespace MultiverseCardBattle.Effects
                 if (effect.Card == null)
                     return;
 
-                card = new CardInstance(effect.Card);
+                CardData data = effect.Card;
+
+                // เหตุการณ์สุ่ม: Token ที่ผู้เล่น Summon มีโอกาสกลายเป็นการ์ดลับ
+                CardData secret = RollSecretCard(effect, context);
+
+                if (secret != null)
+                    data = secret;
+
+                card = new CardInstance(data);
                 card.OwnerID = context.TargetPlayer.PlayerID;
             }
             else
@@ -579,6 +587,53 @@ namespace MultiverseCardBattle.Effects
             context.TargetPlayer.AddToZone(
                 card,
                 CardZone.Field);
+        }
+
+        /// <summary>โอกาสที่ Summon (สร้างการ์ดใหม่) ของผู้เล่นจะได้การ์ดลับ</summary>
+        public static float SecretCardChance = 0.01f;
+
+        /// <summary>ตัวสุ่ม 0-1 (เทสต์แทนค่าได้)</summary>
+        public static System.Func<float> RandomValue = () => UnityEngine.Random.value;
+
+        private static CardData RollSecretCard(
+            EffectData effect,
+            EffectContext context)
+        {
+            if (context.Battle == null || context.TargetPlayer == null)
+                return null;
+
+            // เฉพาะฝั่งผู้เล่น (ไม่ใช่ AI)
+            if (context.Battle.IsAI(context.TargetPlayer))
+                return null;
+
+            // การ์ดลับเรียกลูกน้อง ไม่ทอยซ้ำ
+            if (effect.Card != null &&
+                effect.Card.CardID == MultiverseCardBattle.Data.StarterCardLibrary.SecretId)
+            {
+                return null;
+            }
+
+            if (context.SourceCard != null &&
+                context.SourceCard.Data != null &&
+                context.SourceCard.Data.CardID == MultiverseCardBattle.Data.StarterCardLibrary.SecretId)
+            {
+                return null;
+            }
+
+            if (RandomValue() >= SecretCardChance)
+                return null;
+
+            CardData secret = MultiverseCardBattle.Data.StarterCardLibrary.Get(MultiverseCardBattle.Data.StarterCardLibrary.SecretId);
+
+            if (secret != null)
+            {
+                context.Battle.SecretCardSummoned = true;
+
+                context.Battle.Log(
+                    "A shadow stirs... " + secret.CardName + " answers the summon!");
+            }
+
+            return secret;
         }
 
         private static void CreateCard(

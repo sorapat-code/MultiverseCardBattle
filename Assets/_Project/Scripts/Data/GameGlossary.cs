@@ -47,7 +47,7 @@ namespace MultiverseCardBattle.Data
             new[] { "Spell", "A one-shot card. It acts immediately and goes to the Graveyard. If it needs a target and none exists, it cannot be played." },
             new[] { "Token", "A card created by an effect (for example a Spirit Wisp). It cannot be put in a deck." },
             new[] { "Hand", "Cards you can play. Holds up to 10; extra draws are burned." },
-            new[] { "Deck", "Cards you draw from at turn start. With an empty deck you take Fatigue damage that grows each draw." },
+            new[] { "Deck", "Cards you draw from at turn start. If your deck ever reaches 0 cards, you lose the battle immediately." },
             new[] { "Field", "Where units fight. Holds up to 7 units per player." },
             new[] { "Graveyard", "Where destroyed units and used spells go. Click Graveyard in battle to look inside." },
             new[] { "Opp. Hand", "A button in battle that shows the cards in the opponent's hand." },

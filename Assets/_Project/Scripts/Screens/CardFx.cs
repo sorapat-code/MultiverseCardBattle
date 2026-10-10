@@ -1,3 +1,4 @@
+using MultiverseCardBattle.Cards;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -202,6 +203,104 @@ namespace MultiverseCardBattle.Screens
 
                 if (canvas != null)
                     canvas.overrideSorting = false;
+            }
+        }
+    }
+    /// <summary>
+    /// สำเนาการ์ดที่บินจากจุดหนึ่งไปอีกจุด (มือ → สนาม / มือ → ร่ายสเปล)
+    /// </summary>
+    public class CardFlight : MonoBehaviour
+    {
+        private const float Duration = 0.38f;
+
+        private RectTransform rect;
+        private CanvasGroup group;
+        private Vector3 from;
+        private Vector3 to;
+        private bool consume;
+        private float age;
+        private System.Action onDone;
+
+        /// <summary>
+        /// consume = true: การ์ดหดและจางหายตอนถึง (สเปล) / false: ขนาดเท่าปลายทาง (ยูนิต)
+        /// </summary>
+        public static void Launch(
+            Transform parent,
+            MultiverseCardBattle.Cards.CardInstance card,
+            Vector2 size,
+            Vector3 from,
+            Vector3 to,
+            bool consume,
+            System.Action onDone)
+        {
+            if (parent == null || card == null)
+            {
+                if (onDone != null)
+                    onDone();
+
+                return;
+            }
+
+            CardView view = CardView.Create(parent, size);
+
+            view.ShowInstance(card);
+
+            CanvasGroup group = view.gameObject.AddComponent<CanvasGroup>();
+
+            group.blocksRaycasts = false;
+            group.interactable = false;
+
+            CardFlight flight = view.gameObject.AddComponent<CardFlight>();
+
+            flight.rect = view.GetComponent<RectTransform>();
+            flight.group = group;
+            flight.from = from;
+            flight.to = to;
+            flight.consume = consume;
+            flight.onDone = onDone;
+
+            flight.rect.position = from;
+            flight.rect.SetAsLastSibling();
+        }
+
+        private void Update()
+        {
+            age += Time.unscaledDeltaTime;
+
+            float t = Mathf.Clamp01(age / Duration);
+
+            // เร่งแล้วชะลอ
+            float ease = t * t * (3f - 2f * t);
+
+            Vector3 position = Vector3.Lerp(from, to, ease);
+
+            // โค้งขึ้นกลางทาง
+            position.y += Mathf.Sin(t * Mathf.PI) * 70f;
+
+            rect.position = position;
+
+            float scale = consume
+                ? Mathf.Lerp(1.1f, 0.55f, t)
+                : Mathf.Lerp(1.15f, 1f, ease);
+
+            rect.localScale = Vector3.one * scale;
+
+            rect.localRotation = Quaternion.Euler(
+                0f, 0f, Mathf.Sin(t * Mathf.PI) * (to.x >= from.x ? -6f : 6f));
+
+            if (consume)
+                group.alpha = t < 0.6f ? 1f : 1f - (t - 0.6f) / 0.4f;
+
+            if (t >= 1f)
+            {
+                System.Action done = onDone;
+
+                onDone = null;
+
+                Destroy(gameObject);
+
+                if (done != null)
+                    done();
             }
         }
     }

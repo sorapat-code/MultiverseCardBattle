@@ -98,6 +98,9 @@ namespace MultiverseCardBattle.Screens
         private Dictionary<int, int> lastHealth = new Dictionary<int, int>();
         private Dictionary<int, int> lastAttacks = new Dictionary<int, int>();
         private Dictionary<int, Vector3> lastPositions = new Dictionary<int, Vector3>();
+        private Dictionary<int, Vector3> lastHandPositions = new Dictionary<int, Vector3>();
+        private int lastAiHandCount = -1;
+        private bool secretAnnounced;
         private int lastHumanGrave = -1;
         private int lastAiGrave = -1;
         private RectTransform fxLayer;
@@ -209,6 +212,31 @@ namespace MultiverseCardBattle.Screens
 
                     bannerTimer = 3f;
                 }
+            }
+
+            // เหตุการณ์สุ่ม: ได้การ์ดลับจากการ Summon
+            if (battle.SecretCardSummoned && !secretAnnounced)
+            {
+                secretAnnounced = true;
+
+                bannerText.text =
+                    "<color=#B889FF>SHADOW MONARCH</color>\n" +
+                    "<size=24>Sung Jin-Woo answers your summon!</size>";
+
+                bannerRoot.gameObject.SetActive(true);
+                bannerRoot.SetAsLastSibling();
+
+                bannerTimer = 3.5f;
+
+                UiFx.Ring(
+                    fxLayer, bannerRoot.position, new Color(0.7f, 0.45f, 1f, 0.9f),
+                    100f, 900f, 0.9f);
+
+                UiFx.Burst(
+                    fxLayer, bannerRoot.position, new Color(0.65f, 0.4f, 1f, 1f),
+                    50, 520f, 36f, 1.2f, -40f);
+
+                Sfx.Play(SoundId.Win);
             }
 
             if (bannerTimer > 0f)
@@ -932,6 +960,10 @@ namespace MultiverseCardBattle.Screens
             Dictionary<int, int> nowAttacks = new Dictionary<int, int>();
             Dictionary<int, Vector3> nowPositions = new Dictionary<int, Vector3>();
 
+            // AI เล่นการ์ดจากมือ (มือลดลง) ใช้จับว่ายูนิตใหม่มาจากมือ
+            bool aiPlayedFromHand =
+                lastAiHandCount >= 0 && Ai.Hand.Count < lastAiHandCount;
+
             BattlePlayer[] players = { Human, Ai };
 
             foreach (BattlePlayer player in players)
@@ -947,7 +979,43 @@ namespace MultiverseCardBattle.Screens
                     if (!known && lastFieldCount >= 0 &&
                         viewsByInstance.TryGetValue(card.InstanceID, out CardView entered))
                     {
-                        CardFx.Pop(entered);
+                        Vector3 origin = Vector3.zero;
+
+                        bool fromHand = player == Human
+                            ? lastHandPositions.TryGetValue(card.InstanceID, out origin)
+                            : aiPlayedFromHand;
+
+                        if (player != Human && fromHand && enemyHandButton != null)
+                            origin = enemyHandButton.transform.position;
+
+                        if (fromHand)
+                        {
+                            // การ์ดบินจากมือมาลงสนาม  ตัวจริงซ่อนไว้จนกว่าจะถึง
+                            CanvasGroup hidden =
+                                entered.gameObject.AddComponent<CanvasGroup>();
+
+                            hidden.alpha = 0f;
+
+                            CardView landing = entered;
+
+                            CardFlight.Launch(
+                                fxLayer, card, FieldCardSize, origin,
+                                entered.transform.position, false,
+                                () =>
+                                {
+                                    if (hidden != null)
+                                        hidden.alpha = 1f;
+
+                                    if (landing != null)
+                                        CardFx.Pop(landing);
+                                });
+
+                            aiPlayedFromHand = false;
+                        }
+                        else
+                        {
+                            CardFx.Pop(entered);
+                        }
 
                         UiFx.Ring(
                             fxLayer, entered.transform.position,
@@ -1048,6 +1116,20 @@ namespace MultiverseCardBattle.Screens
                 Sfx.Play(SoundId.Play);
 
             lastFieldCount = fieldCount;
+
+            // จำตำแหน่งการ์ดในมือไว้ใช้ตอนการ์ดบินออกไปในครั้งถัดไป
+            Dictionary<int, Vector3> nowHand = new Dictionary<int, Vector3>();
+
+            foreach (CardInstance handCard in Human.Hand.Cards)
+            {
+                CardView handView;
+
+                if (viewsByInstance.TryGetValue(handCard.InstanceID, out handView))
+                    nowHand[handCard.InstanceID] = handView.transform.position;
+            }
+
+            lastHandPositions = nowHand;
+            lastAiHandCount = Ai.Hand.Count;
         }
 
         private void CheckLeader(BattlePlayer player, ref int last, Button button)
@@ -1118,6 +1200,23 @@ namespace MultiverseCardBattle.Screens
                     }
 
                     Color color = SpellColor(card.Data);
+
+                    // การ์ดสเปลบินจากมือไปกลางสนามแล้วสลาย
+                    Vector3 spellOrigin = Vector3.zero;
+
+                    bool hasOrigin = player == Human
+                        ? lastHandPositions.TryGetValue(card.InstanceID, out spellOrigin)
+                        : enemyHandButton != null;
+
+                    if (player != Human && hasOrigin)
+                        spellOrigin = enemyHandButton.transform.position;
+
+                    if (hasOrigin)
+                    {
+                        CardFlight.Launch(
+                            fxLayer, card, HandCardSize, spellOrigin,
+                            lane.position, true, null);
+                    }
 
                     UiFx.Ring(
                         fxLayer, lane.position, new Color(color.r, color.g, color.b, 0.85f),
@@ -1458,7 +1557,15 @@ namespace MultiverseCardBattle.Screens
             {
                 resultShown = true;
 
-                resultLines = CampaignService.OnBattleFinished(won);
+                BattleSummary summary = new BattleSummary();
+
+                summary.Turns = battle.TurnManager.TurnNumber;
+                summary.PlayerHealth = Human.LeaderHealth;
+                summary.PlayerMaxHealth = Human.MaxLeaderHealth;
+                summary.OpponentDeckOut = Ai.Deck.Count == 0 && Human.Deck.Count > 0;
+                summary.SecretSummoned = battle.SecretCardSummoned;
+
+                resultLines = CampaignService.OnBattleFinished(won, summary);
 
                 if (battle.Winner != null)
                     Sfx.Play(won ? SoundId.Win : SoundId.Lose);

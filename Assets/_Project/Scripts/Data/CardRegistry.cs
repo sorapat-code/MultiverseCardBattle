@@ -65,6 +65,10 @@ namespace MultiverseCardBattle.Data
             if (data.Source == CardSource.Token || data.Source == CardSource.Debug)
                 return false;
 
+            // การ์ดลับ (Secret / Event) ไม่แสดงใน Collection ไม่ออกจากแพ็คและ Discover
+            if (data.Rarity == CardRarity.Secret || data.Source == CardSource.Event)
+                return false;
+
             if ((data.Tags & CardTag.Token) != 0)
                 return false;
 

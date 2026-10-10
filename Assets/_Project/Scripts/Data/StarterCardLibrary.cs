@@ -41,6 +41,9 @@ namespace MultiverseCardBattle.Data
         // การ์ดที่ผู้เล่นฝั่งเริ่มหลังได้ตอนโยนเหรียญ: +1 Energy ในเทิร์นนั้น
         public const string CoinId = "TKN_COIN";
 
+        // การ์ดลับ: มีโอกาสน้อยมากที่ Summon ในการต่อสู้จะได้การ์ดนี้แทน Token
+        public const string SecretId = "EVT_001";
+
         private static void Build()
         {
             if (cards != null)
@@ -93,6 +96,29 @@ namespace MultiverseCardBattle.Data
                 6, 7, 7, Keyword.QuickAttack | Keyword.Pierce,
                 CardTag.Human | CardTag.Spirit | CardTag.Melee | CardTag.Token,
                 CardSource.Token));
+
+            CardData shadowSoldier = Add(Unit(
+                "TKN_005", "Shadow Soldier",
+                Universe.SoloLeveling, Faction.ShadowArmy, CardRarity.Rare,
+                2, 2, 2, Keyword.Rush,
+                CardTag.Undead | CardTag.Melee | CardTag.Token,
+                CardSource.Token));
+
+            // การ์ดลับ (ไม่อยู่ใน Collection ได้จากโอกาส 1% ตอน Summon เท่านั้น)
+            Add(Create(
+                SecretId, "Sung Jin-Woo, Shadow Monarch", CardType.Unit,
+                Universe.SoloLeveling, Faction.ShadowArmy, CardRarity.Secret,
+                9, 8, 8, Keyword.Charge | Keyword.Lifesteal,
+                CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Dark,
+                CardSource.Event,
+                new[]
+                {
+                    Act(TriggerType.Summon, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 3)),
+                    Act(TriggerType.Summon, TargetRule.AllyLeader, TargetSelection.All,
+                        FxCard(EffectType.Summon, shadowSoldier),
+                        FxCard(EffectType.Summon, shadowSoldier))
+                }));
 
             // ---------- Units ----------
 

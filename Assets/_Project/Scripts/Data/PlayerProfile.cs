@@ -38,8 +38,8 @@ namespace MultiverseCardBattle.Data
     [Serializable]
     public class SaveData
     {
-        // 1 = ก่อนมี Gold / 2 = มี Gold และตั้งค่าเสียง
-        public const int CurrentVersion = 2;
+        // 1 = ก่อนมี Gold / 2 = มี Gold และตั้งค่าเสียง / 3 = มี Dust และ Achievement
+        public const int CurrentVersion = 3;
 
         public int Version = CurrentVersion;
 
@@ -53,6 +53,24 @@ namespace MultiverseCardBattle.Data
         public int Gold;
 
         public bool SoundMuted;
+
+        // ผงสำหรับคราฟการ์ด ได้จากการย่อยการ์ดและรางวัล Achievement
+        public int Dust;
+
+        // สถิติสำหรับ Achievement
+        public int StatBattles;
+        public int StatWins;
+        public int StatPacks;
+        public int StatCrafted;
+        public int StatDisenchanted;
+        public int StatSecrets;
+        public int StatDeckOutWins;
+        public int StatComebackWins;
+        public int StatFlawlessWins;
+        public int StatFastWins;
+
+        // Achievement ที่ปลดล็อกแล้ว (รางวัลถูกแจกตอนปลดล็อก)
+        public List<string> Achievements = new List<string>();
     }
 
     /// <summary>
@@ -126,6 +144,41 @@ namespace MultiverseCardBattle.Data
             created.Count = count;
 
             Data.Owned.Add(created);
+        }
+
+        /// <summary>เอาการ์ดออกจากคอลเลกชัน (ไม่ต่ำกว่า 0) คืนจำนวนที่เอาออกจริง</summary>
+        public int RemoveCard(string cardId, int count)
+        {
+            if (string.IsNullOrEmpty(cardId) || count <= 0)
+                return 0;
+
+            foreach (OwnedCardEntry entry in Data.Owned)
+            {
+                if (entry.CardID != cardId)
+                    continue;
+
+                int removed = Math.Min(count, entry.Count);
+
+                entry.Count -= removed;
+
+                if (entry.Count <= 0)
+                    Data.Owned.Remove(entry);
+
+                return removed;
+            }
+
+            return 0;
+        }
+
+        // จำนวนใบมากที่สุดของการ์ดนี้ที่เด็คใบใดใบหนึ่งใช้อยู่
+        public int MaxCopiesInDecks(string cardId)
+        {
+            int most = 0;
+
+            foreach (DeckList deck in Data.Decks)
+                most = Math.Max(most, deck.CountOf(cardId));
+
+            return most;
         }
 
         // ---------- เด็ค ----------
@@ -239,6 +292,29 @@ namespace MultiverseCardBattle.Data
                 return false;
 
             Data.Gold -= amount;
+
+            return true;
+        }
+
+        // ---------- Dust ----------
+
+        public int Dust
+        {
+            get { return Data.Dust; }
+        }
+
+        public void AddDust(int amount)
+        {
+            if (amount > 0)
+                Data.Dust += amount;
+        }
+
+        public bool TrySpendDust(int amount)
+        {
+            if (amount < 0 || Data.Dust < amount)
+                return false;
+
+            Data.Dust -= amount;
 
             return true;
         }

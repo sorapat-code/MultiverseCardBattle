@@ -160,6 +160,9 @@ namespace MultiverseCardBattle.Battle
         public int FirstPlayerID { get; private set; } = 1;
         public bool CoinFlipped { get; private set; }
 
+        // เหตุการณ์สุ่ม: ผู้เล่นได้การ์ดลับจากการ Summon ในการต่อสู้นี้
+        public bool SecretCardSummoned { get; set; }
+
         private void GiveCoin(BattlePlayer player)
         {
             CardData coin = StarterCardLibrary.Get(StarterCardLibrary.CoinId);
@@ -321,18 +324,9 @@ namespace MultiverseCardBattle.Battle
             if (player == null)
                 return null;
 
+            // เด็คหมด = แพ้ทันที (ตัดสินใน CheckVictory) จึงไม่มีอะไรให้จั่ว
             if (player.Deck.Count == 0)
-            {
-                player.FatigueCounter++;
-
-                Log(
-                    player.Name + " has no cards left and takes " +
-                    player.FatigueCounter + " fatigue damage");
-
-                DamageLeader(null, player, player.FatigueCounter, true);
-
                 return null;
-            }
 
             CardInstance card = player.Deck.Draw();
 
@@ -968,6 +962,19 @@ namespace MultiverseCardBattle.Battle
 
             bool p1Dead = Player1.LeaderHealth <= 0;
             bool p2Dead = Player2.LeaderHealth <= 0;
+
+            // เด็คเหลือ 0 ใบเมื่อไหร่ก็แพ้ทันที
+            if (Player1.Deck.Count == 0 && !p1Dead)
+            {
+                Log(Player1.Name + " has no cards left in the deck!");
+                p1Dead = true;
+            }
+
+            if (Player2.Deck.Count == 0 && !p2Dead)
+            {
+                Log(Player2.Name + " has no cards left in the deck!");
+                p2Dead = true;
+            }
 
             if (!p1Dead && !p2Dead)
                 return;

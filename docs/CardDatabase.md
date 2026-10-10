@@ -98,3 +98,14 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
 | unknown card reference | CardID ใน Summon/Transform/EvolvesInto ไม่มี |
 | bad ability script | ลืม `->` หรือวงเล็บไม่ครบ |
 | missing required column | ไม่มีหัวคอลัมน์ ID/Name |
+
+## Secret card, Dust and achievements
+
+- `Sung Jin-Woo, Shadow Monarch` (`EVT_001`, rarity `Secret`, source `Event`) is not collectible:
+  it is hidden from the Collection, packs, Discover and the deck builder. It can only appear when a
+  **Summon** effect that creates a new card is used by the human player (1% chance per summoned card,
+  `EffectExecutor.SecretCardChance`).
+- Disenchant gives Dust (Common 5, Rare 20, Epic 100, Legendary 400). Crafting costs Dust
+  (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.
+- Achievements live in `Data/AchievementService.cs`; stats are stored in the save file (version 3).
+- A player whose deck reaches 0 cards loses the battle immediately.

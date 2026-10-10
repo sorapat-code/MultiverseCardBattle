@@ -55,6 +55,9 @@ namespace MultiverseCardBattle.Cards
         BlackShores,
         Fractsidus,
 
+        // Solo Leveling
+        ShadowArmy,
+
         // Jujutsu Kaisen
         JujutsuHigh,
         CursedSpirits

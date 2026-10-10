@@ -30,14 +30,20 @@ namespace MultiverseCardBattle.Screens
             "While battling, hover a card to see it larger with an explanation of its keywords underneath.\n\n" +
             "<b>Battle tools</b>: the Graveyard buttons show destroyed cards, and Opp. Hand shows the cards in your opponent's hand.\n" +
             "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection or close a window.  Hover a card to see it larger.\n\n" +
+            "<b>Deck-out</b>: if your deck ever reaches 0 cards you lose immediately - watch your draws!\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
-            "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.";
+            "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.\n" +
+            "<b>Collection</b>: click a card to see it full size. Disenchant spare copies into Dust and spend Dust to craft cards you are missing.\n" +
+            "<b>Achievements</b>: complete goals for Gold and Dust. Some are hidden...";
 
         private RectTransform root;
         private RectTransform mainPanel;
         private RectTransform shopPanel;
         private RectTransform helpPanel;
         private RectTransform glossaryPanel;
+        private RectTransform achievementPanel;
+        private RectTransform achievementList;
+        private Text achievementSummary;
 
         private Text message;
         private Text goldText;
@@ -59,11 +65,13 @@ namespace MultiverseCardBattle.Screens
             shopPanel = CreatePanel("ShopPanel");
             helpPanel = CreatePanel("HelpPanel");
             glossaryPanel = CreatePanel("GlossaryPanel");
+            achievementPanel = CreatePanel("AchievementPanel");
 
             BuildMain();
             BuildShop();
             BuildHelp();
             BuildGlossary();
+            BuildAchievements();
 
             Show(mainPanel);
         }
@@ -83,13 +91,15 @@ namespace MultiverseCardBattle.Screens
             shopPanel.gameObject.SetActive(panel == shopPanel);
             helpPanel.gameObject.SetActive(panel == helpPanel);
             glossaryPanel.gameObject.SetActive(panel == glossaryPanel);
+            achievementPanel.gameObject.SetActive(panel == achievementPanel);
 
             RefreshGold();
         }
 
         private void RefreshGold()
         {
-            string gold = "Gold: " + SaveManager.Profile.Gold;
+            string gold = "Gold: " + SaveManager.Profile.Gold +
+                "     <color=#99D9FF>Dust: " + SaveManager.Profile.Dust + "</color>";
 
             if (goldText != null)
                 goldText.text = gold;
@@ -144,30 +154,18 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.AddTextShadow(goldText);
 
-            // คอลัมน์ซ้าย: เล่น
-            float y = 0.68f;
-            const float height = 0.09f;
-            const float step = 0.115f;
+            // ปุ่มเมนู 2 คอลัมน์ 5 แถว + ปุ่มออกตรงกลางแถวสุดท้าย
+            float y = 0.70f;
+            const float height = 0.08f;
+            const float step = 0.095f;
 
             ScreenKit.AddButton(mainPanel, "Campaign",
                 () => SceneLoader.Go(GameScene.Campaign),
                 UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 
-            ScreenKit.AddButton(mainPanel, "How to Play",
-                () => Show(helpPanel),
-                UIFactory.Muted, 0.51f, y, 0.78f, y + height);
-
-            y -= step;
-
             ScreenKit.AddButton(mainPanel, "Quick Battle",
                 StartQuickBattle,
-                UIFactory.Success, 0.22f, y, 0.49f, y + height);
-
-            soundButton = ScreenKit.AddButton(mainPanel, "",
-                ToggleSound,
-                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 26);
-
-            RefreshSoundLabel();
+                UIFactory.Success, 0.51f, y, 0.78f, y + height);
 
             y -= step;
 
@@ -184,21 +182,9 @@ namespace MultiverseCardBattle.Screens
                 },
                 UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 
-            resetButton = ScreenKit.AddButton(mainPanel, "Reset Progress",
-                OnResetClicked,
-                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
-
-            y -= step;
-
             ScreenKit.AddButton(mainPanel, "Deck Builder",
                 () => SceneLoader.Go(GameScene.DeckBuilder),
-                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
-
-#if !UNITY_WEBGL
-            ScreenKit.AddButton(mainPanel, "Quit",
-                Application.Quit,
-                UIFactory.Danger, 0.51f, y, 0.78f, y + height);
-#endif
+                UIFactory.Accent, 0.51f, y, 0.78f, y + height);
 
             y -= step;
 
@@ -206,9 +192,44 @@ namespace MultiverseCardBattle.Screens
                 () => SceneLoader.Go(GameScene.Collection),
                 UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 
+            ScreenKit.AddButton(mainPanel, "Achievements",
+                () =>
+                {
+                    RebuildAchievements();
+
+                    Show(achievementPanel);
+                },
+                UIFactory.Accent, 0.51f, y, 0.78f, y + height);
+
+            y -= step;
+
+            ScreenKit.AddButton(mainPanel, "How to Play",
+                () => Show(helpPanel),
+                UIFactory.Muted, 0.22f, y, 0.49f, y + height);
+
             ScreenKit.AddButton(mainPanel, "Keywords & Status",
                 () => Show(glossaryPanel),
                 UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
+
+            y -= step;
+
+            soundButton = ScreenKit.AddButton(mainPanel, "",
+                ToggleSound,
+                UIFactory.Muted, 0.22f, y, 0.49f, y + height, 26);
+
+            RefreshSoundLabel();
+
+            resetButton = ScreenKit.AddButton(mainPanel, "Reset Progress",
+                OnResetClicked,
+                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
+
+#if !UNITY_WEBGL
+            y -= step;
+
+            ScreenKit.AddButton(mainPanel, "Quit",
+                Application.Quit,
+                UIFactory.Danger, 0.36f, y, 0.64f, y + height);
+#endif
 
             message = ScreenKit.AddLabel(
                 mainPanel, "", 26, TextAnchor.MiddleCenter,
@@ -326,6 +347,8 @@ namespace MultiverseCardBattle.Screens
 
             Sfx.Play(SoundId.Pack);
 
+            ShowUnlocked(AchievementService.Check(SaveManager.Profile));
+
             ClearPackRow();
 
             int newCards = 0;
@@ -348,6 +371,99 @@ namespace MultiverseCardBattle.Screens
                 : "No new cards this time - extra copies added.";
 
             RefreshGold();
+        }
+
+        private void ShowUnlocked(List<AchievementDef> list)
+        {
+            foreach (AchievementDef def in list)
+            {
+                Toast.Show(
+                    root, "Achievement unlocked: " + def.Name,
+                    AchievementService.RewardText(def));
+            }
+        }
+
+        // ---------- Achievement ----------
+
+        private void BuildAchievements()
+        {
+            UIFactory.CreateTitle(achievementPanel, "ACHIEVEMENTS");
+
+            achievementSummary = ScreenKit.AddLabel(
+                achievementPanel, "", 28, TextAnchor.MiddleCenter,
+                0.3f, 0.82f, 0.7f, 0.89f, FontStyle.Bold);
+
+            achievementSummary.color = UIFactory.Gold;
+
+            ScreenKit.AddScroll(
+                achievementPanel, "AchievementScroll",
+                0.08f, 0.14f, 0.92f, 0.82f, out achievementList);
+
+            UIFactory.AddVertical(achievementList, 8f, 10);
+
+            ScreenKit.AddButton(achievementPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+
+        private void RebuildAchievements()
+        {
+            ScreenKit.ClearNow(achievementList);
+
+            PlayerProfile profile = SaveManager.Profile;
+
+            achievementSummary.text =
+                AchievementService.UnlockedCount(profile) + " / " +
+                AchievementService.All.Count + " unlocked";
+
+            foreach (AchievementDef def in AchievementService.All)
+            {
+                bool done = AchievementService.IsUnlocked(profile, def);
+
+                bool hidden = def.Hidden && !done;
+
+                int target = def.GetTarget();
+                int progress = Mathf.Min(def.Progress(profile), target);
+
+                Image row = UIFactory.CreateFramedPanel(
+                    achievementList, "Row_" + def.Id,
+                    done
+                        ? new Color(0.22f, 0.17f, 0.08f, 0.96f)
+                        : UIFactory.Panel);
+
+                row.rectTransform.sizeDelta = new Vector2(0f, 96f);
+
+                Text title = UIFactory.CreateText(
+                    row.transform,
+                    hidden ? "???" : def.Name,
+                    28, done ? UIFactory.Gold : UIFactory.TextColor,
+                    TextAnchor.MiddleLeft, FontStyle.Bold);
+
+                UIFactory.SetAnchors(title.rectTransform, 0.02f, 0.5f, 0.6f, 0.95f);
+
+                Text description = UIFactory.CreateText(
+                    row.transform,
+                    hidden ? "Hidden achievement" : def.Description,
+                    22, new Color(0.8f, 0.76f, 0.68f, 1f), TextAnchor.MiddleLeft);
+
+                UIFactory.SetAnchors(description.rectTransform, 0.02f, 0.05f, 0.6f, 0.5f);
+
+                Text reward = UIFactory.CreateText(
+                    row.transform,
+                    hidden ? "Reward: ???" : "Reward: " + AchievementService.RewardText(def),
+                    22, UIFactory.GoldDim, TextAnchor.MiddleRight);
+
+                UIFactory.SetAnchors(reward.rectTransform, 0.6f, 0.5f, 0.97f, 0.95f);
+
+                Text state = UIFactory.CreateText(
+                    row.transform,
+                    done
+                        ? "<color=#70E080>UNLOCKED</color>"
+                        : (hidden ? "" : progress + " / " + target),
+                    24, UIFactory.TextColor, TextAnchor.MiddleRight, FontStyle.Bold);
+
+                UIFactory.SetAnchors(state.rectTransform, 0.6f, 0.05f, 0.97f, 0.5f);
+            }
         }
 
         // ---------- Keyword / Status ----------
