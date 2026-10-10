@@ -18,6 +18,8 @@ namespace MultiverseCardBattle.Cards
         SoloLeveling,
         DarkSouls,
 
-        JujutsuKaisen
+        JujutsuKaisen,
+
+        Overlord
     }
 }

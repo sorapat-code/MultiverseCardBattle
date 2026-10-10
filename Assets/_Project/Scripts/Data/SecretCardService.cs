@@ -11,6 +11,13 @@ namespace MultiverseCardBattle.Data
         public string Title;
         public string Subtitle;
         public Color Tint;
+        public BannerStyle Style;
+    }
+
+    public enum BannerStyle
+    {
+        Gold,
+        Nazarick
     }
 
     /// <summary>
@@ -21,6 +28,10 @@ namespace MultiverseCardBattle.Data
         public const int ArtoriasWins = 4;
         public const int ArtoriasDeaths = 3;
         public const int ArtoriasMinHealth = 10;
+
+        public const int AinzSpells = 5;
+        public const int AinzEffectKills = 4;
+        public const int AinzMinHealth = 15;
 
         public static List<SecretUnlock> Evaluate(
             BattleManager battle, int humanId, bool won, PlayerProfile profile)
@@ -43,7 +54,32 @@ namespace MultiverseCardBattle.Data
                 list.Add(unlock);
             }
 
+            if (IsAinzEarned(battle.Stats, humanId, battle.GetPlayer(humanId)) &&
+                profile.GetOwnedCount(StarterCardLibrary.AinzId) == 0)
+            {
+                SecretUnlock unlock = new SecretUnlock();
+
+                unlock.CardId = StarterCardLibrary.AinzId;
+                unlock.Title = "THE SUPREME ONE HAS DESCENDED";
+                unlock.Subtitle = "The Throne of Nazarick complete";
+                unlock.Tint = new Color(0.9f, 0.12f, 0.16f, 1f);
+                unlock.Style = BannerStyle.Nazarick;
+
+                list.Add(unlock);
+            }
+
             return list;
+        }
+
+        public static bool IsAinzEarned(
+            BattleStats stats, int humanId, BattlePlayer human)
+        {
+            if (stats == null || human == null)
+                return false;
+
+            return stats.SpellsPlayed[humanId] >= AinzSpells &&
+                   stats.EffectKills[humanId] >= AinzEffectKills &&
+                   human.LeaderHealth >= AinzMinHealth;
         }
 
         public static bool IsArtoriasEarned(BattleStats stats, int humanId)

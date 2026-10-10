@@ -266,6 +266,11 @@ namespace MultiverseCardBattle.Data
                 "Prove yourself in battle... a knight watches from the abyss.",
                 p => p.GetOwnedCount(StarterCardLibrary.ArtoriasId) > 0 ? 1 : 0,
                 () => 1, 500, 300, true);
+
+            Add("nazarick", "The Throne of Nazarick",
+                "Cast many spells and let the dead pile up... something watches.",
+                p => p.GetOwnedCount(StarterCardLibrary.AinzId) > 0 ? 1 : 0,
+                () => 1, 500, 300, true);
         }
     }
 }

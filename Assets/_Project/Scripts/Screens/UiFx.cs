@@ -165,6 +165,102 @@ namespace MultiverseCardBattle.Screens
     }
 
     /// <summary>
+    /// เวทวงกลมสีแดง-ดำหมุนช้าๆ พร้อมอนุภาคลอยขึ้น ใช้กับ Banner ปลดล็อกการ์ดลับ (Ainz)
+    /// </summary>
+    public class BannerMagic : MonoBehaviour
+    {
+        private RectTransform outer;
+        private RectTransform inner;
+        private Image glow;
+        private Transform fxParent;
+        private Color color;
+        private float age;
+        private float particleTimer;
+        private float ringTimer;
+
+        public static void Create(RectTransform parent, Color color)
+        {
+            RectTransform root = UIFactory.CreateRect("BannerMagic", parent);
+
+            UIFactory.SetAnchors(root, 0.5f, 0.5f, 0.5f, 0.5f);
+
+            root.sizeDelta = new Vector2(1000f, 1000f);
+            root.anchoredPosition = new Vector2(0f, 40f);
+
+            Image glowImage = UIFactory.CreatePanel(
+                root, "Glow", new Color(color.r, color.g, color.b, 0.35f));
+
+            glowImage.sprite = UIShapes.Glow;
+            glowImage.type = Image.Type.Simple;
+            glowImage.raycastTarget = false;
+
+            UIFactory.Stretch(glowImage.rectTransform);
+
+            BannerMagic magic = root.gameObject.AddComponent<BannerMagic>();
+
+            magic.color = color;
+            magic.glow = glowImage;
+            magic.fxParent = parent;
+            magic.outer = MakeRing(root, color, 1f);
+            magic.inner = MakeRing(root, color, 0.62f);
+        }
+
+        private static RectTransform MakeRing(RectTransform root, Color color, float scale)
+        {
+            Image ring = UIFactory.CreatePanel(
+                root, "Ring", new Color(color.r, color.g, color.b, 0.8f));
+
+            ring.sprite = UIShapes.RingCircle;
+            ring.type = Image.Type.Simple;
+            ring.raycastTarget = false;
+
+            RectTransform rect = ring.rectTransform;
+
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = Vector2.one * 900f * scale;
+
+            return rect;
+        }
+
+        private void Update()
+        {
+            float dt = Time.unscaledDeltaTime;
+
+            age += dt;
+
+            outer.localRotation = Quaternion.Euler(0f, 0f, age * 12f);
+            inner.localRotation = Quaternion.Euler(0f, 0f, -age * 22f);
+
+            Color g = glow.color;
+
+            g.a = 0.28f + 0.12f * Mathf.Sin(age * 2.2f);
+
+            glow.color = g;
+
+            particleTimer -= dt;
+            ringTimer -= dt;
+
+            Vector3 center = transform.position;
+
+            if (particleTimer <= 0f)
+            {
+                particleTimer = 0.06f;
+
+                UiFx.Burst(fxParent, center, color, 2, 220f, 34f, 1.6f, -140f);
+            }
+
+            if (ringTimer <= 0f)
+            {
+                ringTimer = 1.1f;
+
+                UiFx.Ring(fxParent, center, color, 200f, 1000f, 1.3f);
+            }
+        }
+    }
+
+    /// <summary>
     /// ฝุ่น/ประกายลอยช้าๆ เป็นฉากหลัง พร้อมขอบจอมืด ใส่ในทุกหน้าเพื่อให้ดูมีบรรยากาศ
     /// </summary>
     public class AmbientFx : MonoBehaviour

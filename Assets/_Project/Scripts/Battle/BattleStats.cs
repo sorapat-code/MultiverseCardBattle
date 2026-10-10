@@ -17,6 +17,12 @@ namespace MultiverseCardBattle.Battle
         // เอฟเฟกต์ที่ทำลายยูนิตศัตรูทันทีโดยไม่ผ่านการต่อสู้
         public readonly int[] InstantDestroys = new int[3];
 
+        // จำนวน Spell ที่ใช้
+        public readonly int[] SpellsPlayed = new int[3];
+
+        // ยูนิตศัตรูที่ถูกกำจัดด้วยเอฟเฟกต์ (Spell / ความสามารถการ์ด) ไม่ใช่การต่อสู้
+        public readonly int[] EffectKills = new int[3];
+
         // HP Leader ต่ำสุดตลอดแมตช์
         public readonly int[] LowestLeaderHealth = { int.MaxValue, int.MaxValue, int.MaxValue };
 
@@ -50,6 +56,18 @@ namespace MultiverseCardBattle.Battle
         {
             if (Valid(playerId))
                 UnitDeaths[playerId]++;
+        }
+
+        public void AddSpellPlayed(int playerId)
+        {
+            if (Valid(playerId))
+                SpellsPlayed[playerId]++;
+        }
+
+        public void AddEffectKill(int playerId)
+        {
+            if (Valid(playerId))
+                EffectKills[playerId]++;
         }
 
         public void AddInstantDestroy(int playerId)

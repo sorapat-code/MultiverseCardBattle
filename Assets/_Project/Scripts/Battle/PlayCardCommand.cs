@@ -68,6 +68,9 @@ namespace MultiverseCardBattle.Battle
             // Spellburst: ยูนิตของผู้เล่นที่มี Keyword นี้ทำงานเมื่อใช้ Spell
             if (Card.Data.Type == CardType.Spell)
             {
+                battle.Stats.AddSpellPlayed(Player.PlayerID);
+                Player.SpellsPlayedThisTurn++;
+
                 battle.Publish(
                     TriggerType.Spellburst,
                     card: Card,

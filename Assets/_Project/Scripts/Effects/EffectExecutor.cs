@@ -442,6 +442,10 @@ namespace MultiverseCardBattle.Effects
                         context.SourcePlayer.PlayerID);
                 }
 
+                // จดว่าใครเป็นคนทำลาย (ใช้นับสถิติและ Dark Wisdom)
+                context.Battle.NoteEffectKill(
+                    context.TargetCard, context.SourceCard, context.SourcePlayer);
+
                 context.Battle.KillUnit(context.TargetCard);
                 return;
             }
@@ -813,6 +817,10 @@ namespace MultiverseCardBattle.Effects
 
             if (StatusInfo.Stacks(type) && value <= 0)
                 value = 1;
+
+            // Doom จำว่าใครเป็นผู้ติด เพื่อทำลายตอนต้นเทิร์นของคนนั้น
+            if (type == StatusType.Doom && context.SourcePlayer != null)
+                value = context.SourcePlayer.PlayerID;
 
             int duration = effect.Duration > 0
                 ? effect.Duration

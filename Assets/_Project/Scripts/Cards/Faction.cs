@@ -63,6 +63,9 @@ namespace MultiverseCardBattle.Cards
 
         // Jujutsu Kaisen
         JujutsuHigh,
-        CursedSpirits
+        CursedSpirits,
+
+        // Overlord
+        Nazarick
     }
 }

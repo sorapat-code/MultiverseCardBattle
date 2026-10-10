@@ -51,6 +51,8 @@ namespace MultiverseCardBattle.Battle
                 card.AttacksThisTurn = 0;
 
             player.CardsPlayedThisTurn = 0;
+            player.SpellsPlayedThisTurn = 0;
+            player.DarkWisdomEnergyThisTurn = 0;
 
             Debug.Log(
                 $"Turn {TurnNumber} | " +
@@ -69,6 +71,9 @@ namespace MultiverseCardBattle.Battle
                 player: player);
 
             StatusProcessor.OnTurnStart(battleManager, player);
+
+            // Doom ที่ครบกำหนด และความสามารถต้นเทิร์นที่ต้องเลือกเป้าหมาย (Grasp Heart)
+            battleManager.OnTurnStartPassives(player);
 
             battleManager.Resolve();
         }
@@ -121,6 +126,17 @@ namespace MultiverseCardBattle.Battle
                 foreach (CardInstance card in player.Field)
                 {
                     card.TurnAttackBonus = 0;
+
+                    if (card.TempUnstoppableUntil >= 0 && TotalTurns >= card.TempUnstoppableUntil)
+                    {
+                        card.TempUnstoppableUntil = -1;
+
+                        if (card.TempUnstoppableGranted)
+                        {
+                            card.TempUnstoppableGranted = false;
+                            card.RemoveKeyword(Keyword.Unstoppable);
+                        }
+                    }
 
                     if (card.TauntRestoreTurn >= 0 && TotalTurns >= card.TauntRestoreTurn)
                     {

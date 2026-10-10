@@ -80,7 +80,7 @@ namespace MultiverseCardBattle.Data
             new[] { StatusType.Stun, StatusType.Silence, StatusType.Freeze,
                     StatusType.Root, StatusType.Disarm, StatusType.Confusion },
             new[] { StatusType.Burn, StatusType.Poison, StatusType.Bleed,
-                    StatusType.Curse, StatusType.Marked },
+                    StatusType.Curse, StatusType.Marked, StatusType.Doom },
             new[] { StatusType.AttackUp, StatusType.AttackDown, StatusType.DefenseUp,
                     StatusType.DefenseDown, StatusType.Vulnerable, StatusType.Weakness,
                     StatusType.Barrier, StatusType.Regen, StatusType.CostUp,

@@ -61,11 +61,27 @@ namespace MultiverseCardBattle.Battle
             get { return PendingAdapt != null; }
         }
 
-        /// <summary>มีตัวเลือกที่ผู้เล่นต้องเลือกก่อน (Discover หรือ Adapt)</summary>
+        public TargetRequest PendingTarget { get; private set; }
+
+        public bool HasPendingTarget
+        {
+            get { return PendingTarget != null; }
+        }
+
+        /// <summary>มีตัวเลือกที่ผู้เล่นต้องเลือกก่อน (Discover, Adapt หรือเลือกเป้าหมาย)</summary>
         public bool HasPendingChoice
         {
-            get { return PendingDiscover != null || PendingAdapt != null; }
+            get
+            {
+                return PendingDiscover != null ||
+                       PendingAdapt != null ||
+                       PendingTarget != null;
+            }
         }
+
+        // เอฟเฟกต์ที่กำลังทำงานอยู่ (ตั้งโดย CardActionResolver) null = ไม่ใช่เอฟเฟกต์ เช่น การต่อสู้
+        public CardInstance ActiveEffectSource;
+        public BattlePlayer ActiveEffectPlayer;
 
         private readonly System.Random adaptRng = new System.Random();
 
@@ -478,6 +494,8 @@ namespace MultiverseCardBattle.Battle
                 {
                     Stats.AddUnitDeath(owner.PlayerID);
 
+                    RegisterEffectDeath(card, owner);
+
                     Publish(TriggerType.Death, card: card, player: owner);
                 }
             }
@@ -562,11 +580,40 @@ namespace MultiverseCardBattle.Battle
             if (target.CurrentHealth < 0)
                 target.CurrentHealth = 0;
 
+            // จดว่าดาเมจนี้มาจากเอฟเฟกต์ของใคร (ไม่ใช่การต่อสู้) ไว้ตัดสินสาเหตุการตาย
+            target.LastEffectPlayerID =
+                ActiveEffectPlayer != null ? ActiveEffectPlayer.PlayerID : 0;
+            target.LastEffectSource = ActiveEffectSource;
+
             Log(target.Data.CardName + " takes " + amount + " damage");
 
             // Poison: ยูนิตที่โดนความเสียหายจริงจะตาย
             if (source != null && source.HasKeyword(Keyword.Poison))
                 target.CurrentHealth = 0;
+
+            // The Undead Overlord: ครั้งแรกที่จะตายจากความเสียหาย เหลือ HP 1 + Unstoppable ชั่วคราว
+            // (ไม่กันการถูกทำลายโดยตรง เช่น Doom / Destroy ซึ่งไม่ผ่านที่นี่)
+            if (target.CurrentHealth <= 0 &&
+                target.HasPassive(CardPassive.UndeadOverlord) &&
+                !target.UndeadOverlordUsed)
+            {
+                target.UndeadOverlordUsed = true;
+                target.CurrentHealth = 1;
+
+                if (!target.HasKeyword(Keyword.Unstoppable))
+                {
+                    target.AddKeyword(Keyword.Unstoppable);
+                    target.TempUnstoppableGranted = true;
+                }
+
+                // จนจบ "เทิร์นของเรา" ถัดไป
+                bool ownTurn = TurnManager.CurrentPlayerID == target.OwnerID;
+
+                target.TempUnstoppableUntil =
+                    TurnManager.TotalTurns + (ownTurn ? 2 : 1);
+
+                Log(target.Data.CardName + " rises again (1 HP)");
+            }
 
             // Lifesteal: ฟื้น HP ให้ Leader เจ้าของผู้ทำความเสียหาย
             if (source != null && source.HasKeyword(Keyword.Lifesteal))
@@ -787,6 +834,239 @@ namespace MultiverseCardBattle.Battle
             Log(card.Data.CardName + " adapts: " + option.Label);
         }
 
+        // ---------- สาเหตุการตาย / Dark Wisdom ----------
+
+        /// <summary>จดว่ายูนิตนี้ถูกเอฟเฟกต์ของใครทำลาย (ก่อนเรียก KillUnit)</summary>
+        public void NoteEffectKill(
+            CardInstance target,
+            CardInstance source,
+            BattlePlayer sourcePlayer)
+        {
+            if (target == null)
+                return;
+
+            target.LastEffectSource = source;
+            target.LastEffectPlayerID =
+                sourcePlayer != null ? sourcePlayer.PlayerID : 0;
+        }
+
+        // ยูนิตตายบนสนาม: ถ้าเอฟเฟกต์ของศัตรูเป็นต้นเหตุ นับสถิติและให้ Dark Wisdom
+        private void RegisterEffectDeath(CardInstance dead, BattlePlayer owner)
+        {
+            int killerId = dead.LastEffectPlayerID;
+            CardInstance source = dead.LastEffectSource;
+
+            dead.LastEffectPlayerID = 0;
+            dead.LastEffectSource = null;
+
+            if (killerId == 0 || killerId == owner.PlayerID)
+                return;
+
+            Stats.AddEffectKill(killerId);
+
+            BattlePlayer killer = GetPlayer(killerId);
+
+            if (killer == null || source == null || source.Data == null)
+                return;
+
+            bool bySpell = source.Data.Type == CardType.Spell;
+            bool byAinz = (source.Data.Passives & CardPassive.DarkWisdom) != 0;
+
+            if (!bySpell && !byAinz)
+                return;
+
+            foreach (CardInstance unit in killer.Field)
+            {
+                if (!unit.HasPassive(CardPassive.DarkWisdom))
+                    continue;
+
+                if (killer.DarkWisdomEnergyThisTurn >= DarkWisdomCap ||
+                    killer.CurrentEnergy >= MaxEnergyCap)
+                    return;
+
+                killer.DarkWisdomEnergyThisTurn++;
+                killer.CurrentEnergy++;
+
+                Log(unit.Data.CardName + " drinks in the death (+1 Energy)");
+
+                return;
+            }
+        }
+
+        private const int DarkWisdomCap = 3;
+        private const int MaxEnergyCap = 10;
+
+        // ---------- ความสามารถต้นเทิร์น (Doom / Grasp Heart) ----------
+
+        /// <summary>
+        /// เรียกตอนเริ่มเทิร์นของ player: ทำลายยูนิตที่ติด Doom ของ player นี้
+        /// แล้วให้ยูนิตที่มี Grasp Heart เลือกเป้าหมาย (มนุษย์คลิกเลือก, AI สุ่ม)
+        /// </summary>
+        public void OnTurnStartPassives(BattlePlayer player)
+        {
+            if (player == null || IsOver)
+                return;
+
+            ResolveDoom(player);
+
+            foreach (CardInstance unit in new List<CardInstance>(player.Field))
+            {
+                if (unit.Zone != CardZone.Field ||
+                    !unit.HasPassive(CardPassive.GraspHeart) ||
+                    unit.IsStunned)
+                    continue;
+
+                RequestGraspHeart(player, unit);
+
+                if (PendingTarget != null)
+                    return;
+            }
+        }
+
+        private void ResolveDoom(BattlePlayer caster)
+        {
+            BattlePlayer[] players = { Player1, Player2 };
+
+            foreach (BattlePlayer holder in players)
+            {
+                foreach (CardInstance unit in new List<CardInstance>(holder.Field))
+                {
+                    StatusEffect doom = unit.GetStatus(StatusType.Doom);
+
+                    if (doom == null || doom.Value != caster.PlayerID)
+                        continue;
+
+                    unit.Statuses.Remove(doom);
+
+                    Log(unit.Data.CardName + " is claimed by Doom");
+
+                    CardInstance ainz = null;
+
+                    foreach (CardInstance candidate in caster.Field)
+                    {
+                        if (candidate.HasPassive(CardPassive.DarkWisdom))
+                        {
+                            ainz = candidate;
+                            break;
+                        }
+                    }
+
+                    NoteEffectKill(unit, ainz, caster);
+
+                    // ทำลายโดยตรง ไม่ผ่านความเสียหาย / Shield
+                    KillUnit(unit);
+                }
+            }
+        }
+
+        private void RequestGraspHeart(BattlePlayer player, CardInstance source)
+        {
+            BattlePlayer enemy = GetOpponent(player);
+
+            List<CardInstance> candidates = new List<CardInstance>();
+
+            foreach (CardInstance unit in enemy.Field)
+            {
+                if (unit.Zone == CardZone.Field && !unit.IsHidden)
+                    candidates.Add(unit);
+            }
+
+            if (candidates.Count == 0)
+                return;
+
+            if (IsAI(player))
+            {
+                ApplyGraspHeart(
+                    player, source,
+                    candidates[UnityEngine.Random.Range(0, candidates.Count)]);
+
+                return;
+            }
+
+            PendingTarget = new TargetRequest
+            {
+                Player = player,
+                Source = source,
+                Candidates = candidates,
+                Prompt = source.Data.CardName + ": choose an enemy unit"
+            };
+
+            Touch();
+        }
+
+        public bool ResolvePendingTarget(CardInstance chosen)
+        {
+            if (PendingTarget == null || chosen == null)
+                return false;
+
+            if (!PendingTarget.Candidates.Contains(chosen) ||
+                chosen.Zone != CardZone.Field)
+                return false;
+
+            TargetRequest request = PendingTarget;
+
+            PendingTarget = null;
+
+            ApplyGraspHeart(request.Player, request.Source, chosen);
+
+            Resolve();
+
+            return true;
+        }
+
+        private void ApplyGraspHeart(
+            BattlePlayer player,
+            CardInstance source,
+            CardInstance target)
+        {
+            CardInstance previousSource = ActiveEffectSource;
+            BattlePlayer previousPlayer = ActiveEffectPlayer;
+
+            ActiveEffectSource = source;
+            ActiveEffectPlayer = player;
+
+            if (target.HasKeyword(Keyword.Ward))
+            {
+                target.RemoveKeyword(Keyword.Ward);
+
+                Log(target.Data.CardName + "'s ward blocks the effect");
+            }
+            else
+            {
+                Log(source.Data.CardName + " crushes " + target.Data.CardName);
+
+                DamageUnit(source, target, GraspHeartDamage);
+
+                // ตายจากเอฟเฟกต์นี้: ดาเมจ 3 ให้ยูนิตศัตรูอื่นสุ่ม 2 ใบ
+                if (target.CurrentHealth <= 0)
+                {
+                    List<CardInstance> others = new List<CardInstance>();
+
+                    foreach (CardInstance unit in GetOpponent(player).Field)
+                    {
+                        if (unit != target && unit.CurrentHealth > 0 && !unit.IsHidden)
+                            others.Add(unit);
+                    }
+
+                    for (int i = 0; i < GraspHeartSpread && others.Count > 0; i++)
+                    {
+                        int index = UnityEngine.Random.Range(0, others.Count);
+
+                        DamageUnit(source, others[index], GraspHeartSpreadDamage);
+
+                        others.RemoveAt(index);
+                    }
+                }
+            }
+
+            ActiveEffectSource = previousSource;
+            ActiveEffectPlayer = previousPlayer;
+        }
+
+        private const int GraspHeartDamage = 4;
+        private const int GraspHeartSpread = 2;
+        private const int GraspHeartSpreadDamage = 3;
+
         // ---------- Aura / ตัวปรับค่าจากสถานะ ----------
 
         /// <summary>
@@ -837,11 +1117,33 @@ namespace MultiverseCardBattle.Battle
 
                 RefreshShadowbound(player);
 
+                int spellDiscountFirst = 0;
+
+                foreach (CardInstance caster in player.Field)
+                {
+                    if (caster.HasPassive(CardPassive.SupremeMagicCaster))
+                    {
+                        spellDiscountFirst = 1;
+                        break;
+                    }
+                }
+
                 foreach (CardInstance card in player.Hand.Cards)
                 {
                     int desired =
                         card.StatusValue(StatusType.CostUp) -
                         card.StatusValue(StatusType.CostDown);
+
+                    // Supreme Magic Caster: Spell ใบแรกของเทิร์นลด 2 ใบที่สองลด 1
+                    if (spellDiscountFirst > 0 &&
+                        card.Data != null &&
+                        card.Data.Type == CardType.Spell)
+                    {
+                        if (player.SpellsPlayedThisTurn == 0)
+                            desired -= 2;
+                        else if (player.SpellsPlayedThisTurn == 1)
+                            desired -= 1;
+                    }
 
                     int baseCost = card.CurrentCost - card.AppliedCostMod;
                     int newCost = Mathf.Max(0, baseCost + desired);
@@ -1068,6 +1370,7 @@ namespace MultiverseCardBattle.Battle
 
             PendingDiscover = null;
             PendingAdapt = null;
+            PendingTarget = null;
 
             Log(winner == null
                 ? "The battle ends in a draw"

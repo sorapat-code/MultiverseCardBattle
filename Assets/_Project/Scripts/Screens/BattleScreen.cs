@@ -663,6 +663,9 @@ namespace MultiverseCardBattle.Screens
                 ? "<color=#8A93A6>Space: end turn  -  Esc: cancel</color>"
                 : hint;
 
+            if (battle.HasPendingTarget && battle.PendingTarget.Player == Human)
+                hintText.text = "<color=#FF6070>" + battle.PendingTarget.Prompt + "</color>";
+
             RefreshLeader(enemyWidget, Ai);
             RefreshLeader(playerWidget, Human);
             RefreshPileButtons();
@@ -1554,10 +1557,18 @@ namespace MultiverseCardBattle.Screens
 
         private void ShowUnlockBanner(SecretUnlock unlock)
         {
+            bool nazarick = unlock.Style == BannerStyle.Nazarick;
+
             Image dim = UIFactory.CreatePanel(
-                overlay, "BannerDim", new Color(0f, 0f, 0f, 0.92f));
+                overlay, "BannerDim",
+                nazarick
+                    ? new Color(0.06f, 0f, 0.02f, 0.96f)
+                    : new Color(0f, 0f, 0f, 0.92f));
 
             UIFactory.Stretch(dim.rectTransform);
+
+            if (nazarick)
+                BannerMagic.Create(overlay, unlock.Tint);
 
             Button next = dim.gameObject.AddComponent<Button>();
 
@@ -1727,6 +1738,19 @@ namespace MultiverseCardBattle.Screens
 
         private void OnFieldCardClicked(CardView view)
         {
+            // ความสามารถที่รอให้เลือกยูนิตศัตรู (Grasp Heart)
+            if (battle != null && battle.HasPendingTarget &&
+                battle.PendingTarget.Player == Human &&
+                view.Instance != null)
+            {
+                if (battle.ResolvePendingTarget(view.Instance))
+                    SetHint("");
+                else
+                    SetHint("Choose one of the highlighted enemy units");
+
+                return;
+            }
+
             if (!CanAct() || view.Instance == null)
                 return;
 
@@ -1882,6 +1906,13 @@ namespace MultiverseCardBattle.Screens
 
         private bool IsActiveTarget(object target)
         {
+            CardInstance pendingCard = target as CardInstance;
+
+            if (pendingCard != null && battle.HasPendingTarget &&
+                battle.PendingTarget.Player == Human &&
+                battle.PendingTarget.Candidates.Contains(pendingCard))
+                return true;
+
             if (selectedHand == null && selectedAttacker == null)
                 return false;
 

@@ -91,7 +91,11 @@ namespace MultiverseCardBattle.Cards
         TransformationLock,
 
         // หลังกลับร่างเดิม Attack ลดลง Value
-        TransformationFatigue
+        TransformationFatigue,
+
+        // ถูกพิพากษา: ต้นเทิร์นของผู้ที่ติดให้ ยูนิตนี้ถูกทำลายทันที (ไม่สน HP / Shield)
+        // Value = PlayerID ของผู้ติด ล้างได้ด้วยการล้างสถานะเสีย
+        Doom
     }
 
     /// <summary>
@@ -162,6 +166,7 @@ namespace MultiverseCardBattle.Cards
                 case StatusType.Exposed:
                 case StatusType.TransformationLock:
                 case StatusType.TransformationFatigue:
+                case StatusType.Doom:
                     return true;
 
                 default:
@@ -222,6 +227,7 @@ namespace MultiverseCardBattle.Cards
                 case StatusType.Silence:
                 case StatusType.Transformed:
                 case StatusType.Barrier:
+                case StatusType.Doom:
                     return StatusEffect.Permanent;
 
                 case StatusType.Stun:
@@ -275,6 +281,7 @@ namespace MultiverseCardBattle.Cards
                 case StatusType.TemporaryTransformation: return "Reverts to its original form when time runs out.";
                 case StatusType.TransformationLock: return "Cannot transform.";
                 case StatusType.TransformationFatigue: return "Weakened after transforming back (less Attack).";
+                case StatusType.Doom: return "Destroyed at the start of its caster's next turn, ignoring HP and Shield, unless cleansed first.";
                 default: return "";
             }
         }

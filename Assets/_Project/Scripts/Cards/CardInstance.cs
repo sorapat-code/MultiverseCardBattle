@@ -257,6 +257,18 @@ namespace MultiverseCardBattle.Cards
         // เทิร์น (TotalTurns) ที่ต้องคืน Taunt ให้ -1 = ไม่มี
         public int TauntRestoreTurn = -1;
 
+        // The Undead Overlord ใช้ไปแล้วในแมตช์นี้
+        public bool UndeadOverlordUsed;
+
+        // Unstoppable ชั่วคราวจาก The Undead Overlord หมดหลังจบเทิร์นนี้ (TotalTurns) -1 = ไม่มี
+        public int TempUnstoppableUntil = -1;
+        public bool TempUnstoppableGranted;
+
+        // ผู้ที่ทำความเสียหาย/ทำลายครั้งล่าสุดด้วย "เอฟเฟกต์" (ไม่ใช่การต่อสู้)
+        // PlayerID = 0 แปลว่าไม่ใช่เอฟเฟกต์ ใช้ตัดสินสาเหตุการตาย
+        public int LastEffectPlayerID;
+        public CardInstance LastEffectSource;
+
         public bool HasPassive(CardPassive passive)
         {
             return Data != null &&

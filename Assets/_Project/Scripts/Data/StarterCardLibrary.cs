@@ -46,6 +46,7 @@ namespace MultiverseCardBattle.Data
 
         // การ์ดลับที่ปลดล็อกจากเงื่อนไขในแมตช์ (SecretCardService)
         public const string ArtoriasId = "EVT_002";
+        public const string AinzId = "EVT_003";
 
         private static void Build()
         {
@@ -146,6 +147,33 @@ namespace MultiverseCardBattle.Data
                 "Last Guardian: Once per match, instead of dying, survive with 1 HP but lose Taunt until the end of next turn.";
 
             Add(artorias);
+
+            // Ainz: ปลดล็อกด้วยเงื่อนไข "The Throne of Nazarick"
+            CardData ainz = Create(
+                AinzId, "Ainz Ooal Gown, The Supreme Overlord", CardType.Unit,
+                Universe.Overlord, Faction.Nazarick, CardRarity.Secret,
+                9, 7, 12, Keyword.Unstoppable | Keyword.Unique,
+                CardTag.Undead | CardTag.Elite | CardTag.Boss | CardTag.Magic | CardTag.Dark,
+                CardSource.Event,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                        FxApply(StatusType.Doom, 0, StatusEffect.Permanent))
+                });
+
+            ainz.Passives =
+                CardPassive.GraspHeart | CardPassive.DarkWisdom |
+                CardPassive.SupremeMagicCaster | CardPassive.UndeadOverlord;
+
+            ainz.Description =
+                "Unstoppable, Unique\n" +
+                "Play: Choose an enemy unit. It gains Doom: destroyed at the start of your next turn unless cleansed first.\n" +
+                "Grasp Heart: At the start of your turn, choose an enemy unit and deal 4 damage. If it dies, deal 3 damage to 2 other random enemy units.\n" +
+                "Dark Wisdom: When an enemy unit dies to a Spell or Ainz's abilities, gain 1 Energy (max 3 per turn).\n" +
+                "Supreme Magic Caster: Your first Spell each turn costs 2 less, the second costs 1 less.\n" +
+                "The Undead Overlord: Once per match, when he would die from damage, he survives with 1 HP and gains Unstoppable until the end of your next turn.";
+
+            Add(ainz);
 
             // ---------- Units ----------
 

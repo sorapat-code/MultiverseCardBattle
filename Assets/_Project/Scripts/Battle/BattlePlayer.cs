@@ -23,6 +23,12 @@ namespace MultiverseCardBattle.Battle
         // จำนวนการ์ดที่ใช้ไปแล้วในเทิร์นนี้ (ใช้กับ Combo)
         public int CardsPlayedThisTurn;
 
+        // จำนวน Spell ที่ใช้ในเทิร์นนี้ (Supreme Magic Caster)
+        public int SpellsPlayedThisTurn;
+
+        // Energy ที่ได้จาก Dark Wisdom ในเทิร์นนี้ (สูงสุด 3)
+        public int DarkWisdomEnergyThisTurn;
+
         public Deck Deck;
         public Hand Hand;
 

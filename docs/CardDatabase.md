@@ -110,6 +110,11 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   lose 3+ units, never drop below 10 Leader HP and never use an instant-destroy effect. Match stats are
   tracked by `Battle/BattleStats.cs`. Unlocking shows a banner before the result summary, adds 1 copy to the
   Collection and grants the hidden achievement (500 Gold + 300 Dust). Card-specific passives use `CardPassive`.
+- `Ainz Ooal Gown, The Supreme Overlord` (`EVT_003`) is unlocked by "The Throne of Nazarick": in one match play 5+ Spells,
+  kill 4+ enemy units with Spells/card abilities (not combat) and win with Leader HP >= 15. Mechanics: the `Doom` status
+  (destroys at the start of the caster's next turn), `CardPassive` flags (Grasp Heart / Dark Wisdom / Supreme Magic Caster /
+  Undead Overlord) and `BattleManager.PendingTarget` (the player clicks the Grasp Heart target at turn start). Kill causes are
+  tracked via `BattleManager.ActiveEffectSource` and `CardInstance.LastEffectSource`.
 - Disenchant gives Dust (Common 5, Rare 20, Epic 100, Legendary 400). Crafting costs Dust
   (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.
 - Achievements live in `Data/AchievementService.cs`; stats are stored in the save file (version 3).

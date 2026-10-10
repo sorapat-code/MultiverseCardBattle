@@ -120,6 +120,21 @@ namespace MultiverseCardBattle.Effects
                     sourceContext,
                     candidates);
 
+            // บอก BattleManager ว่าตอนนี้ใครเป็นต้นเหตุของเอฟเฟกต์ (แยกจากการต่อสู้)
+            BattleManager battle = sourceContext.Battle;
+
+            CardInstance previousSource = null;
+            BattlePlayer previousPlayer = null;
+
+            if (battle != null)
+            {
+                previousSource = battle.ActiveEffectSource;
+                previousPlayer = battle.ActiveEffectPlayer;
+
+                battle.ActiveEffectSource = sourceContext.SourceCard;
+                battle.ActiveEffectPlayer = sourceContext.SourcePlayer;
+            }
+
             // Execute ทุก Effect กับทุก Target
             foreach (TargetCandidate target in targets)
             {
@@ -147,6 +162,12 @@ namespace MultiverseCardBattle.Effects
                         effect,
                         effectContext);
                 }
+            }
+
+            if (battle != null)
+            {
+                battle.ActiveEffectSource = previousSource;
+                battle.ActiveEffectPlayer = previousPlayer;
             }
         }
 
