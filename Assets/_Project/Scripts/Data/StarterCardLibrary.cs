@@ -610,6 +610,9 @@ namespace MultiverseCardBattle.Data
 
             data.Actions = new List<CardActionData>(actions);
 
+            // รูปการ์ด (ถ้ามีไฟล์ใน Resources/CardArt/{CardID}.png)
+            data.Artwork = CardArtLoader.Load(id);
+
             return data;
         }
 

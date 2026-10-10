@@ -114,3 +114,9 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   (Common 40, Rare 100, Epic 400, Legendary 1600). Copies used by any deck are protected.
 - Achievements live in `Data/AchievementService.cs`; stats are stored in the save file (version 3).
 - A player whose deck reaches 0 cards loses the battle immediately.
+
+## Card art
+
+Put card images in `Assets/_Project/Resources/CardArt/{CardID}.png` (loaded by `Data/CardArtLoader.cs`, no Sprite import
+settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Artorias, `EVT_003` Ainz Ooal Gown,
+`EVT_004` Vergil, `TKN_006` Vergil Devil Trigger form (Ainz/Vergil cards are not implemented yet).
