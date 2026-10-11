@@ -80,8 +80,8 @@ namespace MultiverseCardBattle.Battle
         }
 
         // เอฟเฟกต์ที่กำลังทำงานอยู่ (ตั้งโดย CardActionResolver) null = ไม่ใช่เอฟเฟกต์ เช่น การต่อสู้
-        public CardInstance ActiveEffectSource;
-        public BattlePlayer ActiveEffectPlayer;
+        [System.NonSerialized] public CardInstance ActiveEffectSource;
+        [System.NonSerialized] public BattlePlayer ActiveEffectPlayer;
 
         private readonly System.Random adaptRng = new System.Random();
 

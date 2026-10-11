@@ -50,6 +50,8 @@ namespace MultiverseCardBattle.Screens
         private RectTransform dailyPanel;
         private RectTransform dailyContent;
         private RectTransform milestonePanel;
+        private RectTransform devPanel;
+        private Text devMessage;
         private RectTransform milestoneList;
         private Text dailyGoldText;
         private Text milestoneGoldText;
@@ -80,6 +82,7 @@ namespace MultiverseCardBattle.Screens
             achievementPanel = CreatePanel("AchievementPanel");
             dailyPanel = CreatePanel("DailyPanel");
             milestonePanel = CreatePanel("MilestonePanel");
+            devPanel = CreatePanel("DevPanel");
 
             BuildMain();
             BuildShop();
@@ -88,6 +91,7 @@ namespace MultiverseCardBattle.Screens
             BuildAchievements();
             BuildDaily();
             BuildMilestones();
+            BuildDev();
 
             Show(mainPanel);
         }
@@ -112,6 +116,8 @@ namespace MultiverseCardBattle.Screens
             if (poolPanel != null)
                 poolPanel.gameObject.SetActive(panel == poolPanel);
             milestonePanel.gameObject.SetActive(panel == milestonePanel);
+            if (devPanel != null)
+                devPanel.gameObject.SetActive(panel == devPanel);
 
             RefreshMenuNotices();
             RefreshGold();
@@ -815,6 +821,69 @@ namespace MultiverseCardBattle.Screens
         }
 
         // ---------- Collection Milestones ----------
+
+        // ---------- Dev (เฉพาะ Editor / Development Build) ----------
+
+        private void BuildDev()
+        {
+            if (!DevCheats.Enabled)
+                return;
+
+            ScreenKit.AddButton(mainPanel, "DEV",
+                () => Show(devPanel),
+                new Color(0.5f, 0.15f, 0.55f, 1f), 0.9f, 0.02f, 0.98f, 0.07f, 22);
+
+            UIFactory.CreateTitle(devPanel, "DEV CHEATS");
+
+            devMessage = ScreenKit.AddLabel(
+                devPanel, "Editor / Development Build only.", 26,
+                TextAnchor.MiddleCenter, 0.1f, 0.12f, 0.9f, 0.22f);
+
+            ScreenKit.AddButton(devPanel, "Unlock ALL cards (max copies, incl. secrets)",
+                () =>
+                {
+                    int added = DevCheats.UnlockAllCards(SaveManager.Profile);
+
+                    SaveManager.Save();
+                    RefreshGold();
+
+                    devMessage.text = "Added " + added + " cards to your collection.";
+                },
+                UIFactory.Accent, 0.25f, 0.72f, 0.75f, 0.82f);
+
+            ScreenKit.AddButton(devPanel, "+10,000 Gold  /  +5,000 Dust",
+                () =>
+                {
+                    DevCheats.AddCurrency(SaveManager.Profile, 10000, 5000);
+
+                    SaveManager.Save();
+                    RefreshGold();
+
+                    devMessage.text = "Added 10,000 Gold and 5,000 Dust.";
+                },
+                UIFactory.Accent, 0.25f, 0.59f, 0.75f, 0.69f);
+
+            ScreenKit.AddButton(devPanel, "Clear all Story stages",
+                () =>
+                {
+                    DevCheats.ClearAllStages(SaveManager.Profile);
+
+                    SaveManager.Save();
+
+                    devMessage.text = "All Story stages marked as cleared.";
+                },
+                UIFactory.Accent, 0.25f, 0.46f, 0.75f, 0.56f);
+
+            ScreenKit.AddLabel(
+                devPanel,
+                "In battle (Numpad):  1 = full Energy   2 = draw a card   3 = heal your Leader\n" +
+                "4 = deal 10 to enemy Leader   5 = next card   - = previous card   6 = add selected card to hand",
+                22, TextAnchor.MiddleCenter, 0.05f, 0.3f, 0.95f, 0.44f);
+
+            ScreenKit.AddButton(devPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
 
         private void BuildMilestones()
         {

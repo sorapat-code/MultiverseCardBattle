@@ -261,6 +261,8 @@ namespace MultiverseCardBattle.Screens
             if (keyboard.spaceKey.wasPressedThisFrame)
                 OnEndTurnClicked();
 
+            HandleDevHotkeys(keyboard);
+
             if (keyboard.escapeKey.wasPressedThisFrame)
             {
                 if (openPile != PileKind.None)
@@ -268,6 +270,87 @@ namespace MultiverseCardBattle.Screens
                 else
                     ClearSelectionAndRefresh();
             }
+        }
+
+        // ---------- Dev cheats (Numpad, เฉพาะ Editor / Development Build) ----------
+
+        private List<CardData> devCards;
+        private int devCardIndex;
+
+        private void HandleDevHotkeys(Keyboard keyboard)
+        {
+            if (!DevCheats.Enabled || battle == null || battle.IsOver)
+                return;
+
+            if (devCards == null)
+                devCards = DevCheats.AllCards();
+
+            if (keyboard.numpad1Key.wasPressedThisFrame)
+            {
+                Human.MaxEnergy = Mathf.Max(Human.MaxEnergy, 10);
+                Human.CurrentEnergy = 10;
+
+                battle.Touch();
+            }
+
+            if (keyboard.numpad2Key.wasPressedThisFrame)
+                battle.DrawCard(Human);
+
+            if (keyboard.numpad3Key.wasPressedThisFrame)
+            {
+                Human.LeaderHealth = Human.MaxLeaderHealth;
+
+                battle.Touch();
+            }
+
+            if (keyboard.numpad4Key.wasPressedThisFrame)
+            {
+                battle.DamageLeader(null, Ai, 10, true);
+
+                battle.Resolve();
+            }
+
+            if (devCards.Count == 0)
+                return;
+
+            if (keyboard.numpad5Key.wasPressedThisFrame)
+            {
+                devCardIndex = (devCardIndex + 1) % devCards.Count;
+
+                ShowDevCard();
+            }
+
+            if (keyboard.numpadMinusKey.wasPressedThisFrame)
+            {
+                devCardIndex = (devCardIndex - 1 + devCards.Count) % devCards.Count;
+
+                ShowDevCard();
+            }
+
+            if (keyboard.numpad6Key.wasPressedThisFrame)
+            {
+                CardData data = devCards[devCardIndex];
+
+                CardInstance card = new CardInstance(data);
+
+                card.OwnerID = Human.PlayerID;
+
+                Human.AddToZone(card, CardZone.Hand);
+
+                battle.Touch();
+
+                Toast.Show(root, "DEV: added to hand", data.CardName);
+            }
+        }
+
+        private void ShowDevCard()
+        {
+            CardData data = devCards[devCardIndex];
+
+            Toast.Show(
+                root,
+                "DEV card " + (devCardIndex + 1) + " / " + devCards.Count,
+                data.CardID + "  " + data.CardName + "  (" + data.Rarity + ")");
         }
 
         // ---------- AI ----------
