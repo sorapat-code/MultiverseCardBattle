@@ -138,8 +138,8 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h));
 
-            for (int i = 0; i < 4; i++) stats.AddCombatWin(h);
-            for (int i = 0; i < 3; i++) stats.AddUnitDeath(h);
+            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
+            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
 
             Assert.IsTrue(SecretCardService.IsArtoriasEarned(stats, h));
 
@@ -148,15 +148,15 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
-        public void Unlock_FailsIfLeaderDropsBelowTen()
+        public void Unlock_FailsIfLeaderDropsBelowTheMinimum()
         {
             BattleStats stats = battle.Stats;
             int h = P1.PlayerID;
 
-            for (int i = 0; i < 4; i++) stats.AddCombatWin(h);
-            for (int i = 0; i < 3; i++) stats.AddUnitDeath(h);
+            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
+            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
 
-            P1.LeaderHealth = 9;
+            P1.LeaderHealth = SecretCardService.ArtoriasMinHealth - 1;
             stats.NoteLeaderHealth(P1);
 
             Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h));

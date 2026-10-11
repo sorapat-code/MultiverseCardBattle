@@ -259,16 +259,16 @@ namespace MultiverseCardBattle.Tests
             BattleStats stats = battle.Stats;
             int h = P1.PlayerID;
 
-            P1.LeaderHealth = 20;
+            P1.LeaderHealth = SecretCardService.AinzMinHealth;
 
             Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1));
 
-            for (int i = 0; i < 5; i++) stats.AddSpellPlayed(h);
-            for (int i = 0; i < 4; i++) stats.AddEffectKill(h);
+            for (int i = 0; i < SecretCardService.AinzSpells; i++) stats.AddSpellPlayed(h);
+            for (int i = 0; i < SecretCardService.AinzEffectKills; i++) stats.AddEffectKill(h);
 
             Assert.IsTrue(SecretCardService.IsAinzEarned(stats, h, P1));
 
-            P1.LeaderHealth = 14;
+            P1.LeaderHealth = SecretCardService.AinzMinHealth - 1;
 
             Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1));
         }

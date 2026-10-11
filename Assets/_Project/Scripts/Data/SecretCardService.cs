@@ -26,13 +26,13 @@ namespace MultiverseCardBattle.Data
     /// </summary>
     public static class SecretCardService
     {
-        public const int ArtoriasWins = 4;
-        public const int ArtoriasDeaths = 3;
-        public const int ArtoriasMinHealth = 10;
+        public const int ArtoriasWins = 8;
+        public const int ArtoriasDeaths = 5;
+        public const int ArtoriasMinHealth = 15;
 
-        public const int AinzSpells = 5;
-        public const int AinzEffectKills = 4;
-        public const int AinzMinHealth = 15;
+        public const int AinzSpells = 10;
+        public const int AinzEffectKills = 8;
+        public const int AinzMinHealth = 25;
 
         public static List<SecretUnlock> Evaluate(
             BattleManager battle, int humanId, bool won, PlayerProfile profile)
