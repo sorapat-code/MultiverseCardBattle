@@ -57,6 +57,14 @@ namespace MultiverseCardBattle.Data
         public const string HollowPurpleId = "TKN_HOLLOW_PURPLE";
         public const string ProtonCannonId = "TKN_PROTON_CANNON";
 
+        // บอสท้ายบท
+        public const string HeroEchoId = "TKN_HERO_ECHO";
+        public const string AmbushId = "TKN_AMBUSH";
+        public const string DivineJudgmentId = "TKN_DIVINE_JUDGMENT";
+        public const string GateCollapseId = "TKN_GATE_COLLAPSE";
+        public const string EmperorWrathId = "TKN_EMPEROR_WRATH";
+        public const string WorldRewriteId = "TKN_WORLD_REWRITE";
+
         private static void Build()
         {
             if (cards != null)
@@ -146,6 +154,81 @@ namespace MultiverseCardBattle.Data
                         Fx(EffectType.DealDamage, 9)),
                     Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
                         Fx(EffectType.DealDamage, 2))
+                }));
+
+            // ---------- การ์ดของบอสท้ายบท ----------
+
+            Add(Unit(
+                HeroEchoId, "Hero's Echo",
+                Universe.Original, Faction.Neutral, CardRarity.Rare,
+                2, 2, 2, Keyword.None,
+                CardTag.Spirit | CardTag.Token,
+                CardSource.Token));
+
+            Add(Create(
+                AmbushId, "Ambush!", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                3, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 5))
+                }));
+
+            Add(Create(
+                DivineJudgmentId, "Divine Judgment", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                4, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 4)),
+                    Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                        Fx(EffectType.Heal, 6))
+                }));
+
+            Add(Create(
+                GateCollapseId, "Gate Collapse", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                5, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 6))
+                }));
+
+            Add(Create(
+                EmperorWrathId, "Emperor's Wrath", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                4, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 7)),
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 3))
+                }));
+
+            Add(Create(
+                WorldRewriteId, "World Rewrite", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                6, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 12)),
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 4))
                 }));
 
             CardData clone = Add(Unit(

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Data;
 using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Targeting;
 
@@ -32,7 +33,79 @@ namespace MultiverseCardBattle.Battle
             if (play != null)
                 return play;
 
+            IBattleCommand skill = PlanLeaderSkill(battle, player);
+
+            if (skill != null)
+                return skill;
+
             return PlanAttack(battle, player);
+        }
+
+        // ---------- สกิล Leader (บอส) ----------
+
+        // ใช้สกิลเมื่อมีประโยชน์จริง (ลงการ์ดเสร็จแล้ว ก่อนโจมตี)
+        private static IBattleCommand PlanLeaderSkill(
+            BattleManager battle,
+            BattlePlayer player)
+        {
+            if (player.Leader == null)
+                return null;
+
+            if (!LeaderSkillCommand.Validate(battle, player).Success)
+                return null;
+
+            BattlePlayer enemy = battle.GetOpponent(player);
+            LeaderData leader = player.Leader;
+
+            switch (leader.SkillKind)
+            {
+                case LeaderSkillKind.BuffAttack:
+                    // มีตัวที่โจมตีได้อย่างน้อยหนึ่งตัวจึงคุ้ม
+                    foreach (CardInstance unit in player.Field)
+                    {
+                        if (BattleRules.CanAttack(battle, player, unit))
+                            return new LeaderSkillCommand(player);
+                    }
+
+                    return null;
+
+                case LeaderSkillKind.Barrier:
+                    return enemy.Field.Count > 0 ? new LeaderSkillCommand(player) : null;
+
+                case LeaderSkillKind.Heal:
+                    // Leader เสียเลือดแล้ว หรือมียูนิตให้รักษา (ไม่เสียเปล่าตอนเต็ม)
+                    if (player.LeaderHealth < player.MaxLeaderHealth)
+                        return new LeaderSkillCommand(player);
+
+                    foreach (CardInstance unit in player.Field)
+                    {
+                        if (unit.CurrentHealth < unit.MaxHealth)
+                            return new LeaderSkillCommand(player);
+                    }
+
+                    return null;
+
+                case LeaderSkillKind.SummonTokens:
+                    return new LeaderSkillCommand(player);
+
+                case LeaderSkillKind.DamageEnemies:
+                    // ศัตรูมีอย่างน้อย 2 ตัว หรือมีตัวที่ตายด้วยดาเมจนี้
+                    if (enemy.Field.Count >= 2)
+                        return new LeaderSkillCommand(player);
+
+                    foreach (CardInstance unit in enemy.Field)
+                    {
+                        if (unit.CurrentHealth <= leader.SkillValue)
+                            return new LeaderSkillCommand(player);
+                    }
+
+                    return null;
+
+                case LeaderSkillKind.WeakenEnemies:
+                    return enemy.Field.Count >= 2 ? new LeaderSkillCommand(player) : null;
+            }
+
+            return null;
         }
 
         // ---------- ตอบโต้ (Fast spell) ----------

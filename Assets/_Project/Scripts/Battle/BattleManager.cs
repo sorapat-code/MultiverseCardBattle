@@ -140,7 +140,7 @@ namespace MultiverseCardBattle.Battle
             // Leader ของผู้เล่น (ฝั่งศัตรูยังไม่มี Leader)
             Leaders = new LeaderSystem(this);
             Leaders.Setup(Player1, LeaderLibrary.Get(BattleSetup.PlayerLeaderId));
-            Leaders.Setup(Player2, null);
+            Leaders.Setup(Player2, LeaderLibrary.Get(BattleSetup.EnemyLeaderId));
 
             Debug.Log("Battle Started!");
 

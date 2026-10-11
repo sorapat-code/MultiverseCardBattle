@@ -44,6 +44,19 @@ namespace MultiverseCardBattle.Screens
         private int lastLogSide = 99;
         private const int MaxLogBubbles = 150;
         private Text termsText;
+        private Image termsPanel;
+
+        // สนามหญ้า: แสงเรืองขอบ / ลิ้นชักล็อก / หน้าต่างข้อมูล Leader
+        private Image enemyGlow;
+        private Image enemyGlowLine;
+        private Image playerGlow;
+        private Image playerGlowLine;
+        private CanvasGroup logGroup;
+        private LeaderInfoPanel leaderInfo;
+        private bool bossIntroShown;
+        private bool lastAiSkillUsed;
+        private bool lastAiFinisher;
+        private int lastTurnKey = -1;
 
         // ป้ายประกาศผลโยนเหรียญตอนเริ่ม
         private RectTransform bannerRoot;
@@ -94,6 +107,16 @@ namespace MultiverseCardBattle.Screens
             public Image PortraitArt;
             public Text PortraitInitial;
             public Image[] Crystals;
+
+            // อัญมณี Energy ข้างสนาม
+            public Text GemText;
+            public Text GemMax;
+
+            // มิเตอร์ Power ของ Leader + ปุ่มอ่านความสามารถ
+            public RectTransform PowerRoot;
+            public Image PowerFill;
+            public Text PowerText;
+            public Button InfoButton;
         }
 
         // พรีวิวการ์ดใบใหญ่ตอนเอาเมาส์ชี้
@@ -322,6 +345,24 @@ namespace MultiverseCardBattle.Screens
             if (coinToss != null)
                 return;
 
+            // ด่านบอส: แนะนำบอสและความสามารถของมันก่อนเริ่ม (ครั้งเดียว)
+            if (!bossIntroShown)
+            {
+                bossIntroShown = true;
+
+                if (Ai.Leader != null && !Ai.Leader.PlayerSelectable)
+                    OpenLeaderInfo(Ai, true);
+            }
+
+            // หน้าต่างข้อมูล Leader เปิดอยู่: หยุดเกมทั้งหมด
+            if (leaderInfo != null && leaderInfo.IsOpen)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                    leaderInfo.Close();
+
+                return;
+            }
+
             // หน้าตั้งค่าเปิดอยู่: หยุดเกมทั้งหมด (AI / อินพุต)
             if (settings != null && settings.IsOpen)
             {
@@ -347,6 +388,10 @@ namespace MultiverseCardBattle.Screens
 
             UpdateBanner();
 
+            UpdateTermsVisibility();
+
+            UpdateTurnBanner();
+
             RunAI();
 
             HandleHotkeys();
@@ -362,6 +407,102 @@ namespace MultiverseCardBattle.Screens
             {
                 Refresh();
             }
+        }
+
+        // กรอบคำอธิบายศัพท์โผล่เฉพาะตอนชี้การ์ด
+        private void UpdateTermsVisibility()
+        {
+            if (termsText == null || termsPanel == null)
+                return;
+
+            bool show = !string.IsNullOrEmpty(termsText.text);
+
+            if (termsPanel.gameObject.activeSelf != show)
+            {
+                termsPanel.gameObject.SetActive(show);
+                termsText.gameObject.SetActive(show);
+            }
+        }
+
+        // ป้ายสลับเทิร์น (YOUR TURN / OPPONENT'S TURN) ตอนเปลี่ยนฝั่ง
+        private void UpdateTurnBanner()
+        {
+            if (battle.IsOver || battle.MulliganPending || battle.CurrentPlayer == null)
+                return;
+
+            int key = battle.TurnManager.TurnNumber * 10 + battle.CurrentPlayer.PlayerID;
+
+            if (key == lastTurnKey)
+                return;
+
+            lastTurnKey = key;
+
+            TurnBanner.Play(fxLayer, battle.CurrentPlayer == Human);
+        }
+
+        private void OpenLeaderInfo(BattlePlayer player, bool intro)
+        {
+            if (leaderInfo == null || player == null || player.Leader == null)
+                return;
+
+            leaderInfo.Open(
+                player.Leader, player.LeaderPower, player.LeaderFinisherGiven,
+                player == Ai, intro);
+        }
+
+        // บอสใช้สกิล / ไม้ตายพร้อมแล้ว: ป้ายประกาศให้ผู้เล่นอ่านออก (ผู้เล่นมองไม่เห็นมือศัตรู)
+        private void AnnounceBossEvents()
+        {
+            LeaderData boss = Ai.Leader;
+
+            if (boss == null)
+            {
+                lastAiSkillUsed = false;
+                lastAiFinisher = false;
+
+                return;
+            }
+
+            string hex = ColorUtility.ToHtmlStringRGB(boss.Theme);
+
+            if (Ai.LeaderSkillUsed && !lastAiSkillUsed)
+            {
+                bannerText.text =
+                    "<color=#" + hex + ">" + boss.Name.ToUpperInvariant() + "</color>\n" +
+                    "<size=44>" + boss.SkillName + "</size>\n" +
+                    "<size=22>" + boss.SkillText + "</size>";
+
+                ShowBanner(3.4f, enemyLeader.transform.position, boss.Theme);
+            }
+
+            if (Ai.LeaderFinisherGiven && !lastAiFinisher)
+            {
+                CardData finisher = StarterCardLibrary.Get(boss.FinisherId);
+
+                bannerText.text =
+                    "<color=#FF6070>DANGER</color>\n" +
+                    "<size=40>" + (finisher != null ? finisher.CardName : "Finisher") + "</size>\n" +
+                    "<size=22>" + boss.Name + "'s " + boss.PowerName +
+                    " is full. A finisher is now in the enemy hand!</size>";
+
+                ShowBanner(4f, enemyLeader.transform.position, new Color(1f, 0.3f, 0.35f, 1f));
+            }
+
+            lastAiSkillUsed = Ai.LeaderSkillUsed;
+            lastAiFinisher = Ai.LeaderFinisherGiven;
+        }
+
+        private void ShowBanner(float seconds, Vector3 fxOrigin, Color color)
+        {
+            bannerRoot.gameObject.SetActive(true);
+            bannerRoot.SetAsLastSibling();
+
+            bannerTimer = seconds;
+
+            UiFx.Ring(fxLayer, fxOrigin, color, 60f, 520f, 0.7f);
+            UiFx.Burst(fxLayer, fxOrigin, color, 30, 420f, 26f, 0.9f, -40f);
+
+            Sfx.Play(SoundId.Hit);
         }
 
         private void UpdateBanner()
@@ -586,63 +727,56 @@ namespace MultiverseCardBattle.Screens
         {
             root = UIFactory.CreateScreenRoot("BattleCanvas", true);
 
-            // ----- แถบข้างซ้าย: พรีวิวการ์ด + คำอธิบายศัพท์ + ประวัติการต่อสู้ (เลื่อนดูย้อนหลังได้) -----
-            ScreenKit.AddPanel(
-                root, "SidePanel", new Color(0.04f, 0.03f, 0.03f, 0.72f),
-                0.005f, 0.01f, 0.168f, 0.99f);
+            // พื้นหลังนอกสนาม: ป่ามืด (ถ้ามีรูป bg_battle ใน Resources/UI จะใช้รูปนั้นแทน)
+            Transform backgroundTransform = root.Find("Background");
 
-            AddSideHeader("KEYWORDS", 0.586f, 0.608f);
+            if (backgroundTransform != null && UIArt.Get("bg_battle") == null)
+            {
+                Image background = backgroundTransform.GetComponent<Image>();
 
-            Image termsPanel = ScreenKit.AddPanel(
-                root, "TermsPanel", new Color(0f, 0f, 0f, 0.35f),
-                0.011f, 0.385f, 0.162f, 0.584f);
+                if (background != null)
+                    background.sprite = BoardArt.Frame;
+            }
 
-            termsPanel.raycastTarget = false;
+            BuildBoard();
 
-            termsText = ScreenKit.AddLabel(
-                root, "", 15, TextAnchor.UpperLeft,
-                0.016f, 0.39f, 0.158f, 0.58f);
-
-            termsText.resizeTextForBestFit = true;
-            termsText.resizeTextMinSize = 9;
-            termsText.resizeTextMaxSize = 15;
-
-            AddSideHeader("BATTLE LOG", 0.354f, 0.378f);
-
-            RectTransform logContent;
-
-            logScroll = ScreenKit.AddScroll(
-                root, "LogScroll", 0.011f, 0.018f, 0.162f, 0.352f,
-                out logContent);
-
-            VerticalLayoutGroup logLayout =
-                logContent.gameObject.AddComponent<VerticalLayoutGroup>();
-
-            logLayout.spacing = 4f;
-            logLayout.padding = new RectOffset(6, 6, 6, 6);
-            logLayout.childControlWidth = true;
-            logLayout.childControlHeight = true;
-            logLayout.childForceExpandWidth = true;
-            logLayout.childForceExpandHeight = false;
-
+            // ----- พรีวิวการ์ด + คำอธิบายศัพท์ (ลอยทางซ้าย โผล่เฉพาะตอนชี้การ์ด) -----
             previewZone = UIFactory.CreateZone(
-                root, "PreviewZone", 0.005f, 0.60f, 0.168f, 0.99f);
+                root, "PreviewZone", 0.0f, 0.26f, 0.16f, 0.84f);
 
             previewView = CardView.Create(previewZone, PreviewCardSize);
 
             previewView.SetInteractable(false);
             previewView.gameObject.SetActive(false);
 
-            // ----- แถบบน -----
+            termsPanel = ScreenKit.AddPanel(
+                root, "TermsPanel", new Color(0.03f, 0.025f, 0.025f, 0.9f),
+                0.005f, 0.02f, 0.158f, 0.25f);
+
+            termsPanel.raycastTarget = false;
+
+            termsText = ScreenKit.AddLabel(
+                root, "", 16, TextAnchor.UpperLeft,
+                0.012f, 0.025f, 0.152f, 0.245f);
+
+            termsText.resizeTextForBestFit = true;
+            termsText.resizeTextMinSize = 9;
+            termsText.resizeTextMaxSize = 16;
+
+            // ----- มุมซ้ายบน: เทิร์น + คำใบ้ -----
             turnText = ScreenKit.AddLabel(
                 root, "", 30, TextAnchor.MiddleLeft,
-                0.18f, 0.945f, 0.40f, 0.995f, FontStyle.Bold);
+                0.012f, 0.925f, 0.39f, 0.99f, FontStyle.Bold);
 
             UIFactory.AddTextShadow(turnText);
 
             hintText = ScreenKit.AddLabel(
-                root, "", 24, TextAnchor.MiddleCenter,
-                0.40f, 0.945f, 0.88f, 0.995f);
+                root, "", 22, TextAnchor.UpperLeft,
+                0.012f, 0.84f, 0.39f, 0.925f);
+
+            hintText.resizeTextForBestFit = true;
+            hintText.resizeTextMinSize = 12;
+            hintText.resizeTextMaxSize = 22;
 
             UIFactory.AddTextShadow(hintText);
 
@@ -650,60 +784,54 @@ namespace MultiverseCardBattle.Screens
             settings = BattleSettingsPanel.Create(root, Concede);
 
             ScreenKit.AddButton(root, "Settings", () => settings.Open(),
-                UIFactory.Muted, 0.90f, 0.95f, 0.99f, 0.993f, 22);
+                UIFactory.Muted, 0.91f, 0.945f, 0.995f, 0.99f, 20);
 
-            // ----- สนาม: พื้นหลังโซน + เส้นกลาง -----
-            ScreenKit.AddPanel(
-                root, "EnemyLane", new Color(0.7f, 0.2f, 0.2f, 0.13f),
-                0.175f, 0.525f, 0.865f, 0.765f);
-
-            ScreenKit.AddPanel(
-                root, "PlayerLane", new Color(0.2f, 0.45f, 0.75f, 0.13f),
-                0.175f, 0.27f, 0.865f, 0.515f);
-
-            UIFactory.CreateDivider(root, 0.19f, 0.5175f, 0.85f, 0.5235f);
-
-            ScreenKit.AddPanel(
-                root, "HandLane", new Color(0f, 0f, 0f, 0.35f),
-                0.34f, 0.0f, 0.865f, 0.262f);
-
-            // พื้นที่ปล่อยการ์ดที่ลากมาเล่น (ทั้งสนาม ไม่มีภาพ)
-            dropZone = UIFactory.CreateZone(root, "DropZone", 0.175f, 0.27f, 0.865f, 0.765f);
-
-            enemyField = CreateRow(root, "EnemyField", 0.175f, 0.525f, 0.865f, 0.765f, 8f);
-            playerField = CreateRow(root, "PlayerField", 0.175f, 0.27f, 0.865f, 0.515f, 8f);
-            handZone = CreateRow(root, "Hand", 0.345f, 0.0f, 0.86f, 0.262f, 4f);
+            ScreenKit.AddButton(root, "Log", ToggleLog,
+                UIFactory.Muted, 0.91f, 0.89f, 0.995f, 0.935f, 20);
 
             // ----- Leader ทั้งสองฝั่ง -----
             enemyWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Ai),
-                0.443f, 0.785f, 0.598f, 0.935f);
+                () => OpenLeaderInfo(Ai, false),
+                0.405f, 0.815f, 0.595f, 0.985f);
 
             playerWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Human),
-                0.178f, 0.05f, 0.333f, 0.20f);
+                () => OpenLeaderInfo(Human, false),
+                0.008f, 0.02f, 0.165f, 0.185f);
 
             enemyLeader = enemyWidget.Button;
             playerLeader = playerWidget.Button;
+
+            // ----- อัญมณี Energy ซ้ายสนาม (แดง = ศัตรู ฟ้า = เรา) -----
+            enemyWidget.GemText = BuildGem(
+                "EnemyGem", new Color(0.95f, 0.25f, 0.3f, 1f),
+                0.018f, 0.585f, 0.082f, 0.715f, out enemyWidget.GemMax,
+                0.012f, 0.55f, 0.088f, 0.585f);
+
+            playerWidget.GemText = BuildGem(
+                "PlayerGem", new Color(0.3f, 0.65f, 1f, 1f),
+                0.018f, 0.285f, 0.082f, 0.415f, out playerWidget.GemMax,
+                0.012f, 0.25f, 0.088f, 0.285f);
 
             // ----- คอลัมน์ขวา: กองการ์ด / จบเทิร์น -----
             // จำนวนการ์ดในมือคู่ต่อสู้ (แสดงเฉพาะตัวเลข ดูการ์ดในมือไม่ได้แล้ว คลิกไม่ได้)
             enemyHandButton = ScreenKit.AddButton(
                 root, "Opp. Hand", () => { },
-                UIFactory.Muted, 0.875f, 0.87f, 0.995f, 0.93f, 20);
+                UIFactory.Muted, 0.91f, 0.81f, 0.995f, 0.865f, 18);
 
             enemyHandButton.targetGraphic.raycastTarget = false;
 
             enemyGraveButton = ScreenKit.AddButton(
                 root, "Graveyard", () => TogglePile(PileKind.EnemyGraveyard),
-                UIFactory.Muted, 0.875f, 0.80f, 0.995f, 0.86f, 20);
+                UIFactory.Muted, 0.91f, 0.745f, 0.995f, 0.80f, 18);
 
-            enemyDeckLabel = AddPileLabel(0.875f, 0.745f, 0.995f, 0.79f);
+            enemyDeckLabel = AddPileLabel(0.91f, 0.70f, 0.995f, 0.74f);
 
             // ปุ่มแปลงร่าง Devil Trigger (Vergil) มีไฟสีน้ำเงินลุกรอบ แสดงเมื่อใช้ได้เท่านั้น
             devilRoot = UIFactory.CreateRect("DevilTrigger", root);
 
-            UIFactory.SetAnchors(devilRoot, 0.875f, 0.585f, 0.995f, 0.705f);
+            UIFactory.SetAnchors(devilRoot, 0.91f, 0.285f, 0.995f, 0.385f);
 
             Image devilGlow = UIFactory.CreatePanel(
                 devilRoot, "Glow", new Color(0.2f, 0.5f, 1f, 0.6f));
@@ -719,33 +847,51 @@ namespace MultiverseCardBattle.Screens
 
             devilButton = ScreenKit.AddButton(
                 devilRoot, "DEVIL\nTRIGGER", OnDevilTriggerClicked,
-                new Color(0.1f, 0.25f, 0.65f, 1f), 0f, 0f, 1f, 1f, 24);
+                new Color(0.1f, 0.25f, 0.65f, 1f), 0f, 0f, 1f, 1f, 20);
 
             devilRoot.gameObject.SetActive(false);
 
+            // ปุ่มจบเทิร์นทรงกลมนูน กลางขอบขวาของสนาม
             endTurnButton = ScreenKit.AddButton(
                 root, "END TURN", OnEndTurnClicked,
-                UIFactory.Success, 0.875f, 0.42f, 0.995f, 0.55f, 30);
+                UIFactory.Success, 0.912f, 0.44f, 0.992f, 0.58f, 26);
+
+            Image dial = endTurnButton.GetComponent<Image>();
+
+            dial.sprite = BoardArt.Dome;
+            dial.type = Image.Type.Simple;
+            dial.preserveAspect = true;
+
+            Image dialRing = UIFactory.CreatePanel(
+                endTurnButton.transform, "DialRing", UIFactory.Gold);
+
+            dialRing.sprite = UIShapes.RingCircle;
+            dialRing.type = Image.Type.Simple;
+            dialRing.raycastTarget = false;
+
+            UIFactory.Stretch(dialRing.rectTransform);
 
             cancelButton = ScreenKit.AddButton(
                 root, "Cancel", ClearSelectionAndRefresh,
-                UIFactory.Muted, 0.875f, 0.34f, 0.995f, 0.40f, 22);
+                UIFactory.Muted, 0.91f, 0.39f, 0.995f, 0.435f, 20);
 
             playerGraveButton = ScreenKit.AddButton(
                 root, "Graveyard", () => TogglePile(PileKind.PlayerGraveyard),
-                UIFactory.Muted, 0.875f, 0.14f, 0.995f, 0.20f, 20);
+                UIFactory.Muted, 0.91f, 0.205f, 0.995f, 0.26f, 18);
 
-            playerDeckLabel = AddPileLabel(0.875f, 0.085f, 0.995f, 0.13f);
+            playerDeckLabel = AddPileLabel(0.91f, 0.16f, 0.995f, 0.20f);
 
             BuildLeaderUI();
 
-            // ป้ายผลโยนเหรียญ (หายเองหลังไม่กี่วินาที)
+            BuildLogPanel();
+
+            // ป้ายประกาศ (หายเองหลังไม่กี่วินาที) ใช้กับสกิลบอส / ไม้ตายพร้อม / การ์ดลับ
             bannerRoot = UIFactory.CreateRect("CoinBanner", root);
 
-            UIFactory.SetAnchors(bannerRoot, 0.3f, 0.43f, 0.7f, 0.57f);
+            UIFactory.SetAnchors(bannerRoot, 0.27f, 0.39f, 0.73f, 0.61f);
 
             Image bannerBack = UIFactory.CreateFramedPanel(
-                bannerRoot, "Back", new Color(0.05f, 0.03f, 0.02f, 0.9f), 16f);
+                bannerRoot, "Back", new Color(0.05f, 0.03f, 0.02f, 0.92f), 16f);
 
             UIFactory.Stretch(bannerBack.rectTransform);
 
@@ -757,6 +903,11 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(bannerText.rectTransform);
 
+            bannerText.supportRichText = true;
+            bannerText.resizeTextForBestFit = true;
+            bannerText.resizeTextMinSize = 14;
+            bannerText.resizeTextMaxSize = 36;
+
             UIFactory.AddTextShadow(bannerText);
 
             bannerRoot.gameObject.SetActive(false);
@@ -767,6 +918,9 @@ namespace MultiverseCardBattle.Screens
             UIFactory.Stretch(fxLayer);
 
             BlueFlame.Attach(devilRoot, fxLayer, devilGlow);
+
+            // หน้าต่างอ่านความสามารถ Leader
+            leaderInfo = LeaderInfoPanel.Create(root);
 
             // หน้าต่างดูกองทิ้ง / มือศัตรู
             pileOverlay = UIFactory.CreateRect("PileOverlay", root);
@@ -781,6 +935,163 @@ namespace MultiverseCardBattle.Screens
             UIFactory.Stretch(overlay);
 
             overlay.gameObject.SetActive(false);
+        }
+
+        // สนามหญ้า + แสงเรืองขอบ + เส้นกลาง + ช่องวางยูนิต + มือ
+        private void BuildBoard()
+        {
+            Image grass = UIFactory.CreatePanel(root, "Board", Color.white);
+
+            grass.sprite = BoardArt.Grass;
+            grass.type = Image.Type.Simple;
+            grass.raycastTarget = false;
+
+            UIFactory.SetAnchors(grass.rectTransform, 0.10f, 0.22f, 0.90f, 0.78f);
+
+            UIFactory.AddRing(grass.transform, new Color(0.05f, 0.1f, 0.05f, 0.95f), 4f);
+
+            // แสงเรืองขอบบน (ศัตรู ชมพู) / ขอบล่าง (เรา ฟ้า) สว่างขึ้นตอนเป็นเทิร์นของฝั่งนั้น
+            enemyGlow = EdgeGlow("EnemyGlow", BoardArt.FadeDown, 0.70f, 0.78f);
+            enemyGlowLine = EdgeLine("EnemyGlowLine", 0.774f, 0.78f);
+
+            playerGlow = EdgeGlow("PlayerGlow", BoardArt.FadeUp, 0.22f, 0.30f);
+            playerGlowLine = EdgeLine("PlayerGlowLine", 0.22f, 0.226f);
+
+            UIFactory.CreateDivider(root, 0.11f, 0.4965f, 0.89f, 0.5035f);
+
+            // พื้นที่ปล่อยการ์ดที่ลากมาเล่น (ทั้งสนาม ไม่มีภาพ)
+            dropZone = UIFactory.CreateZone(root, "DropZone", 0.10f, 0.22f, 0.90f, 0.78f);
+
+            enemyField = CreateRow(root, "EnemyField", 0.10f, 0.50f, 0.90f, 0.775f, 8f);
+            playerField = CreateRow(root, "PlayerField", 0.10f, 0.225f, 0.90f, 0.495f, 8f);
+
+            // เงามืดใต้มือ ให้การ์ดในมืออ่านง่าย
+            Image handShade = UIFactory.CreatePanel(root, "HandShade", new Color(0f, 0f, 0f, 0.55f));
+
+            handShade.sprite = BoardArt.FadeUp;
+            handShade.raycastTarget = false;
+
+            UIFactory.SetAnchors(handShade.rectTransform, 0.0f, 0.0f, 1.0f, 0.22f);
+
+            handZone = CreateRow(root, "Hand", 0.23f, 0.0f, 0.77f, 0.215f, 4f);
+        }
+
+        private Image EdgeGlow(string name, Sprite sprite, float yMin, float yMax)
+        {
+            Image glow = UIFactory.CreatePanel(root, name, Color.white);
+
+            glow.sprite = sprite;
+            glow.raycastTarget = false;
+
+            UIFactory.SetAnchors(glow.rectTransform, 0.10f, yMin, 0.90f, yMax);
+
+            return glow;
+        }
+
+        private Image EdgeLine(string name, float yMin, float yMax)
+        {
+            Image line = UIFactory.CreatePanel(root, name, Color.white);
+
+            line.raycastTarget = false;
+
+            UIFactory.SetAnchors(line.rectTransform, 0.10f, yMin, 0.90f, yMax);
+
+            return line;
+        }
+
+        // อัญมณี Energy: ตัวเลขปัจจุบันในอัญมณี ค่าสูงสุดอยู่ใต้ภาพ
+        private Text BuildGem(
+            string name, Color color,
+            float xMin, float yMin, float xMax, float yMax,
+            out Text maxText,
+            float mxMin, float myMin, float mxMax, float myMax)
+        {
+            Image gem = UIFactory.CreatePanel(root, name, color);
+
+            gem.sprite = BoardArt.Gem;
+            gem.type = Image.Type.Simple;
+            gem.preserveAspect = true;
+            gem.raycastTarget = false;
+
+            UIFactory.SetAnchors(gem.rectTransform, xMin, yMin, xMax, yMax);
+
+            Text number = UIFactory.CreateText(
+                gem.transform, "0", 44, Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(number.rectTransform);
+
+            number.resizeTextForBestFit = true;
+            number.resizeTextMinSize = 14;
+            number.resizeTextMaxSize = 48;
+
+            UIFactory.AddTextShadow(number);
+
+            maxText = ScreenKit.AddLabel(
+                root, "", 18, TextAnchor.MiddleCenter, mxMin, myMin, mxMax, myMax, FontStyle.Bold);
+
+            maxText.color = new Color(0.8f, 0.85f, 0.95f, 1f);
+
+            UIFactory.AddTextShadow(maxText);
+
+            return number;
+        }
+
+        // ล็อกการต่อสู้: ลิ้นชักลอยเหนือขวาของสนาม เปิด/ปิดด้วยปุ่ม Log
+        private void BuildLogPanel()
+        {
+            Image back = ScreenKit.AddPanel(
+                root, "LogPanel", new Color(0.03f, 0.025f, 0.025f, 0.93f),
+                0.69f, 0.22f, 0.905f, 0.78f);
+
+            logGroup = back.gameObject.AddComponent<CanvasGroup>();
+
+            logGroup.alpha = 0f;
+            logGroup.blocksRaycasts = false;
+            logGroup.interactable = false;
+
+            Text header = ScreenKit.AddLabel(
+                back.transform, "BATTLE LOG", 18, TextAnchor.MiddleLeft,
+                0.05f, 0.92f, 0.95f, 0.99f, FontStyle.Bold);
+
+            header.color = UIFactory.Gold;
+
+            RectTransform logContent;
+
+            logScroll = ScreenKit.AddScroll(
+                back.transform, "LogScroll", 0.03f, 0.02f, 0.97f, 0.91f,
+                out logContent);
+
+            VerticalLayoutGroup logLayout =
+                logContent.gameObject.AddComponent<VerticalLayoutGroup>();
+
+            logLayout.spacing = 4f;
+            logLayout.padding = new RectOffset(6, 6, 6, 6);
+            logLayout.childControlWidth = true;
+            logLayout.childControlHeight = true;
+            logLayout.childForceExpandWidth = true;
+            logLayout.childForceExpandHeight = false;
+        }
+
+        private void ToggleLog()
+        {
+            if (logGroup == null)
+                return;
+
+            bool open = logGroup.alpha < 0.5f;
+
+            logGroup.alpha = open ? 1f : 0f;
+            logGroup.blocksRaycasts = open;
+            logGroup.interactable = open;
+
+            if (open)
+            {
+                logGroup.transform.SetAsLastSibling();
+
+                Canvas.ForceUpdateCanvases();
+
+                logScroll.verticalNormalizedPosition = 0f;
+            }
         }
 
         // ป้ายจำนวนการ์ดในกอง (กรอบเล็ก)
@@ -802,6 +1113,7 @@ namespace MultiverseCardBattle.Screens
         // แผง Leader: รูป (วงกลมกรอบทอง) + ชื่อ + แถบ HP + คริสตัล Energy
         private LeaderWidget CreateLeaderWidget(
             UnityEngine.Events.UnityAction onClick,
+            UnityEngine.Events.UnityAction onInfo,
             float xMin, float yMin, float xMax, float yMax)
         {
             LeaderWidget widget = new LeaderWidget();
@@ -819,7 +1131,7 @@ namespace MultiverseCardBattle.Screens
             widget.Title.resizeTextMinSize = 12;
             widget.Title.resizeTextMaxSize = 24;
 
-            UIFactory.SetAnchors(widget.Title.rectTransform, 0.34f, 0.66f, 0.97f, 0.95f);
+            UIFactory.SetAnchors(widget.Title.rectTransform, 0.34f, 0.60f, 0.80f, 0.95f);
 
             // รูป Leader: วงทองรอบนอก > วงมืดตัดมุม > รูป/ตัวอักษรย่อ
             Image goldRing = UIFactory.CreatePanel(panel, "PortraitRing", UIFactory.Gold);
@@ -872,7 +1184,7 @@ namespace MultiverseCardBattle.Screens
 
             hpBack.raycastTarget = false;
 
-            UIFactory.SetAnchors(hpBack.rectTransform, 0.34f, 0.40f, 0.97f, 0.62f);
+            UIFactory.SetAnchors(hpBack.rectTransform, 0.34f, 0.33f, 0.97f, 0.57f);
 
             widget.HpFill = UIFactory.CreatePanel(
                 hpBack.transform, "HpFill", new Color(0.25f, 0.75f, 0.35f, 1f));
@@ -920,6 +1232,53 @@ namespace MultiverseCardBattle.Screens
             UIFactory.SetAnchors(widget.EnergyText.rectTransform, 0.74f, 0.05f, 0.97f, 0.32f);
 
             UIFactory.AddTextShadow(widget.EnergyText);
+
+            // Energy แสดงเป็นอัญมณีข้างสนามแล้ว: ซ่อนคริสตัลและตัวเลขเดิมในแผง
+            crystalRow.gameObject.SetActive(false);
+            widget.EnergyText.gameObject.SetActive(false);
+
+            // มิเตอร์ Power ของ Leader (โชว์เมื่อมี Leader)
+            Image powerBack = UIFactory.CreatePanel(
+                panel, "PowerBack", new Color(0f, 0f, 0f, 0.55f));
+
+            UIShapes.MakeRounded(powerBack, 6f);
+
+            powerBack.raycastTarget = false;
+
+            widget.PowerRoot = powerBack.rectTransform;
+
+            UIFactory.SetAnchors(widget.PowerRoot, 0.34f, 0.07f, 0.97f, 0.27f);
+
+            widget.PowerFill = UIFactory.CreatePanel(
+                powerBack.transform, "PowerFill", new Color(1f, 0.65f, 0.15f, 1f));
+
+            UIShapes.MakeRounded(widget.PowerFill, 6f);
+
+            widget.PowerFill.raycastTarget = false;
+
+            UIFactory.Stretch(widget.PowerFill.rectTransform);
+
+            widget.PowerFill.rectTransform.anchorMax = new Vector2(0f, 1f);
+
+            widget.PowerText = UIFactory.CreateText(
+                powerBack.transform, "", 15, Color.white,
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(widget.PowerText.rectTransform);
+
+            widget.PowerText.resizeTextForBestFit = true;
+            widget.PowerText.resizeTextMinSize = 9;
+            widget.PowerText.resizeTextMaxSize = 15;
+
+            UIFactory.AddTextShadow(widget.PowerText);
+
+            widget.PowerRoot.gameObject.SetActive(false);
+
+            // ปุ่ม "i" อ่านความสามารถของ Leader
+            widget.InfoButton = ScreenKit.AddButton(
+                panel, "i", onInfo, UIFactory.Accent, 0.83f, 0.62f, 0.97f, 0.95f, 22);
+
+            widget.InfoButton.gameObject.SetActive(false);
 
             return widget;
         }
@@ -1023,6 +1382,8 @@ namespace MultiverseCardBattle.Screens
 
             RefreshDevilTrigger(myTurn);
             RefreshLeader();
+            AnnounceBossEvents();
+            RefreshBoardGlow();
 
             endTurnButton.interactable = myTurn || responding;
 
@@ -1042,6 +1403,31 @@ namespace MultiverseCardBattle.Screens
 
             RefreshOverlay();
             RefreshPile();
+        }
+
+        // แสงเรืองขอบสนาม: ฝั่งที่เป็นเทิร์นสว่างกว่า
+        private void RefreshBoardGlow()
+        {
+            if (enemyGlow == null)
+                return;
+
+            bool myTurn = battle.CurrentPlayer == Human && !battle.IsOver;
+            bool enemyTurn = battle.CurrentPlayer == Ai && !battle.IsOver;
+
+            Color pink = new Color(1f, 0.3f, 0.5f, 1f);
+            Color cyan = new Color(0.3f, 0.8f, 1f, 1f);
+
+            pink.a = enemyTurn ? 0.85f : 0.22f;
+            cyan.a = myTurn ? 0.85f : 0.22f;
+
+            enemyGlow.color = pink;
+            playerGlow.color = cyan;
+
+            pink.a = enemyTurn ? 1f : 0.45f;
+            cyan.a = myTurn ? 1f : 0.45f;
+
+            enemyGlowLine.color = pink;
+            playerGlowLine.color = cyan;
         }
 
         // ข้อความบอกว่าตอนนี้ต้องตอบโต้อะไร
@@ -1272,6 +1658,32 @@ namespace MultiverseCardBattle.Screens
 
             widget.EnergyText.text =
                 player.CurrentEnergy + "/" + player.MaxEnergy;
+
+            if (widget.GemText != null)
+                widget.GemText.text = player.CurrentEnergy.ToString();
+
+            if (widget.GemMax != null)
+                widget.GemMax.text = "/ " + player.MaxEnergy;
+
+            // Leader: มิเตอร์ Power + ปุ่มอ่านความสามารถ
+            LeaderData leaderData = player.Leader;
+
+            widget.InfoButton.gameObject.SetActive(leaderData != null);
+            widget.PowerRoot.gameObject.SetActive(leaderData != null);
+
+            if (leaderData != null)
+            {
+                float fraction = leaderData.PowerMax > 0
+                    ? Mathf.Clamp01(player.LeaderPower / (float)leaderData.PowerMax)
+                    : 0f;
+
+                widget.PowerFill.rectTransform.anchorMax = new Vector2(fraction, 1f);
+                widget.PowerFill.color = leaderData.Theme;
+
+                widget.PowerText.text = player.LeaderFinisherGiven
+                    ? "FINISHER IN HAND"
+                    : leaderData.PowerName + " " + player.LeaderPower + " / " + leaderData.PowerMax;
+            }
 
             SetPortrait(
                 widget,
@@ -2923,7 +3335,7 @@ namespace MultiverseCardBattle.Screens
         {
             leaderRoot = UIFactory.CreateRect("LeaderSkill", root);
 
-            UIFactory.SetAnchors(leaderRoot, 0.875f, 0.205f, 0.995f, 0.335f);
+            UIFactory.SetAnchors(leaderRoot, 0.91f, 0.015f, 0.995f, 0.155f);
 
             leaderButton = ScreenKit.AddButton(
                 leaderRoot, "SKILL", OnLeaderSkillClicked,

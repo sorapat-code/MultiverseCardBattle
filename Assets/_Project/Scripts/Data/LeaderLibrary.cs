@@ -11,13 +11,18 @@ namespace MultiverseCardBattle.Data
     /// ตอนนี้เงื่อนไขของทุก Leader เป็นมิเตอร์ "Power" ที่สะสมจากการกระทำต่างๆ (ดู LeaderSystem)
     /// ครบแล้วการ์ดไม้ตายเข้ามือครั้งเดียวต่อแมตช์
     /// </summary>
-    /// <summary>สกิลกดของ Leader (LeaderSkillCommand แยกการทำงานตามค่านี้)</summary>
+    /// <summary>
+    /// ชนิดสกิลกดของ Leader (LeaderSkillCommand แยกการทำงานตามค่านี้)
+    /// ใช้ SkillValue เป็นตัวเลขหลักของสกิล
+    /// </summary>
     public enum LeaderSkillKind
     {
-        Kaioken,     // Goku: ยูนิตทุกตัว +ATK จนจบเทิร์น (จ่ายเลือด Leader)
-        ShadowClone, // Naruto: เรียก Shadow Clone
-        Infinity,    // Gojo: ยูนิตทุกตัวได้ Barrier
-        Repulsor     // Tony: ยิง 1 ดาเมจใส่ศัตรูทุกตัวและ Leader ศัตรู
+        BuffAttack,     // ยูนิตทุกตัวของเรา +SkillValue Attack จนจบเทิร์น
+        Barrier,        // ยูนิตทุกตัวของเราได้ Barrier SkillValue จนจบเทิร์นหน้าของเรา
+        Heal,           // รักษา Leader และยูนิตทุกตัวของเรา SkillValue
+        SummonTokens,   // เรียก SkillTokenId จำนวน SkillCount ตัว
+        DamageEnemies,  // ดาเมจ SkillValue ใส่ยูนิตศัตรูทุกตัว (และ Leader ศัตรูถ้า SkillHitsLeader)
+        WeakenEnemies   // ยูนิตศัตรูทุกตัวสร้างดาเมจลดลงครึ่งหนึ่งจนจบเทิร์นหน้าของศัตรู
     }
 
     /// <summary>เหตุการณ์ที่ทำให้มิเตอร์ Power เพิ่ม +1 (รวมหลายอย่างได้)</summary>
@@ -44,6 +49,10 @@ namespace MultiverseCardBattle.Data
 
         // สกิลกด
         public LeaderSkillKind SkillKind;
+        public int SkillValue;
+        public int SkillCount;
+        public string SkillTokenId;
+        public bool SkillHitsLeader;
         public string SkillName;
         public string SkillText;
         public int SkillEnergyCost;
@@ -56,6 +65,12 @@ namespace MultiverseCardBattle.Data
         public string PowerText;
 
         public string FinisherId;
+
+        // false = Leader ของบอสในโหมดเนื้อเรื่อง (ผู้เล่นเลือกไม่ได้)
+        public bool PlayerSelectable = true;
+
+        // ข้อความสั้นๆ บอกคาแรกเตอร์ของ Leader (ใช้ตอนแนะนำบอส)
+        public string Flavor;
 
         /// <summary>ข้อความต้นทุนสกิล เช่น "1 Energy, -2 HP"</summary>
         public string SkillCostText
@@ -78,6 +93,13 @@ namespace MultiverseCardBattle.Data
         public const string NarutoId = "LDR_002";
         public const string GojoId = "LDR_003";
         public const string TonyId = "LDR_004";
+
+        // บอสท้ายบทของโหมดเนื้อเรื่อง (ศัตรูเท่านั้น)
+        public const string BanditChiefId = "BOSS_01";
+        public const string HighPriestessId = "BOSS_02";
+        public const string GatekeeperId = "BOSS_03";
+        public const string PirateEmperorId = "BOSS_04";
+        public const string SovereignId = "BOSS_05";
 
         private static List<LeaderData> all;
 
@@ -122,7 +144,8 @@ namespace MultiverseCardBattle.Data
                 Universe = Universe.DragonBall,
                 Theme = new Color(1f, 0.6f, 0.15f, 1f),
 
-                SkillKind = LeaderSkillKind.Kaioken,
+                SkillKind = LeaderSkillKind.BuffAttack,
+                SkillValue = 2,
                 SkillName = "Kaioken",
                 SkillEnergyCost = 1,
                 SkillHealthCost = 2,
@@ -148,7 +171,9 @@ namespace MultiverseCardBattle.Data
                 Universe = Universe.Naruto,
                 Theme = new Color(1f, 0.55f, 0.1f, 1f),
 
-                SkillKind = LeaderSkillKind.ShadowClone,
+                SkillKind = LeaderSkillKind.SummonTokens,
+                SkillCount = 2,
+                SkillTokenId = StarterCardLibrary.ShadowCloneId,
                 SkillName = "Shadow Clone",
                 SkillEnergyCost = 2,
                 SkillHealthCost = 0,
@@ -174,7 +199,8 @@ namespace MultiverseCardBattle.Data
                 Universe = Universe.JujutsuKaisen,
                 Theme = new Color(0.45f, 0.7f, 1f, 1f),
 
-                SkillKind = LeaderSkillKind.Infinity,
+                SkillKind = LeaderSkillKind.Barrier,
+                SkillValue = 3,
                 SkillName = "Infinity",
                 SkillEnergyCost = 2,
                 SkillHealthCost = 0,
@@ -200,7 +226,9 @@ namespace MultiverseCardBattle.Data
                 Universe = Universe.Original,
                 Theme = new Color(1f, 0.35f, 0.25f, 1f),
 
-                SkillKind = LeaderSkillKind.Repulsor,
+                SkillKind = LeaderSkillKind.DamageEnemies,
+                SkillValue = 1,
+                SkillHitsLeader = true,
                 SkillName = "Repulsor",
                 SkillEnergyCost = 2,
                 SkillHealthCost = 0,
@@ -215,6 +243,129 @@ namespace MultiverseCardBattle.Data
                     "At 8, Proton Cannon joins your hand (once per match).",
 
                 FinisherId = StarterCardLibrary.ProtonCannonId
+            });
+
+            // ---------- บอสท้ายบท (ศัตรูในโหมดเนื้อเรื่อง) ----------
+
+            all.Add(new LeaderData
+            {
+                Id = BanditChiefId,
+                Name = "Bandit Chief",
+                Title = "Terror of Bandit Road",
+                Flavor = "Fast raiders. Every unit he sends in hits harder after his orders.",
+                Universe = Universe.Original,
+                Theme = new Color(0.85f, 0.55f, 0.2f, 1f),
+                PlayerSelectable = false,
+
+                SkillKind = LeaderSkillKind.BuffAttack,
+                SkillValue = 1,
+                SkillName = "Raid Orders",
+                SkillEnergyCost = 1,
+                SkillText = "Once per turn: pay 1 Energy. All the Chief's units gain +1 Attack until end of turn.",
+
+                PowerName = "Loot",
+                PowerMax = 6,
+                PowerGain = PowerGain.UnitPlayed | PowerGain.SkillUsed,
+                PowerText = "+1 whenever he plays a unit, +1 each time he uses Raid Orders. At 6 Loot, Ambush! joins his hand.",
+
+                FinisherId = StarterCardLibrary.AmbushId
+            });
+
+            all.Add(new LeaderData
+            {
+                Id = HighPriestessId,
+                Name = "High Priestess",
+                Title = "Keeper of the Temple Wall",
+                Flavor = "Heals and endures. Hurting her Leader only feeds her faith.",
+                Universe = Universe.Original,
+                Theme = new Color(1f, 0.95f, 0.6f, 1f),
+                PlayerSelectable = false,
+
+                SkillKind = LeaderSkillKind.Heal,
+                SkillValue = 2,
+                SkillName = "Sanctuary Prayer",
+                SkillEnergyCost = 2,
+                SkillText = "Once per turn: pay 2 Energy. Heal her Leader and all her units for 2.",
+
+                PowerName = "Faith",
+                PowerMax = 6,
+                PowerGain = PowerGain.LeaderDamaged | PowerGain.SkillUsed,
+                PowerText = "+1 whenever her Leader takes damage, +1 each time she prays. At 6 Faith, Divine Judgment joins her hand.",
+
+                FinisherId = StarterCardLibrary.DivineJudgmentId
+            });
+
+            all.Add(new LeaderData
+            {
+                Id = GatekeeperId,
+                Name = "Gatekeeper",
+                Title = "Warden of the Titan Gate",
+                Flavor = "Sweeping stomps punish wide boards. Every fallen titan fuels the next blow.",
+                Universe = Universe.Original,
+                Theme = new Color(0.7f, 0.7f, 0.75f, 1f),
+                PlayerSelectable = false,
+
+                SkillKind = LeaderSkillKind.DamageEnemies,
+                SkillValue = 2,
+                SkillHitsLeader = false,
+                SkillName = "Titan Stomp",
+                SkillEnergyCost = 3,
+                SkillText = "Once per turn: pay 3 Energy. Deal 2 damage to all your units.",
+
+                PowerName = "Fortitude",
+                PowerMax = 6,
+                PowerGain = PowerGain.UnitDied | PowerGain.LeaderDamaged,
+                PowerText = "+1 whenever his Leader takes damage, +1 whenever one of his units dies. At 6, Gate Collapse joins his hand.",
+
+                FinisherId = StarterCardLibrary.GateCollapseId
+            });
+
+            all.Add(new LeaderData
+            {
+                Id = PirateEmperorId,
+                Name = "Pirate Emperor",
+                Title = "Ruler of the Grand Line",
+                Flavor = "His presence alone cuts your units' strength in half.",
+                Universe = Universe.Original,
+                Theme = new Color(0.9f, 0.25f, 0.2f, 1f),
+                PlayerSelectable = false,
+
+                SkillKind = LeaderSkillKind.WeakenEnemies,
+                SkillName = "Conqueror's Haki",
+                SkillEnergyCost = 2,
+                SkillText = "Once per turn: pay 2 Energy. All your units deal half damage until the end of your next turn.",
+
+                PowerName = "Haki",
+                PowerMax = 7,
+                PowerGain = PowerGain.LeaderDamaged | PowerGain.UnitPlayed | PowerGain.SkillUsed,
+                PowerText = "+1 whenever his Leader takes damage, +1 per unit played, +1 per Haki burst. At 7, Emperor's Wrath joins his hand.",
+
+                FinisherId = StarterCardLibrary.EmperorWrathId
+            });
+
+            all.Add(new LeaderData
+            {
+                Id = SovereignId,
+                Name = "The Multiverse Sovereign",
+                Title = "Ruler of Fractured Worlds",
+                Flavor = "Calls the echoes of fallen heroes. When enough fall, the worlds are rewritten.",
+                Universe = Universe.Original,
+                Theme = new Color(0.7f, 0.4f, 1f, 1f),
+                PlayerSelectable = false,
+
+                SkillKind = LeaderSkillKind.SummonTokens,
+                SkillCount = 2,
+                SkillTokenId = StarterCardLibrary.HeroEchoId,
+                SkillName = "Echo of Heroes",
+                SkillEnergyCost = 3,
+                SkillText = "Once per turn: pay 3 Energy. Summon two 2/2 Hero Echoes.",
+
+                PowerName = "Fracture",
+                PowerMax = 8,
+                PowerGain = PowerGain.UnitDied | PowerGain.EnemyUnitDied | PowerGain.SkillUsed,
+                PowerText = "+1 whenever any unit of his dies, +1 whenever one of yours dies, +1 per Echo call. At 8 Fracture, World Rewrite joins his hand.",
+
+                FinisherId = StarterCardLibrary.WorldRewriteId
             });
         }
     }

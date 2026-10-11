@@ -59,6 +59,7 @@ namespace MultiverseCardBattle.Data
                 Description = "Fast, aggressive raiders ambush travelers.",
                 EnemyName = "Bandit Chief",
                 EnemyHealth = 25,
+                EnemyLeaderId = LeaderLibrary.BanditChiefId,
                 RequiresStageId = "stage_01",
                 EnemyDeckIds = StarterDecks.Build(
                     ("STR_001", 3), ("STR_004", 3), ("STR_010", 3),
@@ -91,6 +92,7 @@ namespace MultiverseCardBattle.Data
                 Description = "Taunts, shields and healing. Break the wall.",
                 EnemyName = "High Priestess",
                 EnemyHealth = 30,
+                EnemyLeaderId = LeaderLibrary.HighPriestessId,
                 RequiresStageId = "stage_03",
                 EnemyDeckIds = StarterDecks.Build(
                     ("STR_002", 4), ("STR_009", 4), ("STR_022", 4),
@@ -122,6 +124,7 @@ namespace MultiverseCardBattle.Data
                 Description = "Huge bodies and area damage guard the gate.",
                 EnemyName = "Gatekeeper",
                 EnemyHealth = 35,
+                EnemyLeaderId = LeaderLibrary.GatekeeperId,
                 RequiresStageId = "stage_05",
                 EnemyDeckIds = StarterDecks.Build(
                     ("STR_005", 4), ("STR_021", 3), ("STR_024", 4),
@@ -154,6 +157,7 @@ namespace MultiverseCardBattle.Data
                 Description = "A rubber-limbed captain and his swordsman crew set sail for glory.",
                 EnemyName = "Pirate Emperor",
                 EnemyHealth = 35,
+                EnemyLeaderId = LeaderLibrary.PirateEmperorId,
                 RequiresStageId = "stage_07",
                 EnemyDeckIds = StarterDecks.Build(
                     ("OPC_001", 2), ("OPC_002", 2), ("STR_004", 3),
@@ -186,6 +190,7 @@ namespace MultiverseCardBattle.Data
                 Description = "Heroes and gods from every universe gather for the final battle.",
                 EnemyName = "The Multiverse Sovereign",
                 EnemyHealth = 45,
+                EnemyLeaderId = LeaderLibrary.SovereignId,
                 RequiresStageId = "stage_09",
                 EnemyDeckIds = StarterDecks.Build(
                     ("MYT_001", 1), ("MYT_002", 1), ("JJB_002", 1),

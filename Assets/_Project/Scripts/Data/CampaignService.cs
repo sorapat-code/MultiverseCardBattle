@@ -42,6 +42,7 @@ namespace MultiverseCardBattle.Data
             BattleSetup.EnemyDeck = StarterDecks.ToCards(stage.EnemyDeckIds);
             BattleSetup.EnemyName = stage.EnemyName;
             BattleSetup.EnemyHealth = stage.EnemyHealth;
+            BattleSetup.EnemyLeaderId = stage.EnemyLeaderId;
             BattleSetup.Stage = stage;
 
             SceneLoader.Go(GameScene.Battle);
@@ -66,6 +67,7 @@ namespace MultiverseCardBattle.Data
             BattleSetup.EnemyDeck = StarterDecks.ToCards(pick.EnemyDeckIds);
             BattleSetup.EnemyName = pick.EnemyName;
             BattleSetup.EnemyHealth = pick.EnemyHealth;
+            BattleSetup.EnemyLeaderId = null;
             BattleSetup.Stage = null;
 
             SceneLoader.Go(GameScene.Battle);

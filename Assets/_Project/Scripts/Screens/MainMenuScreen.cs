@@ -334,6 +334,9 @@ namespace MultiverseCardBattle.Screens
 
             foreach (LeaderData leader in LeaderLibrary.All)
             {
+                if (!leader.PlayerSelectable)
+                    continue;
+
                 AddLeaderChoice(leader.Id, leader.Name, y, height);
 
                 y -= step;

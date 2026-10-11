@@ -16,8 +16,6 @@ namespace MultiverseCardBattle.Battle
     /// </summary>
     public class LeaderSystem
     {
-        public const int KaiokenAttack = 2;
-
         private readonly BattleManager battle;
 
         public LeaderSystem(BattleManager battle)
@@ -136,17 +134,10 @@ namespace MultiverseCardBattle.Battle
 
     /// <summary>
     /// กดสกิลของ Leader (เทิร์นละครั้ง) การทำงานแยกตาม LeaderData.SkillKind
-    ///  Kaioken     จ่าย Energy + เลือด Leader แล้วยูนิตทุกตัวของเรา +2 Attack จนจบเทิร์น
-    ///  ShadowClone เรียก Shadow Clone 1/1 สองตัว
-    ///  Infinity    ยูนิตทุกตัวของเราได้ Barrier 3 จนจบเทิร์นหน้าของเรา
-    ///  Repulsor    1 ดาเมจใส่ศัตรูทุกตัวและ Leader ศัตรู
+    /// ใช้ได้ทั้งผู้เล่นและบอสศัตรู (Player = ผู้ใช้สกิล, ศัตรู = battle.GetOpponent(Player))
     /// </summary>
     public class LeaderSkillCommand : IBattleCommand
     {
-        public const int InfinityBarrier = 3;
-        public const int CloneCount = 2;
-        public const int RepulsorDamage = 1;
-
         public BattlePlayer Player;
 
         public LeaderSkillCommand(BattlePlayer player)
@@ -179,20 +170,34 @@ namespace MultiverseCardBattle.Battle
             if (player.LeaderHealth <= leader.SkillHealthCost)
                 return ActionResult.Fail("Not enough Leader Health for " + leader.SkillName);
 
+            BattlePlayer enemy = battle.GetOpponent(player);
+
             switch (leader.SkillKind)
             {
-                case LeaderSkillKind.Kaioken:
-                case LeaderSkillKind.Infinity:
+                case LeaderSkillKind.BuffAttack:
+                case LeaderSkillKind.Barrier:
                     if (player.Field.Count == 0)
                         return ActionResult.Fail("You have no units to empower");
                     break;
 
-                case LeaderSkillKind.ShadowClone:
+                case LeaderSkillKind.Heal:
+                    if (player.LeaderHealth >= player.MaxLeaderHealth && player.Field.Count == 0)
+                        return ActionResult.Fail("Nothing to heal");
+                    break;
+
+                case LeaderSkillKind.SummonTokens:
                     if (player.Field.Count >= BattlePlayer.MaxFieldSize)
                         return ActionResult.Fail("Your field is full");
                     break;
 
-                case LeaderSkillKind.Repulsor:
+                case LeaderSkillKind.DamageEnemies:
+                    if (enemy.Field.Count == 0 && !leader.SkillHitsLeader)
+                        return ActionResult.Fail("No enemy units to hit");
+                    break;
+
+                case LeaderSkillKind.WeakenEnemies:
+                    if (enemy.Field.Count == 0)
+                        return ActionResult.Fail("No enemy units to weaken");
                     break;
             }
 
@@ -207,49 +212,62 @@ namespace MultiverseCardBattle.Battle
                 return check;
 
             LeaderData leader = Player.Leader;
+            BattlePlayer enemy = battle.GetOpponent(Player);
 
             Player.CurrentEnergy -= leader.SkillEnergyCost;
             Player.LeaderSkillUsed = true;
 
             battle.Log(Player.Name + " uses " + leader.SkillName + "!");
 
+            // จ่ายเลือดเป็นความเสียหายจริง (ไม่ผ่านเกราะ/ลดดาเมจ)
+            if (leader.SkillHealthCost > 0)
+                battle.DamageLeader(null, Player, leader.SkillHealthCost, true);
+
             switch (leader.SkillKind)
             {
-                case LeaderSkillKind.Kaioken:
-                    // จ่ายเลือดเป็นความเสียหายจริง (ไม่ผ่านเกราะ/ลดดาเมจ)
-                    battle.DamageLeader(null, Player, leader.SkillHealthCost, true);
-
+                case LeaderSkillKind.BuffAttack:
                     foreach (CardInstance unit in new List<CardInstance>(Player.Field))
-                        unit.AddStatus(StatusType.AttackUp, LeaderSystem.KaiokenAttack, 1);
+                        unit.AddStatus(StatusType.AttackUp, leader.SkillValue, 1);
                     break;
 
-                case LeaderSkillKind.ShadowClone:
-                    CardData cloneData = StarterCardLibrary.Get(StarterCardLibrary.ShadowCloneId);
+                case LeaderSkillKind.Barrier:
+                    foreach (CardInstance unit in new List<CardInstance>(Player.Field))
+                        unit.AddStatus(StatusType.Barrier, leader.SkillValue, 2);
+                    break;
 
-                    for (int i = 0; i < CloneCount && cloneData != null; i++)
+                case LeaderSkillKind.Heal:
+                    battle.HealLeader(null, Player, leader.SkillValue);
+
+                    foreach (CardInstance unit in new List<CardInstance>(Player.Field))
+                        battle.HealUnit(null, unit, leader.SkillValue);
+                    break;
+
+                case LeaderSkillKind.SummonTokens:
+                    CardData tokenData = StarterCardLibrary.Get(leader.SkillTokenId);
+
+                    for (int i = 0; i < leader.SkillCount && tokenData != null; i++)
                     {
-                        CardInstance clone = new CardInstance(cloneData);
+                        CardInstance token = new CardInstance(tokenData);
 
-                        clone.OwnerID = Player.PlayerID;
+                        token.OwnerID = Player.PlayerID;
 
                         // สนามเต็มกลางทาง: ไม่เรียกตัวที่เหลือ
-                        if (!battle.SummonUnit(clone, Player))
+                        if (!battle.SummonUnit(token, Player))
                             break;
                     }
                     break;
 
-                case LeaderSkillKind.Infinity:
-                    foreach (CardInstance unit in new List<CardInstance>(Player.Field))
-                        unit.AddStatus(StatusType.Barrier, InfinityBarrier, 2);
+                case LeaderSkillKind.DamageEnemies:
+                    foreach (CardInstance unit in new List<CardInstance>(enemy.Field))
+                        battle.DamageUnit(null, unit, leader.SkillValue);
+
+                    if (leader.SkillHitsLeader)
+                        battle.DamageLeader(null, enemy, leader.SkillValue);
                     break;
 
-                case LeaderSkillKind.Repulsor:
-                    BattlePlayer enemy = battle.GetOpponent(Player);
-
+                case LeaderSkillKind.WeakenEnemies:
                     foreach (CardInstance unit in new List<CardInstance>(enemy.Field))
-                        battle.DamageUnit(null, unit, RepulsorDamage);
-
-                    battle.DamageLeader(null, enemy, RepulsorDamage);
+                        unit.AddStatus(StatusType.Weakness, 1, 1);
                     break;
             }
 

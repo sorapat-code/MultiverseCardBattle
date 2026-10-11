@@ -14,6 +14,9 @@ namespace MultiverseCardBattle.Data
         public string EnemyName;
         public int EnemyHealth;
 
+        // Leader ของบอส (ว่าง = ศัตรูไม่มี Leader) ดู LeaderLibrary
+        public string EnemyLeaderId;
+
         // ID การ์ดในเด็คศัตรู (ใส่ซ้ำตามจำนวนใบ)
         public List<string> EnemyDeckIds;
 
