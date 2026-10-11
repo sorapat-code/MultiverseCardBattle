@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -50,10 +53,14 @@ namespace MultiverseCardBattle.Editor
                     bool broken = shaderName == "Hidden/InternalErrorShader";
                     bool urp = shaderName.StartsWith("Universal Render Pipeline/");
 
-                    if (!urp && !broken)
+                    // เคยแปลงไปแล้วแต่ texture/สีหาย (เพราะอ่านค่าเดิมจากเชดเดอร์ที่พังไม่ได้): กู้จากไฟล์ .mat
+                    bool repair = shaderName == "Standard" && material.GetTexture("_MainTex") == null &&
+                                  YamlTexture(path, "_BaseMap") != null;
+
+                    if (!urp && !broken && !repair)
                         continue;
 
-                    if (Convert(material, shaderName))
+                    if (Convert(material, repair ? "Universal Render Pipeline/Lit" : shaderName, path))
                     {
                         EditorUtility.SetDirty(material);
                         converted++;
@@ -74,31 +81,34 @@ namespace MultiverseCardBattle.Editor
                 (skipped.Count > 0 ? "\nSkipped (convert by hand):\n" + string.Join("\n", skipped) : ""));
         }
 
-        private static bool Convert(Material material, string shaderName)
+        private static bool Convert(Material material, string shaderName, string path)
         {
             bool lit = shaderName.EndsWith("/Lit") || shaderName.EndsWith("/Simple Lit") ||
                        shaderName.EndsWith("/Complex Lit") || shaderName.EndsWith("/Baked Lit");
             bool unlit = shaderName.EndsWith("/Unlit");
 
             // ข้อมูลที่ต้องเก็บก่อนเปลี่ยนเชดเดอร์ (property ชื่อเดิมจะหายไป)
-            Texture baseMap = Tex(material, "_BaseMap", "_MainTex");
-            Texture bump = Tex(material, "_BumpMap", null);
-            Texture emission = Tex(material, "_EmissionMap", null);
+            // เชดเดอร์ URP ใน Built-in จะเป็น Error Shader ซึ่ง material.GetTexture/GetColor อ่านค่าเดิมไม่ได้
+            // จึงอ่านจากไฟล์ .mat (YAML) ที่ยังเก็บค่าเดิมไว้เป็นหลัก แล้วค่อยลอง API
+            Texture baseMap = YamlTexture(path, "_BaseMap") ?? YamlTexture(path, "_MainTex") ?? Tex(material, "_BaseMap", "_MainTex");
+            Texture bump = YamlTexture(path, "_BumpMap") ?? Tex(material, "_BumpMap", null);
+            Texture emission = YamlTexture(path, "_EmissionMap") ?? Tex(material, "_EmissionMap", null);
 
-            Color color = material.HasProperty("_BaseColor")
-                ? material.GetColor("_BaseColor")
-                : (material.HasProperty("_Color") ? material.GetColor("_Color") : Color.white);
+            Color color = YamlColor(path, "_BaseColor") ?? YamlColor(path, "_Color") ??
+                (material.HasProperty("_BaseColor")
+                    ? material.GetColor("_BaseColor")
+                    : (material.HasProperty("_Color") ? material.GetColor("_Color") : Color.white));
 
-            Color emissionColor = material.HasProperty("_EmissionColor")
-                ? material.GetColor("_EmissionColor") : Color.black;
+            Color emissionColor = YamlColor(path, "_EmissionColor") ??
+                (material.HasProperty("_EmissionColor") ? material.GetColor("_EmissionColor") : Color.black);
 
-            bool clip = material.HasProperty("_AlphaClip") && material.GetFloat("_AlphaClip") > 0.5f;
-            float cutoff = material.HasProperty("_Cutoff") ? material.GetFloat("_Cutoff") : 0.5f;
-            bool transparent = material.HasProperty("_Surface") && material.GetFloat("_Surface") > 0.5f;
-            bool twoSided = material.HasProperty("_Cull") && Mathf.Approximately(material.GetFloat("_Cull"), 0f);
+            bool clip = YamlFloat(path, "_AlphaClip", material.HasProperty("_AlphaClip") ? material.GetFloat("_AlphaClip") : 0f) > 0.5f;
+            float cutoff = YamlFloat(path, "_Cutoff", material.HasProperty("_Cutoff") ? material.GetFloat("_Cutoff") : 0.5f);
+            bool transparent = YamlFloat(path, "_Surface", material.HasProperty("_Surface") ? material.GetFloat("_Surface") : 0f) > 0.5f;
+            bool twoSided = Mathf.Approximately(YamlFloat(path, "_Cull", 2f), 0f);
 
-            float smoothness = material.HasProperty("_Smoothness") ? material.GetFloat("_Smoothness") : 0.2f;
-            float metallic = material.HasProperty("_Metallic") ? material.GetFloat("_Metallic") : 0f;
+            float smoothness = YamlFloat(path, "_Smoothness", 0.2f);
+            float metallic = YamlFloat(path, "_Metallic", 0f);
 
             if (unlit)
             {
@@ -186,6 +196,62 @@ namespace MultiverseCardBattle.Editor
                           "ถ้าใบไม้หายเมื่อมองจากด้านหลังให้ใช้เชดเดอร์ MCB/FoliageCutout แทน", material);
 
             return true;
+        }
+
+        // ---------- อ่านค่าจากไฟล์ .mat (YAML) ----------
+
+        private static string ReadMat(string path)
+        {
+            try
+            {
+                return File.ReadAllText(path);
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private static Texture YamlTexture(string path, string property)
+        {
+            Match match = Regex.Match(
+                ReadMat(path),
+                @"-\s*" + property + @":\s*\r?\n\s*m_Texture:\s*\{fileID:\s*(\d+),\s*guid:\s*([0-9a-f]{32})");
+
+            if (!match.Success || match.Groups[1].Value == "0")
+                return null;
+
+            string assetPath = AssetDatabase.GUIDToAssetPath(match.Groups[2].Value);
+
+            return string.IsNullOrEmpty(assetPath) ? null : AssetDatabase.LoadAssetAtPath<Texture>(assetPath);
+        }
+
+        private static Color? YamlColor(string path, string property)
+        {
+            Match match = Regex.Match(
+                ReadMat(path),
+                @"-\s*" + property + @":\s*\{r:\s*([-\d\.eE]+),\s*g:\s*([-\d\.eE]+),\s*b:\s*([-\d\.eE]+),\s*a:\s*([-\d\.eE]+)\}");
+
+            if (!match.Success)
+                return null;
+
+            return new Color(
+                Num(match.Groups[1].Value), Num(match.Groups[2].Value),
+                Num(match.Groups[3].Value), Num(match.Groups[4].Value));
+        }
+
+        private static float YamlFloat(string path, string property, float fallback)
+        {
+            Match match = Regex.Match(ReadMat(path), @"-\s*" + property + @":\s*([-\d\.eE]+)\s*\r?\n");
+
+            return match.Success ? Num(match.Groups[1].Value) : fallback;
+        }
+
+        private static float Num(string text)
+        {
+            float value;
+
+            return float.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value) ? value : 0f;
         }
 
         private static Texture Tex(Material material, string first, string second)
