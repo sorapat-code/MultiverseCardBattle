@@ -32,6 +32,9 @@ namespace MultiverseCardBattle.Battle
 
         public EventBus Events { get; private set; }
 
+        /// <summary>ระบบ Leader (Power / การ์ดไม้ตาย) สร้างตอนเริ่มแมตช์</summary>
+        public LeaderSystem Leaders { get; private set; }
+
         public CardPool DiscoverPool { get; private set; }
 
         // ---------- สถานะการต่อสู้ ----------
@@ -133,6 +136,11 @@ namespace MultiverseCardBattle.Battle
             HasStarted = true;
 
             ApplySetup();
+
+            // Leader ของผู้เล่น (ฝั่งศัตรูยังไม่มี Leader)
+            Leaders = new LeaderSystem(this);
+            Leaders.Setup(Player1, LeaderLibrary.Get(BattleSetup.PlayerLeaderId));
+            Leaders.Setup(Player2, null);
 
             Debug.Log("Battle Started!");
 

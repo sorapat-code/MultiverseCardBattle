@@ -15,6 +15,9 @@ namespace MultiverseCardBattle.Data
         public static string PlayerName;
         public static string EnemyName;
 
+        // Leader ของผู้เล่น (ว่าง = ไม่มี Leader)
+        public static string PlayerLeaderId;
+
         // 0 = ใช้ค่าตั้งต้นของ BattleManager
         public static int PlayerHealth;
         public static int EnemyHealth;
@@ -39,6 +42,7 @@ namespace MultiverseCardBattle.Data
 
             PlayerName = null;
             EnemyName = null;
+            PlayerLeaderId = null;
 
             PlayerHealth = 0;
             EnemyHealth = 0;

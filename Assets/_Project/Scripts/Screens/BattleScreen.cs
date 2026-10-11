@@ -194,6 +194,13 @@ namespace MultiverseCardBattle.Screens
         // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
         private SecretCinematic cinematic;
         private CoinToss coinToss;
+
+        // Leader: ปุ่มสกิล + มิเตอร์ Power
+        private RectTransform leaderRoot;
+        private Button leaderButton;
+        private Text leaderPowerText;
+        private Image leaderBarFill;
+        private bool leaderFinisherShown;
         private BattleSettingsPanel settings;
         private bool coinTossStarted;
         private SecretCinematic unlockCinematic;
@@ -730,6 +737,8 @@ namespace MultiverseCardBattle.Screens
 
             playerDeckLabel = AddPileLabel(0.875f, 0.085f, 0.995f, 0.13f);
 
+            BuildLeaderUI();
+
             // ป้ายผลโยนเหรียญ (หายเองหลังไม่กี่วินาที)
             bannerRoot = UIFactory.CreateRect("CoinBanner", root);
 
@@ -1013,6 +1022,7 @@ namespace MultiverseCardBattle.Screens
             RefreshPreview();
 
             RefreshDevilTrigger(myTurn);
+            RefreshLeader();
 
             endTurnButton.interactable = myTurn || responding;
 
@@ -2905,6 +2915,149 @@ namespace MultiverseCardBattle.Screens
                 devilFxInstance = card.InstanceID;
 
             Report(result);
+        }
+
+        // ---------- Leader (สกิลกด + มิเตอร์ Power) ----------
+
+        private void BuildLeaderUI()
+        {
+            leaderRoot = UIFactory.CreateRect("LeaderSkill", root);
+
+            UIFactory.SetAnchors(leaderRoot, 0.875f, 0.205f, 0.995f, 0.335f);
+
+            leaderButton = ScreenKit.AddButton(
+                leaderRoot, "SKILL", OnLeaderSkillClicked,
+                new Color(0.75f, 0.4f, 0.08f, 1f), 0f, 0.38f, 1f, 1f, 20);
+
+            leaderPowerText = ScreenKit.AddLabel(
+                leaderRoot, "", 17, TextAnchor.MiddleCenter, 0f, 0.17f, 1f, 0.37f);
+
+            leaderPowerText.resizeTextForBestFit = true;
+            leaderPowerText.resizeTextMinSize = 10;
+            leaderPowerText.resizeTextMaxSize = 17;
+
+            Image barBack = ScreenKit.AddPanel(
+                leaderRoot, "PowerBack", new Color(0f, 0f, 0f, 0.6f), 0f, 0.02f, 1f, 0.16f);
+
+            barBack.raycastTarget = false;
+
+            leaderBarFill = UIFactory.CreatePanel(
+                barBack.transform, "Fill", new Color(1f, 0.65f, 0.15f, 1f));
+
+            leaderBarFill.raycastTarget = false;
+
+            RectTransform fill = leaderBarFill.rectTransform;
+
+            fill.anchorMin = Vector2.zero;
+            fill.anchorMax = new Vector2(0f, 1f);
+            fill.offsetMin = new Vector2(3f, 3f);
+            fill.offsetMax = new Vector2(-3f, -3f);
+
+            leaderRoot.gameObject.SetActive(false);
+        }
+
+        private void RefreshLeader()
+        {
+            LeaderData leader = Human != null ? Human.Leader : null;
+
+            if (leader == null)
+            {
+                leaderRoot.gameObject.SetActive(false);
+                return;
+            }
+
+            leaderRoot.gameObject.SetActive(true);
+
+            ActionResult check = LeaderSkillCommand.Validate(battle, Human);
+
+            leaderButton.interactable = check.Success;
+
+            UIFactory.SetButtonLabel(
+                leaderButton,
+                leader.SkillName.ToUpperInvariant() + "\n" +
+                leader.SkillEnergyCost + " Energy, -" + leader.SkillHealthCost + " HP");
+
+            float fraction = leader.PowerMax > 0
+                ? Mathf.Clamp01(Human.LeaderPower / (float)leader.PowerMax)
+                : 0f;
+
+            leaderBarFill.rectTransform.anchorMax = new Vector2(fraction, 1f);
+
+            CardData finisher = StarterCardLibrary.Get(leader.FinisherId);
+            string finisherName = finisher != null ? finisher.CardName : "Finisher";
+
+            if (Human.LeaderFinisherGiven)
+                leaderPowerText.text = finisherName + " ready";
+            else if (Human.LeaderPower >= leader.PowerMax)
+                leaderPowerText.text = leader.PowerName + " MAX (hand full)";
+            else
+                leaderPowerText.text = leader.PowerName + " " + Human.LeaderPower + "/" + leader.PowerMax;
+
+            // ได้การ์ดไม้ตายแล้ว: ป้ายประกาศ + เอฟเฟกต์
+            if (Human.LeaderFinisherGiven && !leaderFinisherShown)
+            {
+                leaderFinisherShown = true;
+
+                Color theme = leader.Theme;
+
+                bannerText.text =
+                    "<color=#FFB040>" + finisherName.ToUpperInvariant() + "</color>\n" +
+                    "<size=24>" + leader.Name + "'s finisher is in your hand!</size>";
+
+                bannerRoot.gameObject.SetActive(true);
+                bannerRoot.SetAsLastSibling();
+
+                bannerTimer = 3.5f;
+
+                UiFx.Ring(fxLayer, bannerRoot.position, theme, 100f, 900f, 0.9f);
+                UiFx.Burst(fxLayer, bannerRoot.position, theme, 50, 520f, 36f, 1.2f, -40f);
+
+                Sfx.Play(SoundId.Win);
+            }
+        }
+
+        private void OnLeaderSkillClicked()
+        {
+            if (!CanAct() || Human == null || Human.Leader == null)
+                return;
+
+            ClearSelection();
+
+            ActionResult result = battle.Submit(new LeaderSkillCommand(Human));
+
+            if (result.Success)
+                PlayLeaderSkillFx();
+
+            Report(result);
+        }
+
+        private void PlayLeaderSkillFx()
+        {
+            Color theme = Human.Leader.Theme;
+
+            Vector3 origin = playerLeader != null
+                ? playerLeader.transform.position
+                : leaderRoot.position;
+
+            UiFx.Ring(fxLayer, origin, theme, 80f, 900f, 0.8f);
+            UiFx.Burst(fxLayer, origin, theme, 40, 520f, 30f, 1.0f, -60f);
+
+            SecretFx.Flash(root, theme, 0.3f, 0.35f);
+            SecretFx.Shake(root, 10f, 0.3f);
+
+            Sfx.Play(SoundId.Hit);
+
+            foreach (CardInstance unit in Human.Field)
+            {
+                CardView view;
+
+                if (viewsByInstance.TryGetValue(unit.InstanceID, out view) && view != null)
+                {
+                    CardFx.Flash(view, theme);
+
+                    UiFx.Burst(fxLayer, view.transform.position, theme, 12, 300f, 22f, 0.8f, -40f);
+                }
+            }
         }
 
         private void OnEndTurnClicked()

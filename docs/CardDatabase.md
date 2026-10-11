@@ -252,3 +252,20 @@ The battle screen's top-right button is now **Settings** (was Concede). It opens
 sliders, Mute All, Animation Speed, Opponent Speed and **Surrender** (needs a second confirm, then counts as a defeat).
 Esc also opens it when nothing is selected/dragged/open (Esc closes it too). The game (AI + input) is paused while it is
 open. Values are the same `GameSettings` as the main-menu Options and are saved. Not yet compiled/run in Unity.
+
+## Leaders (LeaderData / LeaderSystem)
+
+A Leader is chosen before the match (main menu -> "Leader: ..." button; stored in `SaveData.LeaderId`, default Goku,
+empty = no Leader). Each Leader has **one active skill** (button on the battle screen, once per turn) and **a finisher
+card** that joins the hand when the Leader's condition is met. There is no passive skill by design.
+
+- Data: `LeaderLibrary` / `LeaderData`. Battle side: `BattlePlayer.Leader / LeaderPower / LeaderSkillUsed /
+  LeaderFinisherGiven`, `LeaderSystem` (Power from events, grants the finisher), `LeaderSkillCommand` (the skill).
+- Power (all Leaders for now): +1 when your Leader takes damage, +1 when one of your units dies, +1 per skill use.
+  At `PowerMax` the finisher is added to the hand once per match (waits if the hand is full).
+- **Son Goku** (`LDR_001`, Dragon Ball): Kaioken - 1 Energy + 2 Leader HP: all your units get +2 Attack until end of
+  turn. Ki 10 -> **Spirit Bomb** (`TKN_SPIRIT_BOMB`, cost 4 Spell): 10 damage to the enemy Leader, 5 to every enemy
+  unit, heal your Leader 5.
+- Only the player has a Leader for now (the enemy side has none). Known quirk: Kaioken's HP cost goes through
+  `DamageLeader`, so it is counted in `BattleStats.LeaderDamage` of the opponent.
+Not yet compiled/run in Unity.

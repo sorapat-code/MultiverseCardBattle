@@ -92,6 +92,7 @@ namespace MultiverseCardBattle.Data
 
             BattleSetup.PlayerDeck = StarterDecks.ToCards(deck.CardIDs);
             BattleSetup.PlayerName = "You";
+            BattleSetup.PlayerLeaderId = profile.Data.LeaderId;
 
             return null;
         }

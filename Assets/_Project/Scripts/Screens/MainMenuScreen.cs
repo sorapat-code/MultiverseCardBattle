@@ -90,6 +90,7 @@ namespace MultiverseCardBattle.Screens
             devPanel = CreatePanel("DevPanel");
             rewardsPanel = CreatePanel("RewardsPanel");
             optionsPanel = CreatePanel("OptionsPanel");
+            leaderPanel = CreatePanel("LeaderPanel");
 
             BuildMain();
             BuildShop();
@@ -101,6 +102,7 @@ namespace MultiverseCardBattle.Screens
             BuildDev();
             BuildRewardsMenu();
             BuildOptionsMenu();
+            BuildLeaderMenu();
 
             GameSettings.Apply();
 
@@ -135,6 +137,8 @@ namespace MultiverseCardBattle.Screens
                 optionsPanel.gameObject.SetActive(panel == optionsPanel);
             if (creditsPanel != null)
                 creditsPanel.gameObject.SetActive(panel == creditsPanel);
+            if (leaderPanel != null)
+                leaderPanel.gameObject.SetActive(panel == leaderPanel);
 
             RefreshMenuNotices();
             RefreshGold();
@@ -282,9 +286,144 @@ namespace MultiverseCardBattle.Screens
                 UIFactory.Danger, 0.51f, y, 0.72f, y + height, 26);
 #endif
 
+            // Leader ที่เลือกไว้ก่อนเข้าแมตช์
+            leaderMenuButton = ScreenKit.AddButton(mainPanel, "",
+                () =>
+                {
+                    RefreshLeaderMenu();
+
+                    Show(leaderPanel);
+                },
+                UIFactory.Accent, 0.28f, 0.17f, 0.72f, 0.25f, 26);
+
+            RefreshLeaderMenuButton();
+
             message = ScreenKit.AddLabel(
                 mainPanel, "", 26, TextAnchor.MiddleCenter,
                 0.1f, 0.02f, 0.9f, 0.1f);
+        }
+
+        // ---------- Leader ----------
+
+        private RectTransform leaderPanel;
+        private Button leaderMenuButton;
+        private Text leaderDetail;
+        private readonly List<Button> leaderChoiceButtons = new List<Button>();
+        private readonly List<string> leaderChoiceIds = new List<string>();
+
+        private void BuildLeaderMenu()
+        {
+            UIFactory.CreateTitle(leaderPanel, "CHOOSE YOUR LEADER");
+
+            // ซ้าย: รายชื่อ (บนสุด = ไม่ใช้ Leader)
+            float y = 0.68f;
+            const float height = 0.08f;
+            const float step = 0.095f;
+
+            AddLeaderChoice("", "No Leader", y, height);
+
+            y -= step;
+
+            foreach (LeaderData leader in LeaderLibrary.All)
+            {
+                AddLeaderChoice(leader.Id, leader.Name, y, height);
+
+                y -= step;
+            }
+
+            // ขวา: รายละเอียดสกิล + เงื่อนไขไม้ตาย
+            ScreenKit.AddPanel(
+                leaderPanel, "LeaderDetailBack", new Color(0f, 0f, 0f, 0.45f),
+                0.36f, 0.18f, 0.95f, 0.78f);
+
+            leaderDetail = ScreenKit.AddLabel(
+                leaderPanel, "", 26, TextAnchor.UpperLeft,
+                0.38f, 0.2f, 0.93f, 0.76f);
+
+            leaderDetail.supportRichText = true;
+            leaderDetail.resizeTextForBestFit = true;
+            leaderDetail.resizeTextMinSize = 14;
+            leaderDetail.resizeTextMaxSize = 26;
+
+            ScreenKit.AddButton(leaderPanel, "Back",
+                () =>
+                {
+                    SaveManager.Save();
+
+                    RefreshLeaderMenuButton();
+
+                    Show(mainPanel);
+                },
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+
+            RefreshLeaderMenu();
+        }
+
+        private void AddLeaderChoice(string id, string label, float y, float height)
+        {
+            string captured = id;
+
+            Button button = ScreenKit.AddButton(leaderPanel, label,
+                () =>
+                {
+                    SaveManager.Profile.Data.LeaderId = captured;
+
+                    SaveManager.Save();
+
+                    RefreshLeaderMenu();
+                },
+                UIFactory.Muted, 0.05f, y, 0.33f, y + height, 24);
+
+            leaderChoiceButtons.Add(button);
+            leaderChoiceIds.Add(id);
+        }
+
+        private void RefreshLeaderMenu()
+        {
+            string selected = SaveManager.Profile.Data.LeaderId ?? "";
+
+            for (int i = 0; i < leaderChoiceButtons.Count; i++)
+            {
+                bool on = leaderChoiceIds[i] == selected;
+
+                leaderChoiceButtons[i].GetComponent<Image>().color =
+                    on ? UIFactory.Success : UIFactory.Muted;
+            }
+
+            LeaderData leader = LeaderLibrary.Get(selected);
+
+            if (leader == null)
+            {
+                leaderDetail.text =
+                    "<b>No Leader</b>\n\nPlay without a Leader skill. " +
+                    "Choose a Leader to get a skill you can use once per turn " +
+                    "and a finisher card that joins your hand when you meet its condition.";
+
+                return;
+            }
+
+            CardData finisher = StarterCardLibrary.Get(leader.FinisherId);
+
+            string finisherText = finisher != null
+                ? "<b>" + finisher.CardName + "</b> (Cost " + finisher.Cost + ")\n" + CardTextGenerator.Describe(finisher)
+                : "";
+
+            leaderDetail.text =
+                "<size=34><b><color=#FFB040>" + leader.Name + "</color></b></size>\n" +
+                "<i>" + leader.Title + "</i>\n\n" +
+                "<b>Skill - " + leader.SkillName + "</b> (" + leader.SkillEnergyCost + " Energy, " +
+                leader.SkillHealthCost + " Leader HP)\n" + leader.SkillText + "\n\n" +
+                "<b>Finisher condition - " + leader.PowerName + " " + leader.PowerMax + "</b>\n" +
+                leader.PowerText + "\n\n" + finisherText;
+        }
+
+        private void RefreshLeaderMenuButton()
+        {
+            LeaderData leader = LeaderLibrary.Get(SaveManager.Profile.Data.LeaderId);
+
+            UIFactory.SetButtonLabel(
+                leaderMenuButton,
+                "Leader: " + (leader != null ? leader.Name : "None"));
         }
 
         private void BuildRewardsMenu()

@@ -50,6 +50,9 @@ namespace MultiverseCardBattle.Data
         public const string VergilId = "EVT_004";
         public const string DevilTriggerId = "TKN_006";
 
+        // การ์ดไม้ตายของ Leader (ได้จากเงื่อนไข Power ของ Leader ไม่ใช่จากแพ็ก)
+        public const string SpiritBombId = "TKN_SPIRIT_BOMB";
+
         private static void Build()
         {
             if (cards != null)
@@ -77,6 +80,23 @@ namespace MultiverseCardBattle.Data
                 {
                     Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                         Fx(EffectType.GainEnergy, 1))
+                }));
+
+            // ไม้ตายของ Leader Goku: ปิดเกมหรือพลิกสถานการณ์
+            Add(Create(
+                SpiritBombId, "Spirit Bomb", CardType.Spell,
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
+                4, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 10)),
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 5)),
+                    Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                        Fx(EffectType.Heal, 5))
                 }));
 
             CardData clone = Add(Unit(

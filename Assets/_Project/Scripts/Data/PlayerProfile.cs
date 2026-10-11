@@ -83,6 +83,9 @@ namespace MultiverseCardBattle.Data
         public bool VSync = true;
         public int FpsLimit;        // 0 = ไม่จำกัด
         public float AnimSpeed = 1f;
+        // Leader ที่เลือกไว้ก่อนเข้าแมตช์ (ว่าง = ไม่ใช้ Leader) ค่าเริ่มต้นคือ Goku
+        public string LeaderId = "LDR_001";
+
         public int AiSpeed = 1;     // 0 = ช้า, 1 = ปกติ, 2 = เร็ว
 
         // ผงสำหรับคราฟการ์ด ได้จากการย่อยการ์ดและรางวัล Achievement

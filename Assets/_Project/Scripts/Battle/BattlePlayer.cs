@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Data;
 
 namespace MultiverseCardBattle.Battle
 {
@@ -32,6 +33,12 @@ namespace MultiverseCardBattle.Battle
         // อุปกรณ์ Leader ที่สวมอยู่ (null = ไม่มี) กับจำนวนเทิร์นที่เหลือ
         public CardInstance LeaderGear;
         public int LeaderGearTurns;
+
+        // Leader ของผู้เล่น (null = ไม่มี) / Power ที่สะสม / ใช้สกิลเทิร์นนี้แล้วหรือยัง / ได้การ์ดไม้ตายแล้วหรือยัง
+        public LeaderData Leader;
+        public int LeaderPower;
+        public bool LeaderSkillUsed;
+        public bool LeaderFinisherGiven;
 
         // Energy ที่ถูก Overload ล็อกไว้ในเทิร์นหน้าของผู้เล่นนี้
         public int OverloadedEnergy;
