@@ -844,9 +844,23 @@ namespace MultiverseCardBattle.Battle
                     Stats.AddUnitDeath(owner.PlayerID);
                     Stats.AddUnitKilled(owner.PlayerID == 1 ? 2 : 1);
 
+                    // จดผู้ทำลายก่อน RegisterEffectDeath ล้างค่า (เอฟเฟกต์สั่งทำลายมาก่อน ไม่งั้นดูผู้ทำความเสียหายล่าสุด)
+                    int killerId = card.LastEffectPlayerID != 0
+                        ? card.LastEffectPlayerID
+                        : card.LastDamagePlayerID;
+
+                    CardInstance killerCard = card.LastEffectPlayerID != 0
+                        ? card.LastEffectSource
+                        : card.LastDamageSource;
+
+                    card.LastDamagePlayerID = 0;
+                    card.LastDamageSource = null;
+
                     RegisterEffectDeath(card, owner);
 
                     Publish(TriggerType.Death, card: card, player: owner);
+
+                    PublishKillEvents(card, owner, killerId, killerCard);
                 }
             }
 
@@ -854,6 +868,79 @@ namespace MultiverseCardBattle.Battle
         }
 
         // ---------- ความเสียหาย / การรักษา ----------
+
+        /// <summary>
+        /// Mini Herta: ก่อนยูนิตที่กำหนดโจมตียูนิต ยูนิตฝ่ายเดียวกันที่มี AssistStrike ยิงใส่เป้าหมายก่อน
+        /// ด้วย ATK ของตัวเอง (ไม่นับเป็นการโจมตี ไม่โดนสวนกลับ เครดิตการทำลายเป็นของผู้โจมตี)
+        /// </summary>
+        public void AssistStrikes(CardInstance attacker, CardInstance target)
+        {
+            if (attacker == null || target == null ||
+                target.OwnerID == attacker.OwnerID)
+                return;
+
+            BattlePlayer owner = GetPlayer(attacker.OwnerID);
+
+            if (owner == null)
+                return;
+
+            foreach (CardInstance helper in new List<CardInstance>(owner.Field))
+            {
+                if (helper == attacker ||
+                    helper.CurrentHealth <= 0 ||
+                    helper.Zone != CardZone.Field ||
+                    !helper.HasPassive(CardPassive.AssistStrike) ||
+                    helper.IsSilenced ||
+                    helper.IsStunned)
+                    continue;
+
+                if (helper.Data.AssistTargetCardID != attacker.Data.CardID)
+                    continue;
+
+                if (target.Zone != CardZone.Field || target.CurrentHealth <= 0)
+                    return;
+
+                Log(helper.Data.CardName + " strikes " + target.Data.CardName + " first");
+
+                AssistCredit = attacker;
+
+                DamageUnit(helper, target, helper.CurrentAttack);
+
+                AssistCredit = null;
+            }
+        }
+
+        // ผู้ทำลายยูนิตศัตรู: ผู้ทำความเสียหายล่าสุด หรือเจ้าของเอฟเฟกต์ที่สั่งทำลาย
+        private void PublishKillEvents(
+            CardInstance dead,
+            BattlePlayer owner,
+            int killerId,
+            CardInstance killerCard)
+        {
+            if (killerId == 0 || killerId == owner.PlayerID)
+                return;
+
+            BattlePlayer killer = GetPlayer(killerId);
+
+            if (killer == null)
+                return;
+
+            if (killerCard != null &&
+                killerCard.Data != null &&
+                killerCard.Data.Type == CardType.Unit &&
+                killerCard.OwnerID == killerId)
+            {
+                Publish(TriggerType.Kill, card: killerCard, player: killer, target: dead);
+            }
+
+            Publish(TriggerType.AllyKill, card: killerCard, player: killer, target: dead);
+        }
+
+        public const int PoisonKeywordValue = 1;
+        public const int PoisonKeywordDuration = 3;
+
+        // ขณะยิง AssistStrike: ความเสียหายนับเป็นของผู้โจมตีตัวจริง (ไว้ให้เครดิตการทำลายยูนิต)
+        [System.NonSerialized] private CardInstance AssistCredit;
 
         private const int BerserkerThreshold = 2;
         private const int BerserkerAttack = 3;
@@ -998,6 +1085,17 @@ namespace MultiverseCardBattle.Battle
                 ActiveEffectPlayer != null ? ActiveEffectPlayer.PlayerID : 0;
             target.LastEffectSource = ActiveEffectSource;
 
+            // ผู้ทำความเสียหายล่าสุด (ไว้ตัดสินว่าใคร "ทำลาย" ยูนิตนี้) AssistCredit = ให้เครดิตแก่ผู้โจมตีตัวจริง
+            CardInstance damager = AssistCredit != null ? AssistCredit : source;
+
+            target.LastDamageSource = damager != null ? damager : ActiveEffectSource;
+
+            // เอฟเฟกต์ (Spell / ความสามารถ) นับเจ้าของเอฟเฟกต์ ส่วนการต่อสู้นับเจ้าของผู้ทำความเสียหาย
+            if (AssistCredit == null && ActiveEffectPlayer != null)
+                target.LastDamagePlayerID = ActiveEffectPlayer.PlayerID;
+            else
+                target.LastDamagePlayerID = damager != null ? damager.OwnerID : 0;
+
             Log(target.Data.CardName + " takes " + amount + " damage");
 
             // Backstab: ยูนิตที่โดนความเสียหายจริงจะตาย
@@ -1064,6 +1162,15 @@ namespace MultiverseCardBattle.Battle
                 }
 
                 Log(target.Data.CardName + " is enraged (+" + BerserkerAttack + " Attack, Unstoppable)");
+            }
+
+            // Poison: ยูนิตที่ยังรอดจากความเสียหายของการ์ดนี้ ติดพิษ 1 นาน 3 เทิร์น
+            if (source != null && target.CurrentHealth > 0 &&
+                source.HasKeyword(Keyword.Poison) &&
+                target.OwnerID != source.OwnerID &&
+                target.AddStatus(StatusType.Poison, PoisonKeywordValue, PoisonKeywordDuration))
+            {
+                Log(target.Data.CardName + " is poisoned by " + source.Data.CardName);
             }
 
             // Lifesteal: ฟื้น HP ให้ Leader เจ้าของผู้ทำความเสียหาย

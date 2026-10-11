@@ -98,6 +98,9 @@ namespace MultiverseCardBattle.Cards
 
         // Genshin Impact
         Inazuma,
-        Liyue
+        Liyue,
+
+        // Honkai Star Rail
+        GeniusSociety
     }
 }

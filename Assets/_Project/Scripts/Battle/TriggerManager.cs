@@ -46,7 +46,12 @@ namespace MultiverseCardBattle.Battle
                 case TriggerType.OnTarget:
                 case TriggerType.Graveyard:
                 case TriggerType.AfterAttack:
+                case TriggerType.Kill:
                     Fire(e.Card, e);
+                    break;
+
+                case TriggerType.AllyKill:
+                    FireAllyKill(e);
                     break;
 
                 case TriggerType.Spellburst:
@@ -95,6 +100,26 @@ namespace MultiverseCardBattle.Battle
                 heard.Card = listener;
                 heard.Player = e.Player;
                 heard.Target = e.Card;
+
+                Fire(listener, heard);
+            }
+        }
+
+        // ยูนิตฝ่ายผู้ทำลายทุกตัว (รวมผู้ทำลายเอง) ได้ยินว่าฝ่ายตัวเองทำลายยูนิตศัตรู
+        private void FireAllyKill(GameEvent e)
+        {
+            if (e.Player == null)
+                return;
+
+            foreach (CardInstance listener in
+                new List<CardInstance>(e.Player.Field))
+            {
+                GameEvent heard = new GameEvent();
+
+                heard.Trigger = TriggerType.AllyKill;
+                heard.Card = listener;
+                heard.Player = e.Player;
+                heard.Target = e.Target;
 
                 Fire(listener, heard);
             }

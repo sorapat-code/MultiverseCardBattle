@@ -65,6 +65,25 @@ namespace MultiverseCardBattle.Effects
                 return results;
             }
 
+            // OtherAllies = ยูนิตฝ่ายเราทุกตัวยกเว้นตัวเอง
+            if (action.Target == TargetRule.OtherAllies)
+            {
+                foreach (CardInstance ally in context.SourcePlayer.Field)
+                {
+                    if (ally != context.SourceCard && ally.CurrentHealth > 0)
+                    {
+                        results.Add(
+                            new TargetCandidate(
+                                ownerPlayerIndex,
+                                false,
+                                true,
+                                ally));
+                    }
+                }
+
+                return results;
+            }
+
             // AllyByCardID = ยูนิตฝ่ายเราที่ระบุด้วย CardID (เช่น คู่หูของ Kiana / Mei)
             if (action.Target == TargetRule.AllyByCardID)
             {

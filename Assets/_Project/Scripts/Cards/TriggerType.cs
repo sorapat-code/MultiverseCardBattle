@@ -38,5 +38,11 @@ public enum TriggerType
     AfterAttack,
 
     // ยูนิตอื่นฝั่งเดียวกันถูก Summon ลงสนาม (Card = ยูนิตที่คอยฟัง, Target = ยูนิตที่เพิ่งลงสนาม)
-    AllySummoned
+    AllySummoned,
+
+    // การ์ดนี้เป็นผู้ทำลายยูนิตศัตรู (Card = ผู้ทำลาย, Target = ยูนิตที่ตาย)
+    Kill,
+
+    // ยูนิตฝ่ายเดียวกันตัวใดตัวหนึ่งทำลายยูนิตศัตรู (Card = ผู้ฟัง, Target = ยูนิตที่ตาย)
+    AllyKill
 }

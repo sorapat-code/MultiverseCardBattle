@@ -54,6 +54,10 @@ namespace MultiverseCardBattle.Cards
         Berserker = 1 << 13,
 
         // Zhongli: เมื่อ Shield ของยูนิตฝ่ายเราถูกทำลายครั้งแรกในแต่ละเทิร์น ฟื้นฟู Leader 1
-        JadeShield = 1 << 14
+        JadeShield = 1 << 14,
+
+        // Mini Herta: เมื่อยูนิตฝ่ายเราที่เป็น AssistTargetCardID (The Herta) โจมตียูนิต ยิงใส่เป้าหมายก่อนด้วย ATK ของตัวเอง
+        // (ไม่นับเป็นการโจมตี ไม่โดนสวนกลับ)
+        AssistStrike = 1 << 15
     }
 }

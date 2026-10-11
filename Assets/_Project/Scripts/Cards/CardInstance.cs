@@ -296,6 +296,11 @@ namespace MultiverseCardBattle.Cards
         public int LastEffectPlayerID;
         public CardInstance LastEffectSource;
 
+        // ผู้ทำความเสียหายครั้งล่าสุด (ทั้งการต่อสู้และเอฟเฟกต์) ใช้ตัดสินว่าใครเป็นผู้ "ทำลาย" ยูนิตนี้
+        // PlayerID = 0 แปลว่าไม่มีผู้ทำลาย (เช่น ตายจากพิษ / Burn)
+        public int LastDamagePlayerID;
+        public CardInstance LastDamageSource;
+
         public bool HasPassive(CardPassive passive)
         {
             return Data != null &&

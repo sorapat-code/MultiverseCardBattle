@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei, Lelouch, Guts, Raiden Shogun และ Zhongli</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei, Lelouch, Guts, Raiden Shogun, Zhongli, Shinobu (Poison), The Herta / Mini Herta และ Ruan Mei</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -525,6 +525,249 @@ namespace MultiverseCardBattle.Tests
             battle.DamageUnit(enemy, allyB, 3);
 
             Assert.AreEqual(21, P1.LeaderHealth);
+        }
+
+
+        // ---------- Shinobu / The Herta / Mini Herta / Ruan Mei ----------
+
+        private int HandCount()
+        {
+            return P1.Hand.Cards.Count;
+        }
+
+        private int CountOnField(BattlePlayer owner, string cardId)
+        {
+            int count = 0;
+
+            foreach (CardInstance card in owner.Field)
+            {
+                if (card.Data.CardID == cardId)
+                    count++;
+            }
+
+            return count;
+        }
+
+        [Test]
+        public void Shinobu_PoisonsTheUnitSheDamages()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance shinobu = Place(P1, "SUP_035");
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, shinobu, enemy, null)).Success);
+
+            Assert.AreEqual(6, enemy.CurrentHealth);
+            Assert.AreEqual(1, enemy.StatusValue(StatusType.Poison));
+            Assert.IsTrue(enemy.HasStatus(StatusType.Poison));
+        }
+
+        [Test]
+        public void Shinobu_ShieldedTarget_IsNotPoisoned()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance shinobu = Place(P1, "SUP_035");
+
+            enemy.AddKeyword(Keyword.Shield);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, shinobu, enemy, null)).Success);
+
+            Assert.IsFalse(enemy.HasStatus(StatusType.Poison));
+        }
+
+        [Test]
+        public void Herta_Battlecry_SummonsTwoMiniHertas()
+        {
+            CardInstance herta = InHand("SUP_036");
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, herta)).Success);
+
+            Assert.AreEqual(2, CountOnField(P1, "TKN_MINI_HERTA"));
+            Assert.AreEqual(3, P1.Field.Count);
+        }
+
+        [Test]
+        public void MiniHerta_StrikeBeforeHertaAttacks_AndNoCounterDamage()
+        {
+            CardInstance herta = Place(P1, "SUP_036");
+            CardInstance miniA = Place(P1, "TKN_MINI_HERTA");
+            CardInstance miniB = Place(P1, "TKN_MINI_HERTA");
+            CardInstance enemy = EnemyWithHealth(20);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, herta, enemy, null)).Success);
+
+            // Mini 2 + 2 ก่อนโจมตี แล้ว The Herta 5 = 9
+            Assert.AreEqual(11, enemy.CurrentHealth);
+            Assert.AreEqual(1, miniA.CurrentHealth);
+            Assert.AreEqual(1, miniB.CurrentHealth);
+        }
+
+        [Test]
+        public void MiniHerta_DoesNotStrikeWhenAnotherUnitAttacks()
+        {
+            Place(P1, "SUP_036");
+            Place(P1, "TKN_MINI_HERTA");
+
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(20);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(17, enemy.CurrentHealth);
+        }
+
+        [Test]
+        public void Herta_DrawsWhenAMiniHertaStrikeKillsBeforeTheAttack()
+        {
+            CardInstance herta = Place(P1, "SUP_036");
+
+            Place(P1, "TKN_MINI_HERTA");
+            Place(P1, "TKN_MINI_HERTA");
+
+            CardInstance enemy = EnemyWithHealth(3);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, herta, enemy, null)).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, enemy.Zone);
+            Assert.AreEqual(1, HandCount());
+        }
+
+        [Test]
+        public void Herta_DrawsWhenHerOwnAttackKills()
+        {
+            CardInstance herta = Place(P1, "SUP_036");
+            CardInstance enemy = EnemyWithHealth(5);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, herta, enemy, null)).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, enemy.Zone);
+            Assert.AreEqual(1, HandCount());
+        }
+
+        [Test]
+        public void Herta_DoesNotDrawWhenAnotherUnitKills()
+        {
+            Place(P1, "SUP_036");
+
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(3);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, enemy.Zone);
+            Assert.AreEqual(0, HandCount());
+        }
+
+        [Test]
+        public void RuanMei_Battlecry_BuffsOtherUnitsForTwoTurns_NotHerself()
+        {
+            CardInstance ally = Place(P1, "SUP_002");
+            CardInstance mei = InHand("SUP_037");
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, mei)).Success);
+
+            Assert.AreEqual(1, ally.StatusValue(StatusType.AttackUp));
+            Assert.AreEqual(2, ally.GetStatus(StatusType.AttackUp).Duration);
+            Assert.AreEqual(0, mei.StatusValue(StatusType.AttackUp));
+        }
+
+        [Test]
+        public void RuanMei_TurnStart_WithHerta_BuffsEveryUnit()
+        {
+            CardInstance mei = Place(P1, "SUP_037");
+            CardInstance herta = Place(P1, "SUP_036");
+
+            battle.Publish(TriggerType.TurnStart, player: P1);
+
+            Assert.AreEqual(1, mei.StatusValue(StatusType.AttackUp));
+            Assert.AreEqual(1, herta.StatusValue(StatusType.AttackUp));
+        }
+
+        [Test]
+        public void RuanMei_TurnStart_WithoutHerta_DoesNothing()
+        {
+            CardInstance mei = Place(P1, "SUP_037");
+            CardInstance ally = Place(P1, "SUP_002");
+
+            battle.Publish(TriggerType.TurnStart, player: P1);
+
+            Assert.AreEqual(0, mei.StatusValue(StatusType.AttackUp));
+            Assert.AreEqual(0, ally.StatusValue(StatusType.AttackUp));
+        }
+
+        [Test]
+        public void RuanMei_GainsEnergy_WhenAnAllyDestroysAnEnemyUnit()
+        {
+            Place(P1, "SUP_037");
+
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(3);
+
+            P1.CurrentEnergy = 5;
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(6, P1.CurrentEnergy);
+        }
+
+        [Test]
+        public void RuanMei_NoEnergy_WhenTheEnemyUnitSurvives()
+        {
+            Place(P1, "SUP_037");
+
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(9);
+
+            P1.CurrentEnergy = 5;
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(5, P1.CurrentEnergy);
+        }
+
+        [Test]
+        public void RuanMei_GainsEnergy_WhenASpellDestroysAnEnemyUnit()
+        {
+            Place(P1, "SUP_037");
+
+            CardInstance enemy = EnemyWithHealth(2);
+            CardInstance spell = InHand("MAG_002"); // Frost Shard, cost 2, 2 damage
+
+            List<TargetCandidate> options = BattleRules.GetPlayTargets(battle, P1, spell);
+
+            TargetCandidate chosen = null;
+
+            foreach (TargetCandidate option in options)
+            {
+                if (option.TargetObject == enemy)
+                    chosen = option;
+            }
+
+            Assert.IsNotNull(chosen);
+
+            P1.CurrentEnergy = 5;
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, spell, chosen)).Success);
+
+            // 5 - 2 (Spell) + 1 (Ruan Mei)
+            Assert.AreEqual(4, P1.CurrentEnergy);
+        }
+
+        [Test]
+        public void RuanMei_NoEnergy_WhenTheEnemyKillsItsOwnUnit()
+        {
+            Place(P1, "SUP_037");
+
+            CardInstance enemy = EnemyWithHealth(2);
+
+            P1.CurrentEnergy = 5;
+
+            // ตายจากพิษ ไม่มีผู้ทำลาย
+            enemy.AddStatus(StatusType.Poison, 5, 3);
+
+            StatusProcessor.OnTurnStart(battle, P2);
+            battle.Resolve();
+
+            Assert.AreEqual(5, P1.CurrentEnergy);
         }
 
         [Test]

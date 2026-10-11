@@ -218,6 +218,13 @@ namespace MultiverseCardBattle.Battle
                 targetUnit.Zone != CardZone.Field)
                 return;
 
+            // ผู้ช่วย (เช่น Mini Herta) ยิงใส่เป้าหมายก่อนการต่อสู้ ไม่นับเป็นการโจมตี
+            battle.AssistStrikes(Attacker, targetUnit);
+
+            if (Attacker.Zone != CardZone.Field ||
+                targetUnit.Zone != CardZone.Field)
+                return;
+
             // เป้าหมายตายไปแล้วจาก Trigger ก่อนโจมตี (เช่น Judgment of the End) ไม่ต้องสู้ต่อ
             if (targetUnit.CurrentHealth <= 0)
                 return;

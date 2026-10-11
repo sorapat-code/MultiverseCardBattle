@@ -85,6 +85,9 @@ namespace MultiverseCardBattle.Cards
         // ลดความเสียหายที่ยูนิตพวกเดียวกันตัวอื่นได้รับ (เหมือน Defense Up) ขณะอยู่บนสนาม
         public int AuraDefense;
 
+        // ใช้กับ AssistStrike: CardID ของยูนิตฝ่ายเราที่ต้องเป็นผู้โจมตี
+        public string AssistTargetCardID;
+
         [Header("Evolve")]
 
         // เปลี่ยนเป็นร่างนี้เมื่ออยู่บนสนามครบ EvolveAfterTurns เทิร์นของเจ้าของ

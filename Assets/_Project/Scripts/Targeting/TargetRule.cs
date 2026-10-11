@@ -24,6 +24,9 @@ namespace MultiverseCardBattle.Targeting
         EventSource,
 
         // ยูนิตฝ่ายเราที่มี CardID ตาม CardActionData.TargetCardID (ไม่รวมตัวเอง ต้องยังอยู่บนสนาม)
-        AllyByCardID
+        AllyByCardID,
+
+        // ยูนิตฝ่ายเราทุกตัว "ยกเว้นตัวเอง" (ต้องยังอยู่บนสนาม)
+        OtherAllies
     }
 }

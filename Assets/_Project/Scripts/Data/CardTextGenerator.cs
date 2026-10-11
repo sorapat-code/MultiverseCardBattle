@@ -245,6 +245,8 @@ namespace MultiverseCardBattle.Data
                 case TriggerType.Graveyard: return "When sent to the Graveyard:";
                 case TriggerType.AfterAttack: return "After attacking:";
                 case TriggerType.AllySummoned: return "When an ally is summoned:";
+                case TriggerType.Kill: return "When this destroys a unit:";
+                case TriggerType.AllyKill: return "When your side destroys a unit:";
                 case TriggerType.Spellburst: return "Spellburst:";
                 default: return "";
             }
@@ -347,6 +349,9 @@ namespace MultiverseCardBattle.Data
 
                 case TargetRule.AllAllies:
                     return "all your units";
+
+                case TargetRule.OtherAllies:
+                    return "your other units";
 
                 case TargetRule.AllEnemies:
                     return "all enemy units";

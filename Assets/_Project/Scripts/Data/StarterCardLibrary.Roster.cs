@@ -317,6 +317,64 @@ namespace MultiverseCardBattle.Data
 
             Add(zhongli);
 
+            // ---- Honkai: Star Rail / Demon Slayer ----
+
+            Add(Unit("SUP_035", "Shinobu Kocho",
+                Universe.DemonSlayer, Faction.DemonSlayerCorps, CardRarity.Rare,
+                3, 3, 3, Keyword.QuickAttack | Keyword.Poison,
+                CardTag.Human | CardTag.Melee | CardTag.Assassin));
+
+            // Mini Herta: ยิงใส่เป้าหมายของ The Herta ก่อนโจมตี (ไม่นับเป็นการโจมตี)
+            CardData miniHerta = Unit("TKN_MINI_HERTA", "Mini Herta",
+                Universe.HonkaiStarRail, Faction.GeniusSociety, CardRarity.Common,
+                1, 2, 1, Keyword.None,
+                CardTag.Machine | CardTag.Token,
+                CardSource.Token);
+
+            miniHerta.Passives = CardPassive.AssistStrike;
+            miniHerta.AssistTargetCardID = "SUP_036";
+
+            miniHerta.Description =
+                "When The Herta attacks a unit, this deals damage equal to its Attack to that unit first. " +
+                "This happens before the attack and does not count as an attack.";
+
+            Add(miniHerta);
+
+            CardData herta = Unit("SUP_036", "The Herta",
+                Universe.HonkaiStarRail, Faction.GeniusSociety, CardRarity.Legendary,
+                7, 5, 6, Keyword.None,
+                CardTag.Human | CardTag.Magic | CardTag.Elite | CardTag.Ranged,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxCard(EffectType.Summon, miniHerta),
+                    FxCard(EffectType.Summon, miniHerta)),
+                Act(TriggerType.Kill, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1)));
+
+            herta.Description =
+                "Battlecry: Summon 2 Mini Hertas.\n" +
+                "When this card destroys a unit, draw 1 card.";
+
+            Add(herta);
+
+            CardData ruanMei = Unit("SUP_037", "Ruan Mei",
+                Universe.HonkaiStarRail, Faction.GeniusSociety, CardRarity.Epic,
+                5, 3, 6, Keyword.None,
+                CardTag.Human | CardTag.Magic | CardTag.Support | CardTag.Elite,
+                Act(TriggerType.Play, TargetRule.OtherAllies, TargetSelection.All,
+                    FxApply(StatusType.AttackUp, 1, 2)),
+                ActWhen(TriggerType.TurnStart, TargetRule.AllAllies, TargetSelection.All,
+                    new[] { Cond(ConditionType.AllyCardOnField, "SUP_036") },
+                    FxApply(StatusType.AttackUp, 1, 1)),
+                Act(TriggerType.AllyKill, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.GainEnergy, 1)));
+
+            ruanMei.Description =
+                "Battlecry: Your other units gain Attack Up +1 for 2 turns.\n" +
+                "At the start of your turn, if The Herta is on the field, your units gain Attack Up +1 until end of turn.\n" +
+                "When your side destroys a unit, gain 1 Energy.";
+
+            Add(ruanMei);
+
             // ================= เวทมนตร์ =================
 
             ElemSpell("MAG_001", "Spark", CardRarity.Common, 1, CardTag.Lightning,

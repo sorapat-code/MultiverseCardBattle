@@ -245,6 +245,27 @@
       "desc": "a calm brown-haired scholar in a brown-and-white ornate coat with black gloves, holding a calligraphy brush at a desk"
     },
     {
+      "id": "SUP_035",
+      "name": "Shinobu Kocho",
+      "kind": "unit",
+      "ref": "Shinobu Kocho (Demon Slayer)",
+      "desc": "a petite black-haired swordswoman with a butterfly hair clip and a butterfly-patterned haori, drawing a slender sword amid swirling purple mist and butterflies"
+    },
+    {
+      "id": "SUP_036",
+      "name": "The Herta",
+      "kind": "unit",
+      "ref": "The Herta (Honkai: Star Rail)",
+      "desc": "a young witch in a black flower-adorned witch hat with very long pale hair, reclining among floating books and broken glass in a violet glow"
+    },
+    {
+      "id": "SUP_037",
+      "name": "Ruan Mei",
+      "kind": "unit",
+      "ref": "Ruan Mei (Honkai: Star Rail)",
+      "desc": "a calm dark-haired scholar with pale blue eyes in a teal-and-white qipao dress with long white sleeves, holding a red book"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",

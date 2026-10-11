@@ -45,6 +45,7 @@ namespace MultiverseCardBattle.Data
                 case Keyword.LethalStrike: return "A unit damaged by this unit is destroyed if it is left with 3 HP or less.";
                 case Keyword.Overload: return "Playing this card locks some of your Energy next turn (the number shown).";
                 case Keyword.Echo: return "When played, a copy of this card without Echo returns to your hand.";
+                case Keyword.Poison: return "A unit damaged by this unit gains Poison 1 for 3 turns (it takes 1 true damage each turn, and stacks).";
                 default: return "";
             }
         }
@@ -114,7 +115,7 @@ namespace MultiverseCardBattle.Data
                     Keyword.Lifesteal, Keyword.Pierce, Keyword.QuickAttack,
                     Keyword.Overwhelm, Keyword.Unstoppable, Keyword.Guard, Keyword.Backstab,
                     Keyword.Enrage, Keyword.Retaliate, Keyword.Frenzy, Keyword.Thorns,
-                    Keyword.LethalStrike },
+                    Keyword.LethalStrike, Keyword.Poison },
             new[] { Keyword.Shield, Keyword.Ward, Keyword.Immune,
                     Keyword.Stealth, Keyword.Reborn, Keyword.Shadowbound,
                     Keyword.Elusive, Keyword.Regenerate },
