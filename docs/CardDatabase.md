@@ -136,7 +136,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 - `Type = Equipment` ใช้ Effect `Equip` (สวมยูนิตพวกเราที่เลือก ได้โบนัสถาวร ATK/HP/Keyword จาก `GearAttack/GearHealth/GearKeywords`) หรือ `EquipLeader` (ช่องอุปกรณ์ Leader อยู่ได้ `GearDurability` เทิร์น ทำงานตอน TurnStart/TurnEnd ของเจ้าของ)
 - ยูนิตที่ตาย → อุปกรณ์หายไปพร้อมกัน, Leader gear ที่ถูกแทนที่/หมดอายุลงสุสาน
-- ตัวอย่าง: `RFT_049 Excalibur` (Unit gear), `RFT_050 Holy Grail` (Leader gear)
+- ตอนนี้ยังไม่มีการ์ดอุปกรณ์ในคลัง (ชุดเก่าถูกลบ) แต่ระบบยังใช้งานได้: ใช้ helper `UnitGear` / `LeaderGear` ใน `StarterCardLibrary.cs` หรือแถว CSV ที่ `Type=Equipment` ตัวอย่างการทดสอบอยู่ที่ `Tests/PlayMode/EquipmentTests.cs`
 
 ## Keyword Backstab (เดิมชื่อ Poison)
 
@@ -145,8 +145,24 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 ## ชุดการ์ด (CardSet)
 
 - `Core` (ซองละ 100 Gold) และ `Rift` (ซองละ 150 Gold) แยกกันที่ `CardData.Set`
-- `Rift`: 50 ใบ (ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ID `RFT_001`–`RFT_050` และ Token `TKN_007`–`TKN_013`
-- ดูรายชื่อทั้งหมดได้ใน `docs/CardRework_Draft.md` และปุ่ม "View Card Pool" ในร้านค้า
+- การ์ดชุดเก่า (STR/SPL/RFT/CHN/TGT/GRV/LKT ฯลฯ) ถูกลบทั้งหมดแล้ว เหลือเฉพาะ **การ์ดลับ 4 ใบ + ร่าง Devil Trigger** (ไม่แตะ) และ Token / ไม้ตาย Leader / การ์ดบอสที่ระบบอื่นต้องใช้
+- ซอง `Rift` ยังไม่มีการ์ด จึงซ่อนจากร้านค้าอัตโนมัติ (ใส่การ์ดใหม่แล้วตั้ง `Set = CardSet.Rift` ซองจะกลับมาเอง)
+
+## ชุดการ์ดปัจจุบัน (Roster)
+
+เขียนอยู่ที่ `Data/StarterCardLibrary.Roster.cs` (41 ใบ) ตัวละครสำคัญระดับ Legendary/Secret เจ้าของโปรเจกต์เพิ่มเอง
+ตัวประกอบทุกใบไม่เกิน Epic (มีเทสต์ตรวจ `RosterTests`)
+
+- **ตัวประกอบ `SUP_001`–`SUP_026`** (ยูนิต 26 ใบ จาก 16 จักรวาล): Common 11 / Rare 10 / Epic 5 — เช่น Konohamaru, Rock Lee, Usopp, Chopper, Krillin, Connie, Sasha, March 7th, Chixia, Kobeni, Crestfallen Warrior (Common); Nami, Uryu, Nobara, Mash, Zenitsu, Power, Lady, Solaire, Cha Hae-In, Polnareff (Rare); Igris, Albedo, Shalltear, Rengoku, Gaara (Epic)
+- **เวทมนตร์ `MAG_001`–`MAG_015`** (15 ใบ ใส่ Tag ธาตุเพื่อให้เสียง/เอฟเฟกต์เลือกตามธาตุ): Spark, Frost Shard, Healing Rain, Gale Slash, Stone Wall, Scholar's Notes, Chain Lightning, Shadow Bind, Blessing of Dawn, Spellbreaker (Fast), Emergency Ward (Fast), Inferno, Rewind Fate, World's End (Legendary), Flame Dart
+- เด็คตั้งต้น (30 ใบ), เด็คศัตรู/รางวัลของด่าน 1–10, และ Tutorial ใช้การ์ดชุดนี้ (`StarterDecks`, `CampaignLibrary`, `TutorialSetup`)
+- การ์ดทุกใบต้องได้มาจากด่านหรือเด็คตั้งต้นเสมอ (มีเทสต์ `EveryCollectibleCard_CanBeObtained`) — เพิ่มการ์ดใหม่แล้วอย่าลืมใส่เป็นรางวัลด่านหรือในเด็คตั้งต้น
+
+### รูปการ์ด
+
+รูปของ SUP_/MAG_ สร้างด้วยสคริปต์ `tools/generate_card_art.py` (Python + Pillow, วาดเป็นภาพประกอบซิลูเอตต์ 640x480)
+รันใหม่ได้: `python3 tools/generate_card_art.py` (ระบุ ID ท้ายคำสั่งเพื่อสร้างเฉพาะใบนั้น, `--keep` ข้ามใบที่มีไฟล์แล้ว)
+อยากใช้รูปจริง: วางไฟล์ PNG ชื่อ `{CardID}.png` ใน `Resources/CardArt/` ทับได้เลย
 
 ## Story Mode
 

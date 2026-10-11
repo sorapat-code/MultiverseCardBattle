@@ -76,8 +76,8 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Summon_DamagesEnemiesAndHealsPerHit()
         {
-            Place(P2, "STR_002");
-            Place(P2, "STR_002");
+            Place(P2, "SUP_015");
+            Place(P2, "SUP_015");
 
             P1.LeaderHealth = 10;
 
@@ -120,7 +120,7 @@ namespace MultiverseCardBattle.Tests
         public void Abysswalker_GainsAttackWhenDamagedByAttack()
         {
             CardInstance artorias = Place(P1, StarterCardLibrary.ArtoriasId);
-            CardInstance enemy = Place(P2, "STR_005");
+            CardInstance enemy = Place(P2, "SUP_026");
 
             battle.TurnManager.EndTurn();
 

@@ -179,7 +179,7 @@ namespace MultiverseCardBattle.Screens
                     break;
 
                 case Step.PlayUnit:
-                    body = "Drag Leaf Genin (cost 1) from your hand onto the board to play " +
+                    body = "Drag Connie Springer (cost 1) from your hand onto the board to play " +
                         "it. A unit can't attack on the turn it is played.";
                     highlightTarget = playerField;
                     break;
@@ -204,8 +204,8 @@ namespace MultiverseCardBattle.Screens
                     break;
 
                 case Step.Spell:
-                    body = "Spells have a one-time effect. Play Lightning Bolt from your " +
-                        "hand - it hits the enemy Leader for 4 damage.";
+                    body = "Spells have a one-time effect. Play Spark from your " +
+                        "hand - it hits the enemy Leader for 3 damage.";
                     highlightTarget = handZone;
                     break;
 

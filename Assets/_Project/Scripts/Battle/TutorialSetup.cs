@@ -13,12 +13,12 @@ namespace MultiverseCardBattle.Battle
         public const int EnemyHealth = 10;
 
         // ใบที่จั่วตามลำดับ: มือเปิด 3 ใบแรก + จั่วต้นเทิร์น 1 ใบ แล้วค่อยใบถัดไป
-        // Leaf Genin (1) / Shield Guardian (2) / Lightning Bolt (1) / Raid Skirmisher (3, Rush)
-        // Soul Society Scout (3, Charge) / Field Medic / Sage Scholar / Power Surge
+        // Connie (1, Rush) / March 7th (2, Taunt) / Spark (1, ตีหน้า Leader) / Rock Lee (2, Rush)
+        // Konohamaru / Tony Tony Chopper / Krillin / Scholar's Notes
         private static readonly string[] PlayerTopOrder =
         {
-            "STR_001", "STR_002", "SPL_001", "STR_012",
-            "STR_010", "STR_003", "STR_013", "SPL_004"
+            "SUP_006", "SUP_008", "MAG_001", "SUP_002",
+            "SUP_001", "SUP_004", "SUP_005", "MAG_006"
         };
 
         public static List<CardData> BuildPlayerDeck()
@@ -31,10 +31,10 @@ namespace MultiverseCardBattle.Battle
             List<string> ids = new List<string>();
 
             for (int i = 0; i < 16; i++)
-                ids.Add("STR_001");
+                ids.Add("SUP_006");
 
             for (int i = 0; i < 4; i++)
-                ids.Add("STR_013");
+                ids.Add("SUP_010");
 
             return StarterDecks.ToCards(ids);
         }

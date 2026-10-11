@@ -97,7 +97,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Play_AppliesDoomAndDestroysAtNextTurnStart()
         {
-            CardInstance enemy = Place(P2, "STR_005");
+            CardInstance enemy = Place(P2, "SUP_026");
 
             CardInstance ainz = new CardInstance(
                 StarterCardLibrary.Get(StarterCardLibrary.AinzId));
@@ -186,7 +186,7 @@ namespace MultiverseCardBattle.Tests
 
             for (int i = 0; i < 4; i++)
             {
-                CardInstance enemy = Place(P2, "STR_001");
+                CardInstance enemy = Place(P2, "SUP_001");
 
                 battle.ActiveEffectSource = source;
                 battle.ActiveEffectPlayer = P1;
@@ -208,7 +208,7 @@ namespace MultiverseCardBattle.Tests
         {
             Place(P1, StarterCardLibrary.AinzId);
 
-            CardInstance enemy = Place(P2, "STR_001");
+            CardInstance enemy = Place(P2, "SUP_001");
 
             battle.DamageUnit(null, enemy, 99);
             battle.Resolve();
@@ -220,9 +220,9 @@ namespace MultiverseCardBattle.Tests
         public void GraspHeart_KillSplashesTwoOtherEnemies()
         {
             CardInstance ainz = Place(P1, StarterCardLibrary.AinzId);
-            CardInstance weak = Place(P2, "STR_001");
-            CardInstance other1 = Place(P2, "STR_005");
-            CardInstance other2 = Place(P2, "STR_005");
+            CardInstance weak = Place(P2, "SUP_001");
+            CardInstance other1 = Place(P2, "SUP_026");
+            CardInstance other2 = Place(P2, "SUP_026");
 
             battle.OnTurnStartPassives(P1);
 
@@ -242,8 +242,8 @@ namespace MultiverseCardBattle.Tests
         {
             Place(P1, StarterCardLibrary.AinzId);
 
-            CardInstance big = Place(P2, "STR_005");
-            CardInstance other = Place(P2, "STR_005");
+            CardInstance big = Place(P2, "SUP_026");
+            CardInstance other = Place(P2, "SUP_026");
 
             battle.OnTurnStartPassives(P1);
 

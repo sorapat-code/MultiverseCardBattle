@@ -84,16 +84,16 @@ namespace MultiverseCardBattle.Tests
             PlayerProfile profile = NewProfile();
 
             StatsService.Record(
-                profile, Match(1, 2), new[] { "STR_001", "SPL_001" });
+                profile, Match(1, 2), new[] { "SUP_001", "MAG_001" });
             StatsService.Record(
-                profile, Match(0, 2), new[] { "STR_001" });
+                profile, Match(0, 2), new[] { "SUP_001" });
 
             Assert.AreEqual(2, profile.Data.DifficultyBattles[2]);
             Assert.AreEqual(1, profile.Data.DifficultyWins[2]);
 
             var top = StatsService.TopCards(profile, 5);
 
-            Assert.AreEqual("STR_001", top[0].CardID);
+            Assert.AreEqual("SUP_001", top[0].CardID);
             Assert.AreEqual(2, top[0].Matches);
             Assert.AreEqual(1, top[0].Wins);
         }

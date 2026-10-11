@@ -6,6 +6,7 @@ using UnityEngine.TestTools;
 using MultiverseCardBattle.Battle;
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Data;
+using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
@@ -16,6 +17,7 @@ namespace MultiverseCardBattle.Tests
         private GameObject host;
         private BattleManager battle;
         private CardData filler;
+        private readonly List<CardData> made = new List<CardData>();
 
         private BattlePlayer P1 { get { return battle.Player1; } }
         private BattlePlayer P2 { get { return battle.Player2; } }
@@ -58,12 +60,93 @@ namespace MultiverseCardBattle.Tests
             Object.Destroy(host);
             Object.DestroyImmediate(filler);
 
+            foreach (CardData data in made)
+                Object.DestroyImmediate(data);
+
+            made.Clear();
+
             BattleSetup.Reset();
         }
 
-        private CardInstance Place(BattlePlayer owner, string id)
+        // ---------- การ์ดทดสอบ (ไม่พึ่งการ์ดในคลัง) ----------
+
+        private CardData MakeCard(
+            string id, CardType type, int attack, int health, Keyword keywords)
         {
-            CardInstance card = new CardInstance(StarterCardLibrary.Get(id));
+            CardData data = ScriptableObject.CreateInstance<CardData>();
+
+            data.CardID = id;
+            data.CardName = id;
+            data.Type = type;
+            data.Cost = 1;
+            data.Attack = attack;
+            data.Health = health;
+            data.Keywords = keywords;
+            data.Actions = new List<CardActionData>();
+
+            made.Add(data);
+
+            return data;
+        }
+
+        private static CardActionData Act(
+            TriggerType trigger, TargetRule rule, TargetSelection selection,
+            params EffectData[] effects)
+        {
+            CardActionData action = new CardActionData();
+
+            action.Trigger = trigger;
+            action.Target = rule;
+            action.Selection = selection;
+            action.Effects = new List<EffectData>(effects);
+
+            return action;
+        }
+
+        private static EffectData Fx(EffectType type, int value = 0)
+        {
+            EffectData effect = new EffectData();
+
+            effect.Type = type;
+            effect.Value = value;
+
+            return effect;
+        }
+
+        // อุปกรณ์สวมยูนิต +4/+2 Shield Lifesteal
+        private CardData MakeUnitGear()
+        {
+            CardData gear = MakeCard("T_GEAR", CardType.Equipment, 0, 0, Keyword.None);
+
+            gear.Actions.Add(Act(TriggerType.Play, TargetRule.AllyUnit,
+                TargetSelection.Chosen, Fx(EffectType.Equip)));
+
+            gear.GearAttack = 4;
+            gear.GearHealth = 2;
+            gear.GearKeywords = Keyword.Shield | Keyword.Lifesteal;
+
+            return gear;
+        }
+
+        // อุปกรณ์ Leader อยู่ 4 เทิร์น ฮีลตอนเริ่มเทิร์น 2
+        private CardData MakeLeaderGear()
+        {
+            CardData gear = MakeCard("T_LGEAR", CardType.Equipment, 0, 0, Keyword.None);
+
+            gear.Actions.Add(Act(TriggerType.Play, TargetRule.AllyLeader,
+                TargetSelection.All, Fx(EffectType.EquipLeader)));
+
+            gear.Actions.Add(Act(TriggerType.TurnStart, TargetRule.AllyLeader,
+                TargetSelection.All, Fx(EffectType.Heal, 2)));
+
+            gear.GearDurability = 4;
+
+            return gear;
+        }
+
+        private CardInstance Place(BattlePlayer owner, CardData data)
+        {
+            CardInstance card = new CardInstance(data);
 
             card.OwnerID = owner.PlayerID;
 
@@ -74,9 +157,9 @@ namespace MultiverseCardBattle.Tests
             return card;
         }
 
-        private CardInstance InHand(string id)
+        private CardInstance InHand(CardData data)
         {
-            CardInstance card = new CardInstance(StarterCardLibrary.Get(id));
+            CardInstance card = new CardInstance(data);
 
             card.OwnerID = P1.PlayerID;
             P1.Hand.Add(card);
@@ -87,9 +170,9 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void UnitGear_AddsStatsAndKeywordsToChosenUnit()
         {
-            CardInstance unit = Place(P1, "STR_001"); // 2/2
+            CardInstance unit = Place(P1, MakeCard("T_UNIT", CardType.Unit, 2, 2, Keyword.None));
 
-            CardInstance gear = InHand("RFT_049"); // Excalibur +4/+2 Shield Lifesteal
+            CardInstance gear = InHand(MakeUnitGear()); // +4/+2 Shield Lifesteal
 
             List<TargetCandidate> options =
                 BattleRules.GetPlayTargets(battle, P1, gear);
@@ -109,7 +192,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void UnitGear_CannotBePlayedWithoutAFriendlyUnit()
         {
-            CardInstance gear = InHand("RFT_043");
+            CardInstance gear = InHand(MakeUnitGear());
 
             Assert.IsFalse(
                 BattleRules.ValidatePlayable(battle, P1, gear).Success);
@@ -118,7 +201,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void LeaderGear_StaysAndTicksDownThenExpires()
         {
-            CardInstance gear = InHand("RFT_047"); // Chaldea Mystic Code, 4 turns
+            CardInstance gear = InHand(MakeLeaderGear()); // 4 turns
 
             Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, gear)).Success);
 
@@ -135,7 +218,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void LeaderGear_HealsAtTurnStart()
         {
-            CardInstance gear = InHand("RFT_047");
+            CardInstance gear = InHand(MakeLeaderGear());
 
             Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, gear)).Success);
 
@@ -152,8 +235,10 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Backstab_DestroysAnyUnitThatTookDamage()
         {
-            CardInstance source = Place(P1, "STR_008"); // Disaster Curse
-            CardInstance big = Place(P2, "STR_005");
+            CardInstance source = Place(P1,
+                MakeCard("T_STAB", CardType.Unit, 2, 2, Keyword.Backstab));
+            CardInstance big = Place(P2,
+                MakeCard("T_BIG", CardType.Unit, 4, 7, Keyword.Taunt));
 
             Assert.IsTrue(source.HasKeyword(Keyword.Backstab));
 

@@ -10,7 +10,7 @@ namespace MultiverseCardBattle.Tests
     /// </summary>
     public class EconomyTests
     {
-        private const string Common = "STR_001";
+        private const string Common = "SUP_001";
 
         private static PlayerProfile NewProfile()
         {
@@ -186,7 +186,7 @@ namespace MultiverseCardBattle.Tests
         public void MaxCopies_IsThree_AndOneForUnique()
         {
             Assert.AreEqual(3, DeckRules.MaxCopies(CardRegistry.Get(Common)));
-            Assert.AreEqual(3, DeckRules.MaxCopies(CardRegistry.Get("STR_020")));
+            Assert.AreEqual(3, DeckRules.MaxCopies(CardRegistry.Get("SUP_012")));
 
             CardData secret = CardRegistry.Get(StarterCardLibrary.SecretId);
 

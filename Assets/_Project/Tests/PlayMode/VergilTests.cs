@@ -97,7 +97,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void JudgmentCut_DamagesEnemiesAndGivesExtraAttack()
         {
-            CardInstance enemy = Place(P2, "STR_005");
+            CardInstance enemy = Place(P2, "SUP_026");
 
             CardInstance vergil = new CardInstance(
                 StarterCardLibrary.Get(StarterCardLibrary.VergilId));
@@ -123,7 +123,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void DevilTrigger_TransformsKeepsDamageAndRevertsAfterTwoTurns()
         {
-            CardInstance filler1 = Place(P1, "STR_001");
+            CardInstance filler1 = Place(P1, "SUP_001");
             CardInstance vergil = Place(P1, StarterCardLibrary.VergilId);
 
             int index = P1.Field.IndexOf(vergil);
@@ -177,8 +177,8 @@ namespace MultiverseCardBattle.Tests
         public void OverwhelmingPower_IgnoresDefenseUpAndImmuneOnAttack()
         {
             CardInstance dt = Place(P1, StarterCardLibrary.DevilTriggerId);
-            CardInstance target = Place(P2, "STR_005");
-            CardInstance control = Place(P2, "STR_005");
+            CardInstance target = Place(P2, "SUP_026");
+            CardInstance control = Place(P2, "SUP_026");
 
             target.AddStatus(StatusType.DefenseUp, 3, 3);
             control.AddStatus(StatusType.DefenseUp, 3, 3);
@@ -186,7 +186,7 @@ namespace MultiverseCardBattle.Tests
             battle.DamageUnit(dt, target, 5);
             Assert.AreEqual(2, target.CurrentHealth);
 
-            CardInstance normal = Place(P1, "STR_005");
+            CardInstance normal = Place(P1, "SUP_026");
 
             battle.DamageUnit(normal, control, 5);
             Assert.AreEqual(5, control.CurrentHealth);
@@ -196,8 +196,8 @@ namespace MultiverseCardBattle.Tests
         public void JudgmentOfTheEnd_HitsAllEnemiesWhenAttacking()
         {
             CardInstance dt = Place(P1, StarterCardLibrary.DevilTriggerId);
-            CardInstance a = Place(P2, "STR_005");
-            CardInstance b = Place(P2, "STR_005");
+            CardInstance a = Place(P2, "SUP_026");
+            CardInstance b = Place(P2, "SUP_026");
 
             Assert.IsTrue(battle.Submit(new AttackCommand(P1, dt, a, null)).Success);
 

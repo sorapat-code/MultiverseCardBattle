@@ -1,7 +1,11 @@
+using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Data;
+using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Screens;
+using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
@@ -37,9 +41,29 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Hints_ForDiscoverCard_ExplainDiscover()
         {
-            CardData scroll = StarterCardLibrary.Get("SPL_009");
+            CardData scroll = ScriptableObject.CreateInstance<CardData>();
+
+            scroll.CardID = "TEST_DISCOVER";
+            scroll.CardName = "Test Discover";
+            scroll.Type = CardType.Spell;
+
+            CardActionData action = new CardActionData();
+
+            action.Trigger = TriggerType.Play;
+            action.Target = TargetRule.AllyLeader;
+            action.Selection = TargetSelection.All;
+
+            EffectData effect = new EffectData();
+
+            effect.Type = EffectType.Discover;
+            effect.Value = 3;
+
+            action.Effects = new List<EffectData> { effect };
+            scroll.Actions = new List<CardActionData> { action };
 
             string hints = GameGlossary.HintsFor(scroll, null);
+
+            Object.DestroyImmediate(scroll);
 
             StringAssert.Contains("Discover", hints);
             StringAssert.Contains("3", hints);
@@ -48,15 +72,12 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Hints_ForImmuneCard_ShowTheAmount()
         {
-            CardData immune = null;
+            CardData immune = ScriptableObject.CreateInstance<CardData>();
 
-            foreach (CardData card in StarterCardLibrary.All)
-            {
-                if ((card.Keywords & Keyword.Immune) != 0)
-                    immune = card;
-            }
-
-            Assert.IsNotNull(immune);
+            immune.CardID = "TEST_IMMUNE";
+            immune.CardName = "Test Immune";
+            immune.Type = CardType.Unit;
+            immune.Keywords = Keyword.Immune;
 
             string hints = GameGlossary.HintsFor(immune, null);
 
@@ -66,6 +87,8 @@ namespace MultiverseCardBattle.Tests
             StringAssert.Contains(
                 "Immune " + immune.EffectiveImmuneAmount,
                 CardTextGenerator.Describe(immune));
+
+            Object.DestroyImmediate(immune);
         }
 
         [Test]

@@ -67,7 +67,7 @@ namespace MultiverseCardBattle.Tests
             DeckList deck = new DeckList();
 
             for (int i = 0; i < 4; i++)
-                deck.CardIDs.Add("STR_001");
+                deck.CardIDs.Add("SUP_001");
 
             List<string> problems = DeckRules.Validate(deck, null);
 
@@ -98,7 +98,7 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
-        public void Library_HasFiftyCollectibleCardsFromManyUniverses()
+        public void Library_HasFortyCollectibleCardsFromManyUniverses()
         {
             int count = 0;
             HashSet<Universe> universes = new HashSet<Universe>();
@@ -112,7 +112,7 @@ namespace MultiverseCardBattle.Tests
                 universes.Add(card.Universe);
             }
 
-            Assert.GreaterOrEqual(count, 50);
+            Assert.GreaterOrEqual(count, 40);
             Assert.GreaterOrEqual(universes.Count, 8);
         }
 

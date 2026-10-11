@@ -1059,8 +1059,16 @@ namespace MultiverseCardBattle.Screens
             shopGoldText.color = UIFactory.Gold;
 
             // ซองคู่: Core (ซ้าย) และ Rift (ขวา) แต่ละซองมีปุ่มดู Card Pool
-            BuildPackColumn(CardSet.Core, 0.08f, 0.46f, UIFactory.Success);
-            BuildPackColumn(CardSet.Rift, 0.54f, 0.92f, new Color(0.35f, 0.3f, 0.7f, 1f));
+            // ซองที่ยังไม่มีการ์ดในคลังจะถูกซ่อน (ตอนนี้เหลือ Core ซองเดียว จึงจัดไว้กลางจอ)
+            if (PackService.PoolOf(CardSet.Rift).Count > 0)
+            {
+                BuildPackColumn(CardSet.Core, 0.08f, 0.46f, UIFactory.Success);
+                BuildPackColumn(CardSet.Rift, 0.54f, 0.92f, new Color(0.35f, 0.3f, 0.7f, 1f));
+            }
+            else
+            {
+                BuildPackColumn(CardSet.Core, 0.31f, 0.69f, UIFactory.Success);
+            }
 
             ScreenKit.AddLabel(
                 shopPanel,

@@ -999,22 +999,5 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsFalse(immune.HasStatus(StatusType.Vulnerable));
         }
-
-        [Test]
-        public void StarterShowcaseCards_AreWellFormed()
-        {
-            CardData goku = StarterCardLibrary.Get("DBZ_003");
-            CardData shikai = StarterCardLibrary.Get("BLE_003");
-            CardData gilgamesh = StarterCardLibrary.Get("FAT_002");
-
-            Assert.IsNotNull(goku);
-            Assert.IsNotNull(shikai);
-            Assert.IsNotNull(gilgamesh);
-
-            Assert.IsNotNull(shikai.EvolvesInto);
-            Assert.Greater(shikai.EvolveAfterTurns, 0);
-            Assert.Greater(gilgamesh.AuraAttack, 0);
-            Assert.IsNotEmpty(goku.Actions);
-        }
     }
 }

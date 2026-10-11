@@ -96,7 +96,7 @@ namespace MultiverseCardBattle.Tests
             EffectExecutor.RandomValue = () => 0f;
 
             CardInstance caller =
-                new CardInstance(StarterCardLibrary.Get("STR_016"));
+                new CardInstance(StarterCardLibrary.Get("SUP_001"));
 
             caller.OwnerID = P1.PlayerID;
 
@@ -122,7 +122,7 @@ namespace MultiverseCardBattle.Tests
             EffectExecutor.RandomValue = () => 0.99f;
 
             CardInstance caller =
-                new CardInstance(StarterCardLibrary.Get("STR_016"));
+                new CardInstance(StarterCardLibrary.Get("SUP_001"));
 
             caller.OwnerID = P1.PlayerID;
 
@@ -146,7 +146,7 @@ namespace MultiverseCardBattle.Tests
             P2.CurrentEnergy = 10;
 
             CardInstance caller =
-                new CardInstance(StarterCardLibrary.Get("STR_016"));
+                new CardInstance(StarterCardLibrary.Get("SUP_001"));
 
             caller.OwnerID = P2.PlayerID;
 
@@ -205,7 +205,7 @@ namespace MultiverseCardBattle.Tests
         {
             CardInstance monarch = PlaceCard(P2, StarterCardLibrary.SecretId);
 
-            CardInstance attacker = PlaceCard(P1, "STR_001");
+            CardInstance attacker = PlaceCard(P1, "SUP_001");
 
             battle.Resolve();
 

@@ -188,7 +188,7 @@ namespace MultiverseCardBattle.Tests
         [Test]
         public void Mastery_OnlyForEpicAndAbove()
         {
-            Assert.IsFalse(MasteryService.IsEligible(CardRegistry.Get("STR_001")));
+            Assert.IsFalse(MasteryService.IsEligible(CardRegistry.Get("SUP_001")));
 
             CardData epic = FirstOfRarity(CardRarity.Epic);
 
@@ -197,9 +197,9 @@ namespace MultiverseCardBattle.Tests
 
             PlayerProfile profile = NewProfile();
 
-            MasteryService.AddXp(profile, "STR_001", 50);
+            MasteryService.AddXp(profile, "SUP_001", 50);
 
-            Assert.AreEqual(0, MasteryService.GetXp(profile, "STR_001"));
+            Assert.AreEqual(0, MasteryService.GetXp(profile, "SUP_001"));
         }
 
         [Test]

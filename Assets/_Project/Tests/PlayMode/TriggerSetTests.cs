@@ -465,17 +465,5 @@ namespace MultiverseCardBattle.Tests
             Assert.AreEqual(1, P2.Hand.Count);
             Assert.AreEqual(pricey, P2.Hand.Cards[0].Data);
         }
-
-        [Test]
-        public void StarterLibrary_TriggerSetCardsExist()
-        {
-            foreach (string id in new[]
-            {
-                "TGT_001", "TGT_007", "GRV_001", "GRV_007", "LKT_001", "LKT_007"
-            })
-            {
-                Assert.IsNotNull(StarterCardLibrary.Get(id), id);
-            }
-        }
     }
 }

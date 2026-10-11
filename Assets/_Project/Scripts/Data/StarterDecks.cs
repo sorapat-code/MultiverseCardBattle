@@ -11,10 +11,10 @@ namespace MultiverseCardBattle.Data
         public static List<string> PlayerStarterDeckIds()
         {
             return Build(
-                ("STR_001", 2), ("STR_002", 2), ("STR_003", 2), ("STR_004", 2),
-                ("STR_006", 2), ("STR_007", 2), ("STR_009", 2), ("STR_010", 2),
-                ("STR_013", 2), ("STR_014", 2), ("STR_017", 2), ("STR_018", 2),
-                ("SPL_001", 2), ("SPL_002", 2), ("SPL_003", 1), ("SPL_005", 1));
+                ("SUP_001", 2), ("SUP_002", 2), ("SUP_003", 2), ("SUP_004", 2),
+                ("SUP_005", 2), ("SUP_006", 2), ("SUP_008", 2), ("SUP_010", 2),
+                ("SUP_011", 2), ("MAG_001", 2), ("MAG_002", 2), ("MAG_003", 2),
+                ("MAG_004", 2), ("MAG_005", 2), ("MAG_006", 2));
         }
 
         /// <summary>
