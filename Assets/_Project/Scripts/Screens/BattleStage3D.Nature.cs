@@ -51,7 +51,7 @@ namespace MultiverseCardBattle.Screens
             if (texture != null)
             {
                 material.mainTexture = texture;
-                material.color = leafy ? new Color(0.82f, 0.95f, 0.86f, 1f) : new Color(0.85f, 0.85f, 0.9f, 1f);
+                material.color = leafy ? new Color(0.62f, 0.78f, 0.68f, 1f) : new Color(0.7f, 0.7f, 0.76f, 1f);
             }
             else
             {
@@ -83,26 +83,51 @@ namespace MultiverseCardBattle.Screens
 
             Renderer[] renderers = go.GetComponentsInChildren<Renderer>();
 
-            if (renderers.Length == 0)
+            // ขนาดจริงของโมเดล (หน่วยของ prefab) วัดจาก bounds ของ mesh ในพิกัดของราก
+            // ไม่ใช้ Renderer.bounds เพราะอาจยังไม่อัปเดตทันทีหลัง Instantiate
+            Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+            Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+            bool found = false;
+
+            Matrix4x4 toRoot = go.transform.worldToLocalMatrix;
+
+            foreach (MeshFilter filter in go.GetComponentsInChildren<MeshFilter>())
+            {
+                if (filter.sharedMesh == null)
+                    continue;
+
+                Matrix4x4 matrix = toRoot * filter.transform.localToWorldMatrix;
+
+                Bounds meshBounds = filter.sharedMesh.bounds;
+
+                for (int cx = -1; cx <= 1; cx += 2)
+                {
+                    for (int cy = -1; cy <= 1; cy += 2)
+                    {
+                        for (int cz = -1; cz <= 1; cz += 2)
+                        {
+                            Vector3 corner = matrix.MultiplyPoint3x4(
+                                meshBounds.center + Vector3.Scale(meshBounds.extents, new Vector3(cx, cy, cz)));
+
+                            min = Vector3.Min(min, corner);
+                            max = Vector3.Max(max, corner);
+                            found = true;
+                        }
+                    }
+                }
+            }
+
+            if (!found || renderers.Length == 0 || max.y - min.y < 0.00001f)
             {
                 Destroy(go);
                 return null;
             }
 
-            Bounds bounds = renderers[0].bounds;
+            float scale = height / (max.y - min.y);
 
-            for (int i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
-
-            if (bounds.size.y > 0.0001f)
-                go.transform.localScale = Vector3.one * (height / bounds.size.y);
-
-            bounds = renderers[0].bounds;
-
-            for (int i = 1; i < renderers.Length; i++)
-                bounds.Encapsulate(renderers[i].bounds);
-
-            go.transform.position += Vector3.up * (GroundY - sink - bounds.min.y);
+            go.transform.localScale = Vector3.one * scale;
+            go.transform.localPosition = new Vector3(x, GroundY - sink - min.y * scale, z);
 
             foreach (Renderer renderer in renderers)
             {
