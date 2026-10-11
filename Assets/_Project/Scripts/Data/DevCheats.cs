@@ -16,9 +16,15 @@ namespace MultiverseCardBattle.Data
 
         public static bool Unlocked;
 
+        // Build จริงปลดล็อกไม่ได้ ใช้ได้เฉพาะ Editor / Development Build
+        public static bool CanUnlock
+        {
+            get { return Application.isEditor || Debug.isDebugBuild; }
+        }
+
         public static bool Enabled
         {
-            get { return Unlocked; }
+            get { return Unlocked && CanUnlock; }
         }
 
         /// <summary>การ์ดทั้งหมดที่เล่นได้ (รวมการ์ดลับ ไม่รวม Token) เรียงตาม ID</summary>

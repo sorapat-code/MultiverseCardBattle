@@ -889,7 +889,8 @@ namespace MultiverseCardBattle.Screens
 
         private void Update()
         {
-            if (mainPanel == null || !mainPanel.gameObject.activeSelf)
+            if (!DevCheats.CanUnlock ||
+                mainPanel == null || !mainPanel.gameObject.activeSelf)
             {
                 secretKeys = "";
                 return;
