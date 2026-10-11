@@ -810,6 +810,8 @@ namespace MultiverseCardBattle.Screens
         private void OnHoverEntered(CardView view)
         {
             hovered = true;
+
+            MultiverseCardBattle.Core.Sfx.Play(MultiverseCardBattle.Core.SoundId.Hover);
         }
 
         private void OnHoverExited(CardView view)

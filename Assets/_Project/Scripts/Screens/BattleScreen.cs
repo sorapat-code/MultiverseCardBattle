@@ -130,6 +130,7 @@ namespace MultiverseCardBattle.Screens
         private Dictionary<int, Vector3> lastPositions = new Dictionary<int, Vector3>();
         private Dictionary<int, Vector3> lastHandPositions = new Dictionary<int, Vector3>();
         private int lastAiHandCount = -1;
+        private int lastHumanHandCount = -1;
         private bool secretAnnounced;
         private int lastHumanGrave = -1;
         private int lastAiGrave = -1;
@@ -450,6 +451,8 @@ namespace MultiverseCardBattle.Screens
             lastTurnKey = key;
 
             TurnBanner.Play(fxLayer, battle.CurrentPlayer == Human);
+
+            Sfx.Play(battle.CurrentPlayer == Human ? SoundId.TurnStart : SoundId.EndTurn);
         }
 
         private void OpenLeaderInfo(BattlePlayer player, bool intro)
@@ -2082,6 +2085,9 @@ namespace MultiverseCardBattle.Screens
                             }
                         }
 
+                        if (card.HasKeyword(Keyword.Taunt) || card.HasKeyword(Keyword.Shield))
+                            Sfx.Play(SoundId.Clang);
+
                         UiFx.Ring(
                             fxLayer, UiFx.ScreenOf(entered.transform),
                             new Color(1f, 0.85f, 0.45f, 0.8f), 60f, 300f, 0.45f);
@@ -2101,6 +2107,8 @@ namespace MultiverseCardBattle.Screens
                         CardFx.Lunge(
                             attacker,
                             player == Human ? Vector2.up : Vector2.down);
+
+                        Sfx.Play(SoundId.Attack);
                     }
 
                     nowAttacks[card.InstanceID] = card.AttacksThisTurn;
@@ -2137,11 +2145,14 @@ namespace MultiverseCardBattle.Screens
             }
 
             // ยูนิตที่หายไปจากสนาม (ตาย) นับเป็นความเสียหาย
+            bool unitDied = false;
+
             foreach (int id in lastHealth.Keys)
             {
                 if (!now.ContainsKey(id))
                 {
                     sawDamage = true;
+                    unitDied = true;
 
                     Vector3 deathPos;
 
@@ -2175,7 +2186,9 @@ namespace MultiverseCardBattle.Screens
 
             int fieldCount = Human.Field.Count + Ai.Field.Count;
 
-            if (sawDamage)
+            if (unitDied)
+                Sfx.Play(SoundId.Death);
+            else if (sawDamage)
                 Sfx.Play(SoundId.Hit);
             else if (sawHeal)
                 Sfx.Play(SoundId.Heal);
@@ -2197,6 +2210,14 @@ namespace MultiverseCardBattle.Screens
 
             lastHandPositions = nowHand;
             lastAiHandCount = Ai.Hand.Count;
+
+            // จั่วการ์ดใหม่เข้ามือ
+            int humanHand = Human.Hand.Count;
+
+            if (lastHumanHandCount >= 0 && humanHand > lastHumanHandCount)
+                Sfx.Play(SoundId.Draw);
+
+            lastHumanHandCount = humanHand;
         }
 
         private void CheckLeader(BattlePlayer player, ref int last, Button button)
@@ -2270,6 +2291,8 @@ namespace MultiverseCardBattle.Screens
                     }
 
                     Color color = SpellColor(card.Data);
+
+                    Sfx.Play(Sfx.SpellSoundFor(card.Data.Tags));
 
                     // การ์ดสเปลบินจากมือไปกลางสนามแล้วสลาย
                     Vector3 spellOrigin = Vector3.zero;
@@ -2451,7 +2474,7 @@ namespace MultiverseCardBattle.Screens
             if (battle == null || !battle.HasPendingAdapt)
                 return;
 
-            Sfx.Play(SoundId.Play);
+            Sfx.Play(SoundId.Buff);
 
             battle.ResolveAdapt(index);
         }
@@ -3538,7 +3561,7 @@ namespace MultiverseCardBattle.Screens
             if (stage != null)
                 stage.Shake(0.3f, 0.5f);
 
-            Sfx.Play(SoundId.Hit);
+            Sfx.Play(SoundId.Skill);
 
             foreach (CardInstance unit in Human.Field)
             {
@@ -3624,6 +3647,9 @@ namespace MultiverseCardBattle.Screens
         {
             hint = result.Success ? "" : result.Message;
             dirty = true;
+
+            if (!result.Success)
+                Sfx.Play(SoundId.Error);
         }
 
         private void SetHint(string text)

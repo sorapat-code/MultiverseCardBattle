@@ -365,3 +365,9 @@ board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). A
 - ปุ่ม **Tutorial** ในเมนูหลัก (`CampaignService.StartTutorial`) ตั้ง `BattleSetup.Tutorial = true`: ผู้เล่นเริ่มก่อน ไม่มี Mulligan, การ์ดบนสุดของเด็คถูกจัดไว้ (`Battle/TutorialSetup.cs`), คู่ซ้อมมี HP 10 ลงได้แต่ยูนิต ไม่โจมตี ไม่ใช้สกิล (`AIPlanner.TutorialMode`)
 - `Screens/TutorialCoach.cs` แสดงกล่องคำสอนมุมซ้ายบนและกรอบไฮไลต์กะพริบ เลื่อนขั้นเองเมื่อผู้เล่นทำตามจริง: เป้าหมาย → Energy → ลงยูนิต → จบเทิร์น → เทิร์นศัตรู → โจมตี → สเปล → เคล็ดลับ → ชนะ. กด Skip ข้ามได้
 - ไม่นับสถิติ/Achievement/Daily/การ์ดลับ; ชนะครั้งแรกได้ Gold 100 และจำค่า `SaveData.TutorialDone` (ปุ่มจะไม่มี "(!)" อีก)
+
+## เสียงเอฟเฟกต์ชุดเพิ่มเติม (Sfx.Effects)
+
+`Core/Sfx.Effects.cs` เพิ่มเสียงสังเคราะห์ 20 แบบ (ซ้อนโทน + เสียงซ่าหลายชั้น): Attack, Death, Spell (ทั่วไป) และสเปลตามธาตุ Fire/Ice/Lightning/Dark/Water/Wind/Earth/Light
+(เลือกอัตโนมัติจากแท็กการ์ดด้วย `Sfx.SpellSoundFor`), Draw, TurnStart, EndTurn, Buff, Error, Coin, Skill, Hover, Clang
+ผูกกับหน้าต่อสู้: โจมตี/ตาย/ใช้สเปล/จั่วการ์ด/เริ่ม-จบเทิร์น/สกิล Leader/ลงยูนิต Taunt-Shield/คำสั่งไม่สำเร็จ/ชี้การ์ด และเมนู: รับรางวัล Daily-Milestone = Coin

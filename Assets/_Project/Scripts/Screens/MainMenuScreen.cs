@@ -1393,7 +1393,7 @@ namespace MultiverseCardBattle.Screens
 
                     SaveManager.Save();
 
-                    Sfx.Play(SoundId.Pack);
+                    Sfx.Play(SoundId.Coin);
 
                     RebuildDaily();
                     RefreshGold();
@@ -1469,7 +1469,7 @@ namespace MultiverseCardBattle.Screens
 
                         SaveManager.Save();
 
-                        Sfx.Play(SoundId.Pack);
+                        Sfx.Play(SoundId.Coin);
 
                         RebuildDaily();
                         RefreshGold();
@@ -1495,7 +1495,7 @@ namespace MultiverseCardBattle.Screens
 
                     SaveManager.Save();
 
-                    Sfx.Play(SoundId.Pack);
+                    Sfx.Play(SoundId.Coin);
 
                     RebuildDaily();
                     RefreshGold();
@@ -1696,7 +1696,7 @@ namespace MultiverseCardBattle.Screens
 
                         SaveManager.Save();
 
-                        Sfx.Play(SoundId.Pack);
+                        Sfx.Play(SoundId.Coin);
 
                         RebuildMilestones();
                         RefreshGold();

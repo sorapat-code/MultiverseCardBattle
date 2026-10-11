@@ -11,7 +11,29 @@ namespace MultiverseCardBattle.Core
         Heal,
         Win,
         Lose,
-        Pack
+        Pack,
+
+        // ชุดเสียงเพิ่มเติม (สร้างใน Sfx.Effects.cs)
+        Attack,
+        Death,
+        Spell,
+        SpellFire,
+        SpellIce,
+        SpellLightning,
+        SpellDark,
+        SpellWater,
+        SpellWind,
+        SpellEarth,
+        SpellLight,
+        Draw,
+        TurnStart,
+        EndTurn,
+        Buff,
+        Error,
+        Coin,
+        Skill,
+        Hover,
+        Clang
     }
 
     public enum MusicTrack
@@ -451,6 +473,11 @@ namespace MultiverseCardBattle.Core
         // (ความถี่เริ่ม, ความถี่จบ, ความยาววินาที, สัดส่วนเสียงซ่า 0-1)
         private static AudioClip Create(SoundId id)
         {
+            AudioClip extra = CreateExtra(id);
+
+            if (extra != null)
+                return extra;
+
             switch (id)
             {
                 case SoundId.Click:
