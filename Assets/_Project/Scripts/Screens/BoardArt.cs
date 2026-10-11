@@ -20,6 +20,7 @@ namespace MultiverseCardBattle.Screens
         private static Sprite gem;
         private static Sprite dome;
         private static Sprite stoneFrame;
+        private static Texture2D stoneTexture;
 
         public static Sprite Grass
         {
@@ -87,6 +88,18 @@ namespace MultiverseCardBattle.Screens
                     stoneFrame = BuildStoneFrame();
 
                 return stoneFrame;
+            }
+        }
+
+        /// <summary>ลายหินเทาน้ำตาลแบบเรียงต่อกันได้ (ใช้กับโต๊ะและกรอบ 3D) ย้อมสีด้วย Material.color</summary>
+        public static Texture2D StoneTexture
+        {
+            get
+            {
+                if (stoneTexture == null)
+                    stoneTexture = BuildStoneTexture();
+
+                return stoneTexture;
             }
         }
 
@@ -448,6 +461,48 @@ namespace MultiverseCardBattle.Screens
                 0,
                 SpriteMeshType.FullRect,
                 new Vector4(border, border, border, border));
+        }
+
+        private static Texture2D BuildStoneTexture()
+        {
+            const int size = 128;
+
+            Texture2D texture = new Texture2D(size, size, TextureFormat.RGB24, true);
+
+            texture.filterMode = FilterMode.Bilinear;
+            texture.wrapMode = TextureWrapMode.Repeat;
+            texture.hideFlags = HideFlags.HideAndDontSave;
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float u = x / (float)size;
+                    float v = y / (float)size;
+
+                    // นอยส์ที่วนต่อกันได้: ผสมสองมุมมองเพื่อให้ขอบซ้ายขวาบนล่างเนียน
+                    float a = Fbm(u * 6f, v * 6f);
+                    float b = Fbm((1f - u) * 6f, v * 6f);
+                    float c = Fbm(u * 6f, (1f - v) * 6f);
+                    float d = Fbm((1f - u) * 6f, (1f - v) * 6f);
+
+                    float n = Mathf.Lerp(Mathf.Lerp(a, b, u), Mathf.Lerp(c, d, u), v);
+
+                    float value = 0.55f + n * 0.5f;
+
+                    // รอยแตกบางๆ
+                    float crack = Mathf.PerlinNoise(u * 18f, v * 18f);
+
+                    if (crack > 0.47f && crack < 0.5f)
+                        value *= 0.7f;
+
+                    texture.SetPixel(x, y, new Color(value, value * 0.96f, value * 0.9f, 1f));
+                }
+            }
+
+            texture.Apply();
+
+            return texture;
         }
     }
 }

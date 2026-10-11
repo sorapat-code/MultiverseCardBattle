@@ -54,6 +54,44 @@ namespace MultiverseCardBattle.Screens
             return fx;
         }
 
+        /// <summary>
+        /// ตำแหน่งบนหน้าจอ (พิกเซล) ของ Transform ใช้วางเอฟเฟกต์ในชั้น Overlay
+        /// ถ้าอยู่ใน Canvas แบบ World Space (การ์ดบนโต๊ะ 3D) แปลงผ่านกล้อง ไม่งั้นใช้ position ตรงๆ
+        /// </summary>
+        public static Vector3 ScreenOf(Transform target)
+        {
+            if (target == null)
+                return Vector3.zero;
+
+            return ScreenOfPoint(target, target.position);
+        }
+
+        public static Vector3 ScreenOfPoint(Transform context, Vector3 worldPoint)
+        {
+            Canvas canvas = context != null ? context.GetComponentInParent<Canvas>() : null;
+
+            if (canvas != null)
+            {
+                canvas = canvas.rootCanvas;
+
+                if (canvas.renderMode == RenderMode.WorldSpace)
+                {
+                    Camera camera = canvas.worldCamera != null ? canvas.worldCamera : Camera.main;
+
+                    if (camera != null)
+                    {
+                        Vector3 screen = camera.WorldToScreenPoint(worldPoint);
+
+                        screen.z = 0f;
+
+                        return screen;
+                    }
+                }
+            }
+
+            return worldPoint;
+        }
+
         /// <summary>อนุภาคกระจายออกจากจุดเดียว (gravity ติดลบ = ลอยขึ้น)</summary>
         public static void Burst(
             Transform parent, Vector3 world, Color color,
@@ -361,6 +399,10 @@ namespace MultiverseCardBattle.Screens
             timer = interval;
 
             target.GetWorldCorners(corners);
+
+            // การ์ดบนโต๊ะ 3D: แปลงมุมเป็นพิกเซลหน้าจอก่อนใช้กับชั้นเอฟเฟกต์
+            for (int i = 0; i < corners.Length; i++)
+                corners[i] = UiFx.ScreenOfPoint(target, corners[i]);
 
             // สุ่มจุดบนขอบกรอบ: ซ้ายล่าง -> ซ้ายบน -> ขวาบน -> ขวาล่าง
             Vector3 point;

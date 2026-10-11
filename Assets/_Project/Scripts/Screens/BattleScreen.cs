@@ -47,10 +47,6 @@ namespace MultiverseCardBattle.Screens
         private Image termsPanel;
 
         // สนามหญ้า: แสงเรืองขอบ / ลิ้นชักล็อก / หน้าต่างข้อมูล Leader
-        private Image enemyGlow;
-        private Image enemyGlowLine;
-        private Image playerGlow;
-        private Image playerGlowLine;
         private CanvasGroup logGroup;
         private LeaderInfoPanel leaderInfo;
         private bool bossIntroShown;
@@ -147,7 +143,9 @@ namespace MultiverseCardBattle.Screens
         private CardView dragGhost;
         private CardInstance dragCard;
         private bool dragFromHand;
-        private RectTransform dropZone;
+        private BattleStage3D stage;
+        private readonly List<CardHolder3D> fieldHolders = new List<CardHolder3D>();
+        private readonly List<CardHolder3D> handHolders = new List<CardHolder3D>();
 
         // Mulligan
         private RectTransform mulliganRoot;
@@ -212,6 +210,9 @@ namespace MultiverseCardBattle.Screens
         {
             if (battle != null && battle.Events != null)
                 battle.Events.Raised -= OnBattleEvent;
+
+            if (stage != null)
+                Destroy(stage.gameObject);
         }
 
         // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
@@ -240,7 +241,7 @@ namespace MultiverseCardBattle.Screens
             if (group != null)
                 group.alpha = 0f;
 
-            Vector3 destination = view.transform.position;
+            Vector3 destination = UiFx.ScreenOf(view.transform);
 
             cinematic = SecretCinematic.Play(
                 root, SecretCinematic.Mode.Arrival, cardData,
@@ -288,7 +289,7 @@ namespace MultiverseCardBattle.Screens
                 CardView view;
 
                 if (viewsByInstance.TryGetValue(e.Card.InstanceID, out view) && view != null)
-                    from = view.transform.position;
+                    from = UiFx.ScreenOf(view.transform);
                 else if (!lastPositions.TryGetValue(e.Card.InstanceID, out from))
                     continue;
 
@@ -302,14 +303,14 @@ namespace MultiverseCardBattle.Screens
                         viewsByInstance.TryGetValue(e.Target.InstanceID, out targetView) &&
                         targetView != null)
                     {
-                        to = targetView.transform.position;
+                        to = UiFx.ScreenOf(targetView.transform);
                     }
                     else if (e.TargetPlayer != null)
                     {
                         Button leader = e.TargetPlayer == Human ? playerLeader : enemyLeader;
 
                         if (leader != null)
-                            to = leader.transform.position;
+                            to = UiFx.ScreenOf(leader.transform);
                     }
                 }
 
@@ -472,7 +473,7 @@ namespace MultiverseCardBattle.Screens
                     "<size=44>" + boss.SkillName + "</size>\n" +
                     "<size=22>" + boss.SkillText + "</size>";
 
-                ShowBanner(3.4f, enemyLeader.transform.position, boss.Theme);
+                ShowBanner(3.4f, UiFx.ScreenOf(enemyLeader.transform), boss.Theme);
             }
 
             if (Ai.LeaderFinisherGiven && !lastAiFinisher)
@@ -485,7 +486,7 @@ namespace MultiverseCardBattle.Screens
                     "<size=22>" + boss.Name + "'s " + boss.PowerName +
                     " is full. A finisher is now in the enemy hand!</size>";
 
-                ShowBanner(4f, enemyLeader.transform.position, new Color(1f, 0.3f, 0.35f, 1f));
+                ShowBanner(4f, UiFx.ScreenOf(enemyLeader.transform), new Color(1f, 0.3f, 0.35f, 1f));
             }
 
             lastAiSkillUsed = Ai.LeaderSkillUsed;
@@ -937,74 +938,54 @@ namespace MultiverseCardBattle.Screens
             overlay.gameObject.SetActive(false);
         }
 
-        // สนามหญ้า + แสงเรืองขอบ + เส้นกลาง + ช่องวางยูนิต + มือ
+        // โต๊ะ 3D: ตัวโต๊ะ/กรอบ/พุ่มไม้/แสง อยู่ใน BattleStage3D ส่วนนี้สร้างโซนล่องหนไว้ให้ตำแหน่ง FX อ้างอิง
         private void BuildBoard()
         {
-            // กรอบหินอยู่หลังสนามหญ้า (โผล่ออกมารอบขอบ)
-            BoardDecor.BuildFrame(root);
+            stage = BattleStage3D.Create();
 
-            Image grass = UIFactory.CreatePanel(root, "Board", Color.white);
+            // พื้นหลัง 2D ปิดไว้ (กล้อง 3D วาดเอง)
+            Transform backgroundTransform = root.Find("Background");
 
-            grass.sprite = BoardArt.Grass;
-            grass.type = Image.Type.Simple;
-            grass.raycastTarget = false;
+            if (backgroundTransform != null)
+                backgroundTransform.gameObject.SetActive(false);
 
-            UIFactory.SetAnchors(grass.rectTransform, 0.10f, 0.22f, 0.90f, 0.78f);
+            enemyField = UIFactory.CreateZone(root, "EnemyField", 0.10f, 0.50f, 0.90f, 0.775f);
+            playerField = UIFactory.CreateZone(root, "PlayerField", 0.10f, 0.225f, 0.90f, 0.495f);
+            handZone = UIFactory.CreateZone(root, "Hand", 0.23f, 0.0f, 0.77f, 0.215f);
 
-            UIFactory.AddRing(grass.transform, new Color(0.05f, 0.1f, 0.05f, 0.95f), 4f);
-
-            // แสงเรืองขอบบน (ศัตรู ชมพู) / ขอบล่าง (เรา ฟ้า) สว่างขึ้นตอนเป็นเทิร์นของฝั่งนั้น
-            enemyGlow = EdgeGlow("EnemyGlow", BoardArt.FadeDown, 0.70f, 0.78f);
-            enemyGlowLine = EdgeLine("EnemyGlowLine", 0.774f, 0.78f);
-
-            playerGlow = EdgeGlow("PlayerGlow", BoardArt.FadeUp, 0.22f, 0.30f);
-            playerGlowLine = EdgeLine("PlayerGlowLine", 0.22f, 0.226f);
-
-            UIFactory.CreateDivider(root, 0.11f, 0.4965f, 0.89f, 0.5035f);
-
-            // บรรยากาศขยับได้ (ลำแสง ลม หมอก หิ่งห้อย ใบไม้) พุ่มไม้ และเครื่องประดับทอง
-            BoardDecor.BuildAtmosphere(root);
-            BoardDecor.BuildFoliage(root);
-            BoardDecor.BuildOrnaments(root);
-
-            // พื้นที่ปล่อยการ์ดที่ลากมาเล่น (ทั้งสนาม ไม่มีภาพ)
-            dropZone = UIFactory.CreateZone(root, "DropZone", 0.10f, 0.22f, 0.90f, 0.78f);
-
-            enemyField = CreateRow(root, "EnemyField", 0.10f, 0.50f, 0.90f, 0.775f, 8f);
-            playerField = CreateRow(root, "PlayerField", 0.10f, 0.225f, 0.90f, 0.495f, 8f);
-
-            // เงามืดใต้มือ ให้การ์ดในมืออ่านง่าย
-            Image handShade = UIFactory.CreatePanel(root, "HandShade", new Color(0f, 0f, 0f, 0.55f));
-
-            handShade.sprite = BoardArt.FadeUp;
-            handShade.raycastTarget = false;
-
-            UIFactory.SetAnchors(handShade.rectTransform, 0.0f, 0.0f, 1.0f, 0.22f);
-
-            handZone = CreateRow(root, "Hand", 0.23f, 0.0f, 0.77f, 0.215f, 4f);
+            LayoutZones();
         }
 
-        private Image EdgeGlow(string name, Sprite sprite, float yMin, float yMax)
+        // ตั้งโซนล่องหน (ใช้เป็นจุดอ้างอิง FX) ให้ตรงกับตำแหน่งบนจอของโต๊ะ 3D
+        private void LayoutZones()
         {
-            Image glow = UIFactory.CreatePanel(root, name, Color.white);
+            if (stage == null)
+                return;
 
-            glow.sprite = sprite;
-            glow.raycastTarget = false;
+            stage.Fit();
 
-            UIFactory.SetAnchors(glow.rectTransform, 0.10f, yMin, 0.90f, yMax);
+            float w = Screen.width;
+            float h = Screen.height;
 
-            return glow;
+            if (w < 1f || h < 1f)
+                return;
+
+            PlaceZone(enemyField, stage.ScreenBounds(
+                -BattleStage3D.BoardHalfWidth, BattleStage3D.BoardHalfWidth, 0.2f, BattleStage3D.BoardHalfDepth), w, h);
+            PlaceZone(playerField, stage.ScreenBounds(
+                -BattleStage3D.BoardHalfWidth, BattleStage3D.BoardHalfWidth, -BattleStage3D.BoardHalfDepth, -0.2f), w, h);
+            PlaceZone(handZone, stage.ScreenBounds(-5f, 5f, -6.4f, -4.6f), w, h);
         }
 
-        private Image EdgeLine(string name, float yMin, float yMax)
+        private static void PlaceZone(RectTransform zone, Rect pixels, float w, float h)
         {
-            Image line = UIFactory.CreatePanel(root, name, Color.white);
+            if (zone == null)
+                return;
 
-            line.raycastTarget = false;
-
-            UIFactory.SetAnchors(line.rectTransform, 0.10f, yMin, 0.90f, yMax);
-
-            return line;
+            UIFactory.SetAnchors(
+                zone,
+                Mathf.Clamp01(pixels.xMin / w), Mathf.Clamp01(pixels.yMin / h),
+                Mathf.Clamp01(pixels.xMax / w), Mathf.Clamp01(pixels.yMax / h));
         }
 
         // อัญมณี Energy: ตัวเลขปัจจุบันในอัญมณี ค่าสูงสุดอยู่ใต้ภาพ
@@ -1371,6 +1352,12 @@ namespace MultiverseCardBattle.Screens
 
             viewsByInstance.Clear();
 
+            if (stage != null && stage.NeedsRefit)
+                LayoutZones();
+
+            CardHolder3D.Dispose(fieldHolders);
+            CardHolder3D.Dispose(handHolders);
+
             RefreshField(enemyField, Ai, myTurn);
             RefreshField(playerField, Human, myTurn);
             // Fast spell เล่นได้ทุกจังหวะ (ถ้าเชนว่าง) จึงเปิดมือไว้ตลอด
@@ -1379,11 +1366,6 @@ namespace MultiverseCardBattle.Screens
                 (!battle.IsOver && !battle.HasPendingChoice && !battle.ChainBlocksActions);
 
             RefreshHand(handActive);
-
-            // ต้องคำนวณ Layout ก่อน จึงจะรู้ตำแหน่งการ์ดสำหรับตัวเลขลอย
-            LayoutRebuilder.ForceRebuildLayoutImmediate(enemyField);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(playerField);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(handZone);
 
             DetectChanges();
             RefreshPreview();
@@ -1413,29 +1395,15 @@ namespace MultiverseCardBattle.Screens
             RefreshPile();
         }
 
-        // แสงเรืองขอบสนาม: ฝั่งที่เป็นเทิร์นสว่างกว่า
+        // แสงเรืองขอบโต๊ะ: ฝั่งที่เป็นเทิร์นสว่างกว่า
         private void RefreshBoardGlow()
         {
-            if (enemyGlow == null)
+            if (stage == null)
                 return;
 
-            bool myTurn = battle.CurrentPlayer == Human && !battle.IsOver;
-            bool enemyTurn = battle.CurrentPlayer == Ai && !battle.IsOver;
-
-            Color pink = new Color(1f, 0.3f, 0.5f, 1f);
-            Color cyan = new Color(0.3f, 0.8f, 1f, 1f);
-
-            pink.a = enemyTurn ? 0.85f : 0.22f;
-            cyan.a = myTurn ? 0.85f : 0.22f;
-
-            enemyGlow.color = pink;
-            playerGlow.color = cyan;
-
-            pink.a = enemyTurn ? 1f : 0.45f;
-            cyan.a = myTurn ? 1f : 0.45f;
-
-            enemyGlowLine.color = pink;
-            playerGlowLine.color = cyan;
+            stage.SetTurnGlow(
+                battle.CurrentPlayer == Ai && !battle.IsOver,
+                battle.CurrentPlayer == Human && !battle.IsOver);
         }
 
         // ข้อความบอกว่าตอนนี้ต้องตอบโต้อะไร
@@ -1709,11 +1677,19 @@ namespace MultiverseCardBattle.Screens
 
         private void RefreshField(RectTransform row, BattlePlayer owner, bool myTurn)
         {
-            ScreenKit.ClearNow(row);
+            bool enemySide = owner == Ai;
+            int count = owner.Field.Count;
+            int slot = 0;
 
             foreach (CardInstance card in owner.Field)
             {
-                CardView view = CardView.Create(row, FieldCardSize);
+                CardHolder3D holder = stage.CreateFieldHolder(enemySide, slot++, count, FieldCardSize);
+
+                fieldHolders.Add(holder);
+
+                CardView view = CardView.Create(holder.Rect, FieldCardSize);
+
+                holder.Bind(view);
 
                 view.ShowInstance(card);
 
@@ -1786,30 +1762,20 @@ namespace MultiverseCardBattle.Screens
 
         private void RefreshHand(bool myTurn)
         {
-            ScreenKit.ClearNow(handZone);
-
-            HorizontalLayoutGroup handLayout =
-                handZone.GetComponent<HorizontalLayoutGroup>();
-
-            if (handLayout != null)
-            {
-                int count = Human.Hand.Count;
-                float width = handZone.rect.width > 10f ? handZone.rect.width : 1000f;
-
-                handLayout.spacing = count > 1
-                    ? Mathf.Clamp(
-                        (width - count * HandCardSize.x) / (count - 1),
-                        -HandCardSize.x * 0.45f, 6f)
-                    : 6f;
-            }
+            int handCount = Human.Hand.Count;
+            int handSlot = 0;
 
             foreach (CardInstance card in Human.Hand.Cards)
             {
-                CardView view = CardView.Create(handZone, HandCardSize);
+                CardHolder3D holder = stage.CreateHandHolder(handSlot++, handCount, HandCardSize);
+
+                handHolders.Add(holder);
+
+                CardView view = CardView.Create(holder.Rect, HandCardSize);
+
+                holder.Bind(view);
 
                 view.ShowInstance(card);
-
-                CardHover.Add(view);
 
                 viewsByInstance[card.InstanceID] = view;
                 view.HoverEntered += ShowPreview;
@@ -1981,7 +1947,7 @@ namespace MultiverseCardBattle.Screens
                             : aiPlayedFromHand;
 
                         if (player != Human && fromHand && enemyHandButton != null)
-                            origin = enemyHandButton.transform.position;
+                            origin = UiFx.ScreenOf(enemyHandButton.transform);
 
                         if (fromHand)
                         {
@@ -1998,7 +1964,7 @@ namespace MultiverseCardBattle.Screens
 
                             CardFlight.Launch(
                                 fxLayer, card, FieldCardSize, origin,
-                                entered.transform.position, false,
+                                UiFx.ScreenOf(entered.transform), false,
                                 () =>
                                 {
                                     if (landing != null &&
@@ -2019,7 +1985,7 @@ namespace MultiverseCardBattle.Screens
                                         if (SecretFx.IsSecret(card.Data))
                                         {
                                             SecretFx.Arrive(
-                                                fxLayer, root, landing.transform.position, card.Data);
+                                                fxLayer, root, UiFx.ScreenOf(landing.transform), card.Data);
                                         }
                                     }
                                 });
@@ -2039,17 +2005,17 @@ namespace MultiverseCardBattle.Screens
                                 if (SecretFx.IsSecret(card.Data))
                                 {
                                     SecretFx.Arrive(
-                                        fxLayer, root, entered.transform.position, card.Data);
+                                        fxLayer, root, UiFx.ScreenOf(entered.transform), card.Data);
                                 }
                             }
                         }
 
                         UiFx.Ring(
-                            fxLayer, entered.transform.position,
+                            fxLayer, UiFx.ScreenOf(entered.transform),
                             new Color(1f, 0.85f, 0.45f, 0.8f), 60f, 300f, 0.45f);
 
                         UiFx.Burst(
-                            fxLayer, entered.transform.position,
+                            fxLayer, UiFx.ScreenOf(entered.transform),
                             new Color(1f, 0.85f, 0.45f, 0.9f), 10, 220f, 22f, 0.5f);
                     }
 
@@ -2070,7 +2036,7 @@ namespace MultiverseCardBattle.Screens
                     CardView located;
 
                     if (viewsByInstance.TryGetValue(card.InstanceID, out located))
-                        nowPositions[card.InstanceID] = located.transform.position;
+                        nowPositions[card.InstanceID] = UiFx.ScreenOf(located.transform);
 
                     if (known && previous != card.CurrentHealth)
                     {
@@ -2080,7 +2046,7 @@ namespace MultiverseCardBattle.Screens
                         {
                             int delta = card.CurrentHealth - previous;
 
-                            SpawnDelta(view.transform.position, delta);
+                            SpawnDelta(UiFx.ScreenOf(view.transform), delta);
 
                             CardFx.Flash(
                                 view,
@@ -2088,7 +2054,7 @@ namespace MultiverseCardBattle.Screens
                                     ? new Color(1f, 0.15f, 0.15f, 0.65f)
                                     : new Color(0.3f, 1f, 0.4f, 0.55f));
 
-                            PlayImpact(view.transform.position, delta);
+                            PlayImpact(UiFx.ScreenOf(view.transform), delta);
                         }
 
                         NoteChange(card.CurrentHealth - previous);
@@ -2154,7 +2120,7 @@ namespace MultiverseCardBattle.Screens
                 CardView handView;
 
                 if (viewsByInstance.TryGetValue(handCard.InstanceID, out handView))
-                    nowHand[handCard.InstanceID] = handView.transform.position;
+                    nowHand[handCard.InstanceID] = UiFx.ScreenOf(handView.transform);
             }
 
             lastHandPositions = nowHand;
@@ -2167,9 +2133,9 @@ namespace MultiverseCardBattle.Screens
             {
                 int delta = player.LeaderHealth - last;
 
-                SpawnDelta(button.transform.position, delta);
+                SpawnDelta(UiFx.ScreenOf(button.transform), delta);
 
-                PlayImpact(button.transform.position, delta);
+                PlayImpact(UiFx.ScreenOf(button.transform), delta);
 
                 NoteChange(delta);
             }
@@ -2238,7 +2204,7 @@ namespace MultiverseCardBattle.Screens
                         : enemyHandButton != null;
 
                     if (player != Human && hasOrigin)
-                        spellOrigin = enemyHandButton.transform.position;
+                        spellOrigin = UiFx.ScreenOf(enemyHandButton.transform);
 
                     if (hasOrigin)
                     {
@@ -2858,9 +2824,7 @@ namespace MultiverseCardBattle.Screens
 
             if (fromHand)
             {
-                bool inField =
-                    dropZone != null &&
-                    RectTransformUtility.RectangleContainsScreenPoint(dropZone, pos, null);
+                bool inField = stage != null && stage.IsOverBoard(pos);
 
                 if (inField)
                     PlayDroppedCard(card);
@@ -3282,7 +3246,7 @@ namespace MultiverseCardBattle.Screens
                 if (viewsByInstance.TryGetValue(devilFxInstance, out view) &&
                     view != null)
                 {
-                    Vector3 position = view.transform.position;
+                    Vector3 position = UiFx.ScreenOf(view.transform);
 
                     CardData dtData = view.Data != null
                         ? view.Data
@@ -3455,7 +3419,7 @@ namespace MultiverseCardBattle.Screens
             Color theme = Human.Leader.Theme;
 
             Vector3 origin = playerLeader != null
-                ? playerLeader.transform.position
+                ? UiFx.ScreenOf(playerLeader.transform)
                 : leaderRoot.position;
 
             UiFx.Ring(fxLayer, origin, theme, 80f, 900f, 0.8f);
@@ -3474,7 +3438,7 @@ namespace MultiverseCardBattle.Screens
                 {
                     CardFx.Flash(view, theme);
 
-                    UiFx.Burst(fxLayer, view.transform.position, theme, 12, 300f, 22f, 0.8f, -40f);
+                    UiFx.Burst(fxLayer, UiFx.ScreenOf(view.transform), theme, 12, 300f, 22f, 0.8f, -40f);
                 }
             }
         }

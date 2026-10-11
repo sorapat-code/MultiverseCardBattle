@@ -316,3 +316,11 @@ in `BoardArt` (no image files).
 
 `BoardDecor` adds the stone frame, gold gem ornaments, bushes/rocks around the board and an animated atmosphere clipped to the
 board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). All procedural, unscaled time.
+
+## หน้าต่อสู้แบบโต๊ะ 3D (BattleStage3D)
+
+- `Screens/BattleStage3D.cs` สร้างฉาก 3D: กล้อง (fov 36 เอียงมองโต๊ะ), โต๊ะ/กรอบหิน, พุ่มไม้, แสง+เงา+หมอก, หิ่งห้อย/ใบไม้ (ParticleSystem) และแสงเรืองฝั่งที่เป็นเทิร์น (`SetTurnGlow`)
+- การ์ดทุกใบ = `CardHolder3D` (World Space Canvas ขนาดพิกเซล x 0.01 + กล่องบางเป็นตัวการ์ด) ข้างในคือ `CardView` เดิม จึงคลิก/ชี้/ลากผ่าน EventSystem เดิมได้ (ชี้แล้วการ์ดลอยเข้าหากล้อง)
+- เมนู, HUD, Leader, ปุ่ม, พรีวิว, ghost ตอนลาก ยังเป็น UI 2D ซ้อนทับ; ตำแหน่ง FX แปลงด้วย `UiFx.ScreenOf`
+- ปล่อยการ์ดลงสนามเช็คด้วย ray-plane (`IsOverBoard`); จอแคบกว่า 16:9 กล้องถอยออกอัตโนมัติ
+- ใช้ Built-in pipeline (Standard shader ถูกใส่ใน Always Included Shaders)
