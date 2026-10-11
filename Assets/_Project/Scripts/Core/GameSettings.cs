@@ -10,6 +10,8 @@ namespace MultiverseCardBattle.Core
     {
         public static readonly int[] FpsOptions = { 0, 30, 60, 120, 144 };
         public static readonly float[] AnimOptions = { 0.5f, 1f, 1.5f, 2f };
+        public static readonly float[] TextScaleOptions = { 1f, 1.15f, 1.3f };
+        public static readonly string[] TextScaleNames = { "Normal", "Large", "Extra Large" };
         public static readonly string[] AiSpeedNames = { "Slow", "Normal", "Fast" };
         private static readonly float[] AiDelays = { 0.6f * 1.8f, 0.6f, 0.6f * 0.4f };
 
@@ -60,6 +62,13 @@ namespace MultiverseCardBattle.Core
             set { Data.AnimSpeed = value; }
         }
 
+        /// <summary>ตัวคูณขนาดตัวอักษร UI (ใช้ตอนสร้างข้อความ)</summary>
+        public static float TextScale
+        {
+            get { return Mathf.Clamp(Data.TextScale, 0.8f, 1.6f); }
+            set { Data.TextScale = value; }
+        }
+
         public static int AiSpeed
         {
             get { return Mathf.Clamp(Data.AiSpeed, 0, AiDelays.Length - 1); }
@@ -89,6 +98,7 @@ namespace MultiverseCardBattle.Core
             d.FpsLimit = source.FpsLimit;
             d.AnimSpeed = source.AnimSpeed;
             d.AiSpeed = source.AiSpeed;
+            d.TextScale = source.TextScale;
         }
 
         public static void ResetToDefaults()

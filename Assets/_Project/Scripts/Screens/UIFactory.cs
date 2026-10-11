@@ -27,16 +27,70 @@ namespace MultiverseCardBattle.Screens
         public static readonly Color GoldDim = new Color(0.62f, 0.48f, 0.22f, 1f);
 
         private static Font cachedFont;
+        private static Font regularFont;
+        private static Font boldFont;
+        private static Font italicFont;
+        private static bool fontsLoaded;
+
+        // ฟอนต์ที่แถมมากับเกม (Resources/Fonts: Inter, SIL OFL) เหมือนกันทุกเครื่อง
+        private static void LoadFonts()
+        {
+            if (fontsLoaded)
+                return;
+
+            fontsLoaded = true;
+
+            regularFont = Resources.Load<Font>("Fonts/Inter-Regular");
+            boldFont = Resources.Load<Font>("Fonts/Inter-Bold");
+            italicFont = Resources.Load<Font>("Fonts/Inter-Italic");
+        }
+
+        /// <summary>ตั้งฟอนต์และสไตล์ให้ตัวอักษร (ใช้ไฟล์ตัวหนา/เอียงจริง ไม่ปล่อยให้ Unity ทำหนาเทียม)</summary>
+        public static void ApplyFont(Text text, FontStyle style)
+        {
+            LoadFonts();
+
+            if (regularFont == null)
+            {
+                text.font = DefaultFont;
+                text.fontStyle = style;
+                return;
+            }
+
+            bool bold = style == FontStyle.Bold || style == FontStyle.BoldAndItalic;
+            bool italic = style == FontStyle.Italic || style == FontStyle.BoldAndItalic;
+
+            if (bold && boldFont != null)
+            {
+                text.font = boldFont;
+                text.fontStyle = italic ? FontStyle.Italic : FontStyle.Normal;
+            }
+            else if (italic && !bold && italicFont != null)
+            {
+                text.font = italicFont;
+                text.fontStyle = FontStyle.Normal;
+            }
+            else
+            {
+                text.font = regularFont;
+                text.fontStyle = style;
+            }
+        }
 
         public static Font DefaultFont
         {
             get
             {
+                LoadFonts();
+
+                if (cachedFont == null && regularFont != null)
+                    cachedFont = regularFont;
+
                 if (cachedFont == null)
                 {
                     // ฟอนต์เซอริฟแนวแฟนตาซี (ใช้ตัวแรกที่เครื่องมี) ไม่มีก็ใช้ฟอนต์ในตัว
                     cachedFont = Font.CreateDynamicFontFromOSFont(
-                        new[] { "Cinzel", "Palatino Linotype", "Georgia", "Cambria" },
+                        new[] { "Segoe UI", "Arial", "Helvetica" },
                         18);
 
                     if (cachedFont != null && cachedFont.fontNames.Length == 0)
@@ -221,12 +275,11 @@ namespace MultiverseCardBattle.Screens
 
             Text text = rect.gameObject.AddComponent<Text>();
 
-            text.font = DefaultFont;
+            ApplyFont(text, style);
             text.text = content;
-            text.fontSize = fontSize;
+            text.fontSize = Mathf.RoundToInt(fontSize * GameSettings.TextScale);
             text.color = color;
             text.alignment = anchor;
-            text.fontStyle = style;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Truncate;
             text.raycastTarget = false;
@@ -277,6 +330,11 @@ namespace MultiverseCardBattle.Screens
                 TextAnchor.MiddleCenter, FontStyle.Bold);
 
             Stretch(text.rectTransform);
+
+            // ตัวอักษรใหญ่ขึ้นแล้วล้นปุ่ม: ย่อให้พอดีแทนที่จะถูกตัด
+            text.resizeTextForBestFit = true;
+            text.resizeTextMinSize = 10;
+            text.resizeTextMaxSize = text.fontSize;
 
             AddTextShadow(text);
 

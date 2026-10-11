@@ -86,6 +86,9 @@ namespace MultiverseCardBattle.Data
         // Leader ที่เลือกไว้ก่อนเข้าแมตช์ (ว่าง = ไม่ใช้ Leader) ค่าเริ่มต้นคือ Goku
         public string LeaderId = "LDR_001";
 
+        // ขนาดตัวอักษร UI (1 = ปกติ) ใช้ตอนสร้างหน้าจอ จึงมีผลกับหน้าถัดไปที่เปิด
+        public float TextScale = 1f;
+
         public int AiSpeed = 1;     // 0 = ช้า, 1 = ปกติ, 2 = เร็ว
 
         // ผงสำหรับคราฟการ์ด ได้จากการย่อยการ์ดและรางวัล Achievement

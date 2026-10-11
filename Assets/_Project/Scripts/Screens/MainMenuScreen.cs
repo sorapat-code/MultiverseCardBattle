@@ -107,6 +107,14 @@ namespace MultiverseCardBattle.Screens
             GameSettings.Apply();
 
             Show(mainPanel);
+
+            // เปลี่ยนขนาดตัวอักษรแล้วโหลดเมนูใหม่: กลับมาที่หน้า Options
+            if (openOptionsOnStart)
+            {
+                openOptionsOnStart = false;
+
+                Show(optionsPanel);
+            }
         }
 
         private RectTransform CreatePanel(string name)
@@ -478,6 +486,8 @@ namespace MultiverseCardBattle.Screens
         private Button fpsButton;
         private Button animButton;
         private Button aiButton;
+        private Button textButton;
+        private static bool openOptionsOnStart;
         private RectTransform creditsPanel;
 
         private void BuildOptionsMenu()
@@ -549,19 +559,35 @@ namespace MultiverseCardBattle.Screens
                 },
                 UIFactory.Muted, 0.52f, 0.65f, 0.94f, 0.72f, 24);
 
-            AddOptionsHeader("INFO", 0.52f, 0.94f, 0.55f);
+            // ขนาดตัวอักษร: ใช้ตอนสร้างหน้าจอ จึงโหลดเมนูใหม่เพื่อให้เห็นผลทันที
+            textButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    float[] options = GameSettings.TextScaleOptions;
+                    int index = NearestIndex(options, GameSettings.TextScale);
+
+                    GameSettings.TextScale = options[(index + 1) % options.Length];
+                    ApplySettings();
+
+                    openOptionsOnStart = true;
+
+                    SceneLoader.Go(GameScene.MainMenu);
+                },
+                UIFactory.Muted, 0.52f, 0.57f, 0.94f, 0.64f, 24);
+
+            AddOptionsHeader("INFO", 0.52f, 0.94f, 0.49f);
 
             ScreenKit.AddButton(optionsPanel, "How to Play",
                 () => Show(helpPanel),
-                UIFactory.Accent, 0.52f, 0.46f, 0.94f, 0.53f, 24);
+                UIFactory.Accent, 0.52f, 0.41f, 0.94f, 0.48f, 24);
 
             ScreenKit.AddButton(optionsPanel, "Keywords & Status",
                 () => Show(glossaryPanel),
-                UIFactory.Accent, 0.52f, 0.38f, 0.94f, 0.45f, 24);
+                UIFactory.Accent, 0.52f, 0.33f, 0.94f, 0.40f, 24);
 
             ScreenKit.AddButton(optionsPanel, "Credits",
                 () => Show(creditsPanel),
-                UIFactory.Accent, 0.52f, 0.30f, 0.94f, 0.37f, 24);
+                UIFactory.Accent, 0.52f, 0.25f, 0.94f, 0.32f, 24);
 
             ScreenKit.AddButton(optionsPanel, "Defaults",
                 () =>
@@ -572,11 +598,11 @@ namespace MultiverseCardBattle.Screens
 
                     optionsMessage.text = "Options restored to defaults.";
                 },
-                UIFactory.Muted, 0.52f, 0.22f, 0.94f, 0.29f, 24);
+                UIFactory.Muted, 0.52f, 0.17f, 0.94f, 0.24f, 24);
 
             resetButton = ScreenKit.AddButton(optionsPanel, "Reset Progress",
                 OnResetClicked,
-                UIFactory.Danger, 0.52f, 0.14f, 0.94f, 0.21f, 24);
+                UIFactory.Danger, 0.52f, 0.10f, 0.94f, 0.16f, 24);
 
             ScreenKit.AddLabel(
                 optionsPanel, "Version " + Application.version, 20,
@@ -704,6 +730,11 @@ namespace MultiverseCardBattle.Screens
             UIFactory.SetButtonLabel(
                 aiButton,
                 "Opponent Speed: " + GameSettings.AiSpeedNames[GameSettings.AiSpeed]);
+
+            UIFactory.SetButtonLabel(
+                textButton,
+                "Text Size: " + GameSettings.TextScaleNames[
+                    NearestIndex(GameSettings.TextScaleOptions, GameSettings.TextScale)]);
         }
 
         private static int NearestIndex(float[] options, float value)
@@ -732,6 +763,7 @@ namespace MultiverseCardBattle.Screens
                 "Game design, programming and card design: Sorapat\n" +
                 "Built with Unity\n\n" +
                 "Music and sound effects are generated in code.\n" +
+                "Font: Inter (SIL Open Font License 1.1)\n\n" +
                 "Thank you for playing!",
                 30, TextAnchor.MiddleCenter, 0.2f, 0.2f, 0.8f, 0.85f);
 

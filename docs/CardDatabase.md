@@ -269,3 +269,9 @@ card** that joins the hand when the Leader's condition is met. There is no passi
 - Only the player has a Leader for now (the enemy side has none). Known quirk: Kaioken's HP cost goes through
   `DamageLeader`, so it is counted in `BattleStats.LeaderDamage` of the opponent.
 Not yet compiled/run in Unity.
+
+## Font & Text Size
+
+- All UI text uses **Inter** (SIL OFL 1.1), bundled in `Assets/_Project/Resources/Fonts/` (Regular / Bold / Italic + license). `UIFactory.ApplyFont` picks the real bold/italic files instead of faux styles. If the files are missing it falls back to Segoe UI / Arial.
+- **Text Size** (Options → Normal 100% / Large 115% / Extra Large 130%) is stored in the save (`SaveData.TextScale`) and multiplies every font size in `UIFactory.CreateText`. Changing it reloads the main menu; other screens pick it up when they are built.
+- Button labels use best-fit so larger text shrinks to fit instead of being cut off.
