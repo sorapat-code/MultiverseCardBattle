@@ -210,6 +210,13 @@
       "desc": "a long purple-haired swordswoman with a huge red demon-mask blade, standing under a full moon in the rain over a night city"
     },
     {
+      "id": "SUP_030",
+      "name": "Lelouch vi Britannia",
+      "kind": "unit",
+      "ref": "Lelouch vi Britannia (Code Geass)",
+      "desc": "a scheming young prince in a black-and-gold cape and high collar, one eye glowing red, holding a dark helmet mask, burning city at dusk behind him"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",

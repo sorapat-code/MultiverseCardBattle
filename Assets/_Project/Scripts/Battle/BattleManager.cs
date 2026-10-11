@@ -1318,17 +1318,54 @@ namespace MultiverseCardBattle.Battle
                     HealUnit(null, unit, SinDevilHeal);
             }
 
+            // ความสามารถต้นเทิร์นที่ต้องเลือกเป้าหมาย (Grasp Heart / Geass) ทำทีละใบตามลำดับ
+            startPickQueue.Clear();
+
             foreach (CardInstance unit in new List<CardInstance>(player.Field))
             {
-                if (unit.Zone != CardZone.Field ||
-                    !unit.HasPassive(CardPassive.GraspHeart) ||
-                    unit.IsStunned)
+                if (unit.Zone != CardZone.Field || unit.IsStunned)
                     continue;
 
-                RequestGraspHeart(player, unit);
+                if (unit.HasPassive(CardPassive.GraspHeart))
+                    startPickQueue.Enqueue(new StartPick(player, unit, CardPassive.GraspHeart));
 
-                if (PendingTarget != null)
-                    return;
+                if (unit.HasPassive(CardPassive.Geass))
+                    startPickQueue.Enqueue(new StartPick(player, unit, CardPassive.Geass));
+            }
+
+            ProcessStartPicks();
+        }
+
+        private struct StartPick
+        {
+            public readonly BattlePlayer Player;
+            public readonly CardInstance Source;
+            public readonly CardPassive Passive;
+
+            public StartPick(BattlePlayer player, CardInstance source, CardPassive passive)
+            {
+                Player = player;
+                Source = source;
+                Passive = passive;
+            }
+        }
+
+        private readonly Queue<StartPick> startPickQueue = new Queue<StartPick>();
+
+        // ทำความสามารถต้นเทิร์นในคิวจนกว่าจะติดที่ต้องรอให้ผู้เล่นเลือกเป้าหมาย
+        private void ProcessStartPicks()
+        {
+            while (startPickQueue.Count > 0 && PendingTarget == null && !IsOver)
+            {
+                StartPick pick = startPickQueue.Dequeue();
+
+                // ระหว่างรอ ยูนิตอาจตายหรือโดนควบคุมไปแล้ว
+                if (pick.Source.Zone != CardZone.Field ||
+                    pick.Source.IsStunned ||
+                    pick.Source.IsSilenced)
+                    continue;
+
+                RequestStartPick(pick.Player, pick.Source, pick.Passive);
             }
         }
 
@@ -1368,7 +1405,10 @@ namespace MultiverseCardBattle.Battle
             }
         }
 
-        private void RequestGraspHeart(BattlePlayer player, CardInstance source)
+        private void RequestStartPick(
+            BattlePlayer player,
+            CardInstance source,
+            CardPassive passive)
         {
             BattlePlayer enemy = GetOpponent(player);
 
@@ -1385,8 +1425,8 @@ namespace MultiverseCardBattle.Battle
 
             if (IsAI(player))
             {
-                ApplyGraspHeart(
-                    player, source,
+                ApplyStartPick(
+                    player, source, passive,
                     candidates[UnityEngine.Random.Range(0, candidates.Count)]);
 
                 return;
@@ -1397,6 +1437,7 @@ namespace MultiverseCardBattle.Battle
                 Player = player,
                 Source = source,
                 Candidates = candidates,
+                Passive = passive,
                 Prompt = source.Data.CardName + ": choose an enemy unit"
             };
 
@@ -1416,13 +1457,59 @@ namespace MultiverseCardBattle.Battle
 
             PendingTarget = null;
 
-            ApplyGraspHeart(request.Player, request.Source, chosen);
+            ApplyStartPick(request.Player, request.Source, request.Passive, chosen);
+
+            // ยังมีความสามารถต้นเทิร์นใบอื่นรออยู่ (เช่น Ainz + Lelouch บนสนามพร้อมกัน)
+            ProcessStartPicks();
 
             Resolve();
 
             ContinueChain();
 
             return true;
+        }
+
+        private void ApplyStartPick(
+            BattlePlayer player,
+            CardInstance source,
+            CardPassive passive,
+            CardInstance target)
+        {
+            if (passive == CardPassive.Geass)
+                ApplyGeass(player, source, target);
+            else
+                ApplyGraspHeart(player, source, target);
+        }
+
+        // Geass: เป้าหมาย Stun 1 เทิร์น (โจมตี / ใช้ความสามารถไม่ได้ และสวนกลับไม่ได้) Ward กันได้
+        private void ApplyGeass(
+            BattlePlayer player,
+            CardInstance source,
+            CardInstance target)
+        {
+            CardInstance previousSource = ActiveEffectSource;
+            BattlePlayer previousPlayer = ActiveEffectPlayer;
+
+            ActiveEffectSource = source;
+            ActiveEffectPlayer = player;
+
+            if (target.HasKeyword(Keyword.Ward))
+            {
+                target.RemoveKeyword(Keyword.Ward);
+
+                Log(target.Data.CardName + "'s ward blocks the effect");
+            }
+            else
+            {
+                Log(source.Data.CardName + " commands " + target.Data.CardName + " with Geass");
+
+                target.AddStatus(StatusType.Stun, 0, 1);
+            }
+
+            ActiveEffectSource = previousSource;
+            ActiveEffectPlayer = previousPlayer;
+
+            Touch();
         }
 
         private void ApplyGraspHeart(

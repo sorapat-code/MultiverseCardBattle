@@ -42,6 +42,12 @@ namespace MultiverseCardBattle.Cards
         OverwhelmingPower = 1 << 9,
 
         // เป็นร่าง Devil Trigger: กลับร่างแล้วคง HP (ลดเหลือเพดานของร่างปกติ) และไม่ติด Fatigue
-        DevilTriggerForm = 1 << 10
+        DevilTriggerForm = 1 << 10,
+
+        // Lelouch (Geass): ต้นเทิร์นเลือกยูนิตศัตรู 1 ใบ ให้ Stun (โจมตี/ใช้ความสามารถไม่ได้)
+        Geass = 1 << 11,
+
+        // Lelouch (Chessmaster): ครั้งแรกในแต่ละเทิร์นที่เจ้าของเล่นการ์ดใบที่สอง จั่วการ์ด 1 ใบ
+        Chessmaster = 1 << 12
     }
 }

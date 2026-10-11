@@ -85,6 +85,9 @@ namespace MultiverseCardBattle.Cards
         WhitebeardPirates,
 
         // Honkai Impact 3rd
-        Schicksal
+        Schicksal,
+
+        // Code Geass
+        BlackKnights
     }
 }

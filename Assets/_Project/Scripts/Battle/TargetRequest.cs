@@ -13,5 +13,8 @@ namespace MultiverseCardBattle.Battle
         public CardInstance Source;
         public List<CardInstance> Candidates = new List<CardInstance>();
         public string Prompt;
+
+        // ความสามารถประจำการ์ดที่ขอให้เลือก (GraspHeart / Geass)
+        public MultiverseCardBattle.Cards.CardPassive Passive;
     }
 }

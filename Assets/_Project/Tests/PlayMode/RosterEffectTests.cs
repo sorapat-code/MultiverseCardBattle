@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng และคู่ Kiana / Mei</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei และ Lelouch</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -365,6 +365,64 @@ namespace MultiverseCardBattle.Tests
             Assert.IsTrue(battle.Submit(new AttackCommand(P1, kiana, null, P2)).Success);
 
             Assert.IsFalse(mei.HasKeyword(Keyword.Shield));
+        }
+
+        [Test]
+        public void Lelouch_Battlecry_StunsChosenEnemyUnit()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance lelouch = InHand("SUP_030");
+
+            List<TargetCandidate> options = BattleRules.GetPlayTargets(battle, P1, lelouch);
+
+            TargetCandidate chosen = null;
+
+            foreach (TargetCandidate option in options)
+            {
+                if (option.TargetObject == enemy)
+                    chosen = option;
+            }
+
+            Assert.IsNotNull(chosen);
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, lelouch, chosen)).Success);
+
+            Assert.IsTrue(enemy.IsStunned);
+        }
+
+        [Test]
+        public void Lelouch_TurnStart_GeassStunsEnemyUnit()
+        {
+            Place(P1, "SUP_030");
+
+            CardInstance enemy = EnemyWithHealth(9);
+
+            battle.OnTurnStartPassives(P1);
+
+            // มนุษย์ต้องคลิกเลือก / AI สุ่มเอง (ตัวเลือกเดียวจึงได้ตัวเดิม)
+            if (battle.HasPendingTarget)
+                Assert.IsTrue(battle.ResolvePendingTarget(enemy));
+
+            Assert.IsTrue(enemy.IsStunned);
+        }
+
+        [Test]
+        public void Lelouch_Chessmaster_SecondCardOfTheTurnDrawsOne()
+        {
+            Place(P1, "SUP_030");
+
+            CardInstance first = InHand("SUP_006");   // Connie, cost 1
+            CardInstance second = InHand("SUP_007");  // Sasha, cost 2
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, first)).Success);
+
+            // ใบแรก: ยังไม่จั่ว
+            Assert.AreEqual(1, P1.Hand.Count);
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, second)).Success);
+
+            // ใบที่สอง: เล่นออก 1 ใบ จั่วเข้ามา 1 ใบ
+            Assert.AreEqual(1, P1.Hand.Count);
         }
     }
 }

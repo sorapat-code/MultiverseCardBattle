@@ -28,6 +28,8 @@ namespace MultiverseCardBattle.Cards
         AttackOnTitan,
         ChainsawMan,
 
-        HonkaiImpact
+        HonkaiImpact,
+
+        CodeGeass
     }
 }

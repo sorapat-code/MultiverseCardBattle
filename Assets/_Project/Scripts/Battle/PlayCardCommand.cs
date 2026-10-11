@@ -146,6 +146,21 @@ namespace MultiverseCardBattle.Battle
 
             // นับหลังจบ Effect เพื่อให้ Combo ดูเฉพาะการ์ดที่ใช้ "ก่อนหน้า"
             Player.CardsPlayedThisTurn++;
+
+            // Chessmaster: ใบที่สองของเทิร์น จั่ว 1 ใบ (ยูนิตที่มี Passive นี้ต้องอยู่บนสนาม)
+            if (Player.CardsPlayedThisTurn == 2)
+            {
+                foreach (CardInstance unit in new System.Collections.Generic.List<CardInstance>(Player.Field))
+                {
+                    if (unit.Zone != CardZone.Field ||
+                        !unit.HasPassive(CardPassive.Chessmaster))
+                        continue;
+
+                    battle.Log(unit.Data.CardName + "'s Chessmaster draws a card");
+
+                    battle.DrawCard(Player);
+                }
+            }
         }
     }
 }

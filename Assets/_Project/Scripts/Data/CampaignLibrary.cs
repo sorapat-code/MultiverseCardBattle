@@ -132,7 +132,7 @@ namespace MultiverseCardBattle.Data
                     ("SUP_019", 3), ("SUP_023", 2), ("SUP_026", 2),
                     ("SUP_024", 2), ("SUP_021", 3), ("MAG_004", 4),
                     ("MAG_012", 1), ("SUP_005", 4)),
-                RewardCardIds = new List<string> { "SUP_026", "MAG_004", "MAG_013", "EQP_004" }
+                RewardCardIds = new List<string> { "SUP_026", "SUP_030", "MAG_004", "MAG_013", "EQP_004" }
             });
 
             stages.Add(new CampaignStage

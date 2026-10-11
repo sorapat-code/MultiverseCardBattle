@@ -249,6 +249,24 @@ namespace MultiverseCardBattle.Data
 
             Add(mei);
 
+            // Lelouch: Geass (Stun ศัตรู 1 ใบ ตอนลงสนามและต้นเทิร์น) + Chessmaster (ใบที่สองของเทิร์นจั่ว 1)
+            // Geass ต้นเทิร์น / Chessmaster ทำงานจาก CardPassive (BattleManager / PlayCardCommand)
+            CardData lelouch = Unit("SUP_030", "Lelouch vi Britannia",
+                Universe.CodeGeass, Faction.BlackKnights, CardRarity.Epic,
+                5, 3, 7, Keyword.Unique,
+                CardTag.Human | CardTag.Elite | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.Stun, 1)));
+
+            lelouch.Passives = CardPassive.Geass | CardPassive.Chessmaster;
+
+            lelouch.Description =
+                "Geass: When Lelouch enters the field or at the start of your turn, choose an enemy unit. " +
+                "It cannot attack or use abilities until the end of your next turn.\n" +
+                "Chessmaster: The first time each turn you play your second card, draw a card.";
+
+            Add(lelouch);
+
             // ================= เวทมนตร์ =================
 
             ElemSpell("MAG_001", "Spark", CardRarity.Common, 1, CardTag.Lightning,
