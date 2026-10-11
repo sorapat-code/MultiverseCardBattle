@@ -193,6 +193,8 @@ namespace MultiverseCardBattle.Screens
 
         // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
         private SecretCinematic cinematic;
+        private CoinToss coinToss;
+        private bool coinTossStarted;
         private SecretCinematic unlockCinematic;
         private int unlockCinematicIndex = -1;
 
@@ -296,6 +298,21 @@ namespace MultiverseCardBattle.Screens
                 battle.StartBattle();
                 return;
             }
+
+            // โยนเหรียญก่อนเริ่มเกม: ระหว่างฉากหยุด AI / อินพุต / Mulligan ทั้งหมด
+            if (battle.CoinFlipped && !coinTossStarted)
+            {
+                coinTossStarted = true;
+                bannerShown = true; // ฉากโยนเหรียญบอกผลแล้ว ไม่ต้องใช้ป้ายเดิมซ้ำ
+
+                coinToss = CoinToss.Play(
+                    root, "YOU", Ai.Name,
+                    battle.FirstPlayerID == Human.PlayerID,
+                    () => coinToss = null);
+            }
+
+            if (coinToss != null)
+                return;
 
             // Mulligan: รอผู้เล่นเลือกเปลี่ยนการ์ดก่อน ยังไม่เริ่มเทิร์นแรก
             if (battle.MulliganPending)

@@ -237,3 +237,11 @@ scene by card ID and mode; returns null -> shared timeline is used.
 
 Shared parts: `RingAnim`, `SlamText`, `EyePair`, `VergilCut` (slash line, optional palette), `SwordDrop`.
 Not yet compiled/run in Unity.
+
+## Coin toss (CoinToss)
+
+When `BattleSetup.UseCoinFlip` is on, `BattleScreen` plays `CoinToss` right after `StartBattle` (before mulligan).
+The result is already decided by `BattleManager`; the overlay only shows it: the coin arcs up, flips (front = YOU in
+gold, back = opponent in silver), lands with a bounce, then both name plates show 1ST / 2ND (second player: +1 card and
+The Coin) with a slam banner. AI, input and mulligan wait until it ends; click skips to the result, click again (or
+~8 s) continues. Not yet compiled/run in Unity.
