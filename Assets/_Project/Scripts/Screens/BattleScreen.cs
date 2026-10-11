@@ -2150,6 +2150,9 @@ namespace MultiverseCardBattle.Screens
             {
                 float power = Mathf.Clamp(-delta, 1, 8);
 
+                if (stage != null)
+                    stage.Shake(0.05f + power * 0.014f, 0.22f + power * 0.02f);
+
                 UiFx.Slash(
                     fxLayer, position, new Color(1f, 0.35f, 0.3f, 0.95f),
                     200f + power * 18f, 26f + power * 2f);
@@ -3427,6 +3430,9 @@ namespace MultiverseCardBattle.Screens
 
             SecretFx.Flash(root, theme, 0.3f, 0.35f);
             SecretFx.Shake(root, 10f, 0.3f);
+
+            if (stage != null)
+                stage.Shake(0.3f, 0.5f);
 
             Sfx.Play(SoundId.Hit);
 

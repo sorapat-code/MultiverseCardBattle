@@ -12,7 +12,7 @@ namespace MultiverseCardBattle.Screens
     /// ระบบ: Built-in Render Pipeline (Standard shader; ไม่มีก็ถอยไปใช้ Diffuse / Sprites/Default)
     /// พิกัดโลก: x = ขวา, y = ขึ้น, z = ไปทางฝั่งศัตรู กลางสนามคือ (0,0,0) ฝั่งผู้เล่นอยู่ z ติดลบ
     /// </summary>
-    public class BattleStage3D : MonoBehaviour
+    public partial class BattleStage3D : MonoBehaviour
     {
         public const float BoardHalfWidth = 7.6f;
         public const float BoardHalfDepth = 4.3f;
@@ -125,12 +125,14 @@ namespace MultiverseCardBattle.Screens
         private void Build()
         {
             BuildCamera();
+            BuildPostFx();
             BuildLights();
             BuildTable();
             BuildFrame();
             BuildGlowStrips();
             BuildFoliage();
             BuildParticles();
+            BuildScenery();
 
             Fit();
         }
@@ -282,10 +284,10 @@ namespace MultiverseCardBattle.Screens
             float w = BoardHalfWidth;
             float d = BoardHalfDepth;
 
-            enemyGlowMaterial = Unlit(new Color(1f, 0.3f, 0.5f, 0.2f), BoardArt.FadeDown.texture);
-            playerGlowMaterial = Unlit(new Color(0.3f, 0.8f, 1f, 0.2f), BoardArt.FadeUp.texture);
-            enemyLineMaterial = Unlit(new Color(1f, 0.3f, 0.5f, 0.5f), null);
-            playerLineMaterial = Unlit(new Color(0.3f, 0.8f, 1f, 0.5f), null);
+            enemyGlowMaterial = GlowMaterial(new Color(1.4f, 0.4f, 0.7f, 0.2f), BoardArt.FadeDown.texture, true);
+            playerGlowMaterial = GlowMaterial(new Color(0.4f, 1.1f, 1.5f, 0.2f), BoardArt.FadeUp.texture, true);
+            enemyLineMaterial = GlowMaterial(new Color(2.2f, 0.5f, 1f, 0.5f), null, true);
+            playerLineMaterial = GlowMaterial(new Color(0.5f, 1.6f, 2.2f, 0.5f), null, true);
 
             Quaternion flat = Quaternion.Euler(90f, 0f, 0f);
 
@@ -320,6 +322,15 @@ namespace MultiverseCardBattle.Screens
             SetAlpha(enemyLineMaterial, enemyTurn ? 1f : 0.4f);
             SetAlpha(playerGlowMaterial, playerTurn ? 0.85f : 0.2f);
             SetAlpha(playerLineMaterial, playerTurn ? 1f : 0.4f);
+
+            enemyBoostTarget = enemyTurn ? 1.25f : 0.55f;
+            playerBoostTarget = playerTurn ? 1.25f : 0.55f;
+
+            if (enemySlotMaterial != null)
+                SetAlpha(enemySlotMaterial, enemyTurn ? 0.75f : 0.28f);
+
+            if (playerSlotMaterial != null)
+                SetAlpha(playerSlotMaterial, playerTurn ? 0.75f : 0.28f);
 
             if (enemyLight != null)
                 enemyLight.intensity = enemyTurn ? 1.6f : 0.5f;
@@ -491,7 +502,7 @@ namespace MultiverseCardBattle.Screens
 
             ParticleSystemRenderer renderer = go.GetComponent<ParticleSystemRenderer>();
 
-            renderer.sharedMaterial = Unlit(Color.white, glow);
+            renderer.sharedMaterial = GlowMaterial(Hdr(Color.white, 2.4f, 1f), glow, true);
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
 
@@ -567,7 +578,9 @@ namespace MultiverseCardBattle.Screens
 
             float scale = Mathf.Max(1f, (16f / 9f) / aspect);
 
-            Cam.transform.position = camLook + (camBase - camLook) * scale;
+            fitPosition = camLook + (camBase - camLook) * scale;
+
+            Cam.transform.position = fitPosition;
             Cam.transform.LookAt(camLook);
         }
 
@@ -633,11 +646,15 @@ namespace MultiverseCardBattle.Screens
 
             float height = 0.04f + pixelSize.y * CardUnit * 0.5f * Mathf.Cos(FieldTilt * Mathf.Deg2Rad);
 
-            return CardHolder3D.Create(
+            CardHolder3D holder = CardHolder3D.Create(
                 transform, Cam, pixelSize,
                 new Vector3(x, height, z),
                 Quaternion.Euler(FieldTilt, 0f, 0f),
                 new Vector3(0f, 0.3f, -0.12f));
+
+            holder.BobPhase = index * 1.3f + (enemySide ? 2f : 0f);
+
+            return holder;
         }
 
         public CardHolder3D CreateHandHolder(int index, int count, Vector2 pixelSize)
@@ -675,9 +692,15 @@ namespace MultiverseCardBattle.Screens
         private CanvasGroup face;
 
         private Vector3 basePosition;
+        private Quaternion baseRotation;
         private Vector3 hoverOffset;
         private float hover;
         private bool hovered;
+        private Vector2 tilt;
+        private Camera viewCamera;
+
+        /// <summary>ลอยขึ้นลงเบาๆ ตอนอยู่นิ่ง (เฟสต่างกันตามช่อง) ไม่มี = นิ่ง</summary>
+        public float BobPhase = -1f;
 
         public static CardHolder3D Create(
             Transform parent, Camera camera, Vector2 pixelSize,
@@ -692,7 +715,9 @@ namespace MultiverseCardBattle.Screens
             CardHolder3D holder = go.AddComponent<CardHolder3D>();
 
             holder.basePosition = position;
+            holder.baseRotation = rotation;
             holder.hoverOffset = hoverOffset;
+            holder.viewCamera = camera;
 
             // Canvas ของหน้าการ์ด (มองเห็นจากด้าน -z ของ holder)
             GameObject canvasObject = new GameObject("CardCanvas", typeof(RectTransform));
@@ -727,10 +752,13 @@ namespace MultiverseCardBattle.Screens
                     shader = Shader.Find("Legacy Shaders/Diffuse");
 
                 bodyMaterial = new Material(shader);
-                bodyMaterial.color = new Color(0.2f, 0.15f, 0.08f, 1f);
+                bodyMaterial.color = new Color(0.78f, 0.58f, 0.24f, 1f);
 
                 if (bodyMaterial.HasProperty("_Glossiness"))
-                    bodyMaterial.SetFloat("_Glossiness", 0.3f);
+                    bodyMaterial.SetFloat("_Glossiness", 0.55f);
+
+                if (bodyMaterial.HasProperty("_Metallic"))
+                    bodyMaterial.SetFloat("_Metallic", 0.35f);
             }
 
             GameObject body = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -744,10 +772,10 @@ namespace MultiverseCardBattle.Screens
 
             body.transform.SetParent(go.transform, false);
             body.transform.localScale = new Vector3(
-                pixelSize.x * BattleStage3D.CardUnit,
-                pixelSize.y * BattleStage3D.CardUnit,
-                0.06f);
-            body.transform.localPosition = new Vector3(0f, 0f, 0.04f);
+                pixelSize.x * BattleStage3D.CardUnit - 0.05f,
+                pixelSize.y * BattleStage3D.CardUnit - 0.05f,
+                0.09f);
+            body.transform.localPosition = new Vector3(0f, 0f, 0.05f);
 
             Renderer renderer = body.GetComponent<Renderer>();
 
@@ -784,12 +812,42 @@ namespace MultiverseCardBattle.Screens
 
         private void Update()
         {
+            float dt = Time.unscaledDeltaTime;
+
             float target = hovered ? 1f : 0f;
 
-            hover = Mathf.Lerp(hover, target, 1f - Mathf.Exp(-16f * Time.unscaledDeltaTime));
+            hover = Mathf.Lerp(hover, target, 1f - Mathf.Exp(-16f * dt));
 
             // ยกขึ้นตามแกนของโลก (เข้าหากล้องและสูงขึ้น)
-            transform.localPosition = basePosition + hoverOffset * hover;
+            Vector3 position = basePosition + hoverOffset * hover;
+
+            if (BobPhase >= 0f)
+                position.y += Mathf.Sin(Time.unscaledTime * 1.5f + BobPhase) * 0.025f * (1f - hover);
+
+            transform.localPosition = position;
+
+            // ชี้แล้วการ์ดเอียงเข้าหาเมาส์: ขอบด้านเมาส์จมลง
+            Vector2 wanted = Vector2.zero;
+
+            if (hovered && viewCamera != null && UnityEngine.InputSystem.Pointer.current != null)
+            {
+                Vector2 pointer = UnityEngine.InputSystem.Pointer.current.position.ReadValue();
+
+                Vector3 center = viewCamera.WorldToScreenPoint(transform.position);
+                Vector3 edge = viewCamera.WorldToScreenPoint(transform.position + transform.right * 0.75f);
+                Vector3 top = viewCamera.WorldToScreenPoint(transform.position + transform.up * 1.05f);
+
+                float halfWidth = Mathf.Max(8f, Mathf.Abs(edge.x - center.x));
+                float halfHeight = Mathf.Max(8f, Mathf.Abs(top.y - center.y));
+
+                wanted = new Vector2(
+                    Mathf.Clamp((pointer.x - center.x) / halfWidth, -1f, 1f),
+                    Mathf.Clamp((pointer.y - center.y) / halfHeight, -1f, 1f));
+            }
+
+            tilt = Vector2.Lerp(tilt, wanted, 1f - Mathf.Exp(-14f * dt));
+
+            transform.localRotation = baseRotation * Quaternion.Euler(tilt.y * 9f, -tilt.x * 11f, 0f);
         }
 
         private void LateUpdate()

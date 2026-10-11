@@ -324,3 +324,9 @@ board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). A
 - เมนู, HUD, Leader, ปุ่ม, พรีวิว, ghost ตอนลาก ยังเป็น UI 2D ซ้อนทับ; ตำแหน่ง FX แปลงด้วย `UiFx.ScreenOf`
 - ปล่อยการ์ดลงสนามเช็คด้วย ray-plane (`IsOverBoard`); จอแคบกว่า 16:9 กล้องถอยออกอัตโนมัติ
 - ใช้ Built-in pipeline (Standard shader ถูกใส่ใน Always Included Shaders)
+
+### กราฟิกโต๊ะ 3D รอบตกแต่ง (BattleStage3D.Scenery / StagePostFx)
+
+- เสาหินคริสตัลเรืองแสงสี่มุม (ชมพูศัตรู/ฟ้าเรา สว่างตามเทิร์น), วงรูนกลางสนามหมุนช้า, กรอบช่องวางยูนิต 7 ช่องต่อฝั่ง, ลำแสงลอดใบไม้, หมอกพื้น, ละอองแสง
+- โพสต์เอฟเฟกต์เขียนเองด้วย `Resources/MCBPostFx.shader` + `StagePostFx` (Bloom สองระดับ, ปรับสี, วิกเน็ต) ไม่ต้องติดตั้ง package; เชดเดอร์เรืองแสง `Resources/MCBGlow.shader`
+- กล้องขยับตามเมาส์เล็กน้อยและสั่นตอนโดนตี (`stage.Shake`); การ์ดมีขอบทอง ลอยเบาๆ และเอียงตามเมาส์ตอนชี้
