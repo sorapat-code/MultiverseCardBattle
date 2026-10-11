@@ -123,13 +123,19 @@ namespace MultiverseCardBattle.Screens
                 }
             }
 
-            if (!found || renderers.Length == 0 || max.y - min.y < 0.00001f)
+            if (!found || renderers.Length == 0 || max.y - min.y < 0.00001f && max.x - min.x < 0.00001f)
             {
                 Destroy(go);
                 return null;
             }
 
-            float scale = height / (max.y - min.y);
+            // ชิ้นที่นอนราบ (ท่อนไม้ กิ่งไม้) สูงนิดเดียว ถ้าวัดแค่ความสูงจะถูกขยายมหาศาล
+            // จึงใช้ค่าอ้างอิงที่ไม่ต่ำกว่า 60% ของด้านที่ยาวที่สุด
+            Vector3 size = max - min;
+
+            float reference = Mathf.Max(size.y, 0.6f * Mathf.Max(size.x, size.z));
+
+            float scale = height / reference;
 
             go.transform.localScale = Vector3.one * scale;
             go.transform.localPosition = new Vector3(x, GroundY - sink - min.y * scale, z);

@@ -104,6 +104,39 @@ namespace MultiverseCardBattle.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            // รายงาน material ของ prefab ที่เก็บมา (ไว้ตรวจว่าสี/texture หายตรงไหน)
+            List<string> report = new List<string>();
+
+            foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { Target }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+
+                if (prefab == null)
+                    continue;
+
+                HashSet<string> seen = new HashSet<string>();
+
+                foreach (Renderer renderer in prefab.GetComponentsInChildren<Renderer>(true))
+                {
+                    foreach (Material material in renderer.sharedMaterials)
+                    {
+                        if (material == null || !seen.Add(material.name))
+                            continue;
+
+                        string texture = material.HasProperty("_MainTex") && material.GetTexture("_MainTex") != null
+                            ? material.GetTexture("_MainTex").name : "none";
+
+                        string color = material.HasProperty("_Color") ? ColorUtility.ToHtmlStringRGBA(material.GetColor("_Color")) : "-";
+
+                        report.Add(prefab.name + " / " + material.name + " shader=" + material.shader.name +
+                            " tex=" + texture + " color=" + color);
+                    }
+                }
+            }
+
+            Debug.Log("[CollectNaturePrefabs] materials:\n" + string.Join("\n", report));
+
             string summary = "";
 
             foreach (KeyValuePair<string, int> pair in counts)
