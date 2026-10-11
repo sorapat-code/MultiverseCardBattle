@@ -95,6 +95,8 @@ namespace MultiverseCardBattle.Data
 
             profile.Data.StatDisenchanted += amount;
 
+            DailyService.Report(profile, QuestMetric.CraftOrDisenchant, amount);
+
             message = "Disenchanted " + card.CardName + " x" + amount +
                 " (+" + dust + " Dust)";
 
@@ -128,6 +130,8 @@ namespace MultiverseCardBattle.Data
             {
                 profile.AddDust(dust);
                 profile.Data.StatDisenchanted += cards;
+
+                DailyService.Report(profile, QuestMetric.CraftOrDisenchant, cards);
             }
 
             return dust;
@@ -181,6 +185,8 @@ namespace MultiverseCardBattle.Data
             profile.AddCard(card.CardID, 1);
 
             profile.Data.StatCrafted++;
+
+            DailyService.Report(profile, QuestMetric.CraftOrDisenchant, 1);
 
             message = "Crafted " + card.CardName + " (-" + cost + " Dust)";
 

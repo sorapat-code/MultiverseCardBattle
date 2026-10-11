@@ -493,6 +493,7 @@ namespace MultiverseCardBattle.Battle
                 if (wasOnField)
                 {
                     Stats.AddUnitDeath(owner.PlayerID);
+                    Stats.AddUnitKilled(owner.PlayerID == 1 ? 2 : 1);
 
                     RegisterEffectDeath(card, owner);
 
@@ -693,6 +694,7 @@ namespace MultiverseCardBattle.Battle
                 target.LeaderHealth = 0;
 
             Stats.NoteLeaderHealth(target);
+            Stats.AddLeaderDamage(target.PlayerID == 1 ? 2 : 1, amount);
 
             Log(target.Name + " takes " + amount + " damage");
 

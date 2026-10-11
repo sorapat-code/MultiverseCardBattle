@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MultiverseCardBattle.Battle
@@ -22,6 +23,17 @@ namespace MultiverseCardBattle.Battle
 
         // จำนวน Spell ที่ใช้
         public readonly int[] SpellsPlayed = new int[3];
+
+        // การ์ดทั้งหมดที่ใช้ (รวม Spell) / ยูนิตศัตรูที่ตาย / ดาเมจที่ทำกับ Leader ศัตรู
+        public readonly int[] CardsPlayed = new int[3];
+        public readonly int[] UnitsKilled = new int[3];
+        public readonly int[] LeaderDamage = new int[3];
+
+        // ID การ์ดที่ใช้ในแมตช์นี้ (ไม่ซ้ำ) ของแต่ละฝั่ง ใช้คิด Mastery
+        public readonly List<string>[] PlayedCardIds =
+        {
+            new List<string>(), new List<string>(), new List<string>()
+        };
 
         // ยูนิตศัตรูที่ถูกกำจัดด้วยเอฟเฟกต์ (Spell / ความสามารถการ์ด) ไม่ใช่การต่อสู้
         public readonly int[] EffectKills = new int[3];
@@ -65,6 +77,30 @@ namespace MultiverseCardBattle.Battle
         {
             if (Valid(playerId) && totalAttacks >= 3)
                 TripleAttacker[playerId] = true;
+        }
+
+        public void AddCardPlayed(int playerId, string cardId)
+        {
+            if (!Valid(playerId))
+                return;
+
+            CardsPlayed[playerId]++;
+
+            if (!string.IsNullOrEmpty(cardId) &&
+                !PlayedCardIds[playerId].Contains(cardId))
+                PlayedCardIds[playerId].Add(cardId);
+        }
+
+        public void AddUnitKilled(int killerId)
+        {
+            if (Valid(killerId))
+                UnitsKilled[killerId]++;
+        }
+
+        public void AddLeaderDamage(int attackerId, int amount)
+        {
+            if (Valid(attackerId) && amount > 0)
+                LeaderDamage[attackerId] += amount;
         }
 
         public void AddSpellPlayed(int playerId)

@@ -13,6 +13,13 @@ namespace MultiverseCardBattle.Data
         public bool OpponentDeckOut;
         public bool SecretSummoned;
         public List<string> SecretIds = new List<string>();
+
+        // ใช้กับ Daily Quest และ Mastery
+        public int CardsPlayed;
+        public int SpellsPlayed;
+        public int UnitsKilled;
+        public int LeaderDamage;
+        public List<string> PlayedCardIds = new List<string>();
     }
 
     public class AchievementDef

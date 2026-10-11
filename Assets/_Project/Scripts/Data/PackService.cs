@@ -63,6 +63,8 @@ namespace MultiverseCardBattle.Data
 
             profile.Data.StatPacks++;
 
+            DailyService.Report(profile, QuestMetric.OpenPacks, 1);
+
             List<PackPull> pulls = new List<PackPull>();
 
             foreach (CardData card in cards)

@@ -1672,6 +1672,12 @@ namespace MultiverseCardBattle.Screens
                 summary.SecretSummoned = battle.SecretCardSummoned;
                 summary.SecretIds.AddRange(battle.SecretsSummoned);
 
+                summary.CardsPlayed = battle.Stats.CardsPlayed[Human.PlayerID];
+                summary.SpellsPlayed = battle.Stats.SpellsPlayed[Human.PlayerID];
+                summary.UnitsKilled = battle.Stats.UnitsKilled[Human.PlayerID];
+                summary.LeaderDamage = battle.Stats.LeaderDamage[Human.PlayerID];
+                summary.PlayedCardIds.AddRange(battle.Stats.PlayedCardIds[Human.PlayerID]);
+
                 unlockBanners = SecretCardService.Evaluate(
                     battle, Human.PlayerID, won, SaveManager.Profile);
 

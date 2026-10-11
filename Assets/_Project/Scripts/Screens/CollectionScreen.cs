@@ -296,7 +296,7 @@ namespace MultiverseCardBattle.Screens
                 "      Dust: " + profile.Dust + "\n" +
                 "Craft: " + CardEconomy.CraftCost(card.Rarity) +
                 " Dust      Disenchant: +" + CardEconomy.DisenchantValue(card.Rarity) +
-                " Dust</size>";
+                " Dust" + MasteryLine(profile, card) + "</size>";
 
             modalHints.text = GameGlossary.HintsFor(card, null);
 
@@ -319,6 +319,31 @@ namespace MultiverseCardBattle.Screens
 
             if (!canCraft && string.IsNullOrEmpty(modalMessage.text))
                 modalMessage.text = "<color=#A0A0A0>" + reason + "</color>";
+        }
+
+        // Mastery (เฉพาะการ์ด Epic ขึ้นไป): เลเวล XP รางวัลถัดไป และกรอบ
+        private static string MasteryLine(PlayerProfile profile, CardData card)
+        {
+            if (!MasteryService.IsEligible(card))
+                return "";
+
+            int xp = MasteryService.GetXp(profile, card.CardID);
+            int level = MasteryService.LevelFor(xp);
+
+            string frame = MasteryService.FrameName(level);
+
+            if (level >= MasteryService.MaxLevel)
+            {
+                return "\n<color=#FFE070>Mastery Lv " + level + " (MAX)</color>" +
+                       (frame.Length > 0 ? "  -  " + frame : "");
+            }
+
+            int next = MasteryService.XpAt(level + 1);
+
+            return "\n<color=#FFE070>Mastery Lv " + level + "</color>  " +
+                   xp + " / " + next + " XP  -  next: " +
+                   MasteryService.RewardText(level + 1) +
+                   (frame.Length > 0 ? "  -  " + frame : "");
         }
 
         private void OnCraftClicked()

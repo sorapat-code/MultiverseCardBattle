@@ -180,8 +180,13 @@ namespace MultiverseCardBattle.Data
             if (playerWon)
                 profile.Data.StatWins++;
 
+            DailyService.ReportBattle(profile, playerWon, summary);
+
             if (summary != null)
             {
+                lines.AddRange(MasteryService.ApplyBattle(
+                    profile, summary.PlayedCardIds, playerWon));
+
                 if (summary.SecretSummoned)
                     profile.Data.StatSecrets++;
 

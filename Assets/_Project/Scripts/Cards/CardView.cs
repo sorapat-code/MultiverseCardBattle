@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Core;
 using MultiverseCardBattle.Data;
 
 namespace MultiverseCardBattle.Screens
@@ -38,6 +39,7 @@ namespace MultiverseCardBattle.Screens
         private Image background;
         private Image artFrame;
         private Image artwork;
+        private bool masteryFrame = true;
         private AspectRatioFitter artFitter;
         private Outline outline;
         private CanvasGroup group;
@@ -281,6 +283,9 @@ namespace MultiverseCardBattle.Screens
             Instance = card;
             Data = card == null ? null : card.Data;
 
+            // กรอบ Mastery ใช้กับการ์ดของผู้เล่น (ฝั่ง 1) เท่านั้น ไม่ใช่การ์ดศัตรู
+            masteryFrame = card != null && card.OwnerID != 2;
+
             if (card == null || card.Data == null)
             {
                 gameObject.SetActive(false);
@@ -361,6 +366,8 @@ namespace MultiverseCardBattle.Screens
             Instance = null;
             Data = data;
 
+            masteryFrame = true;
+
             if (data == null)
             {
                 gameObject.SetActive(false);
@@ -393,6 +400,17 @@ namespace MultiverseCardBattle.Screens
         private void ApplyCommon(CardData data)
         {
             background.color = RarityBorder(data.Rarity);
+
+            // Mastery: เลเวลสูงขึ้นได้กรอบ Bronze / Gold / Platinum
+            if (masteryFrame && MasteryService.IsEligible(data))
+            {
+                Color? frame = MasteryService.FrameColor(
+                    MasteryService.GetLevel(SaveManager.Profile, data.CardID));
+
+                if (frame.HasValue)
+                    background.color = frame.Value;
+            }
+
             artFrame.color = UniverseColor(data.Universe, data.Type);
 
             nameText.text = data.CardName;

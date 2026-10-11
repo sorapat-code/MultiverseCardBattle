@@ -43,6 +43,14 @@ namespace MultiverseCardBattle.Screens
         private RectTransform glossaryPanel;
         private RectTransform achievementPanel;
         private RectTransform achievementList;
+        private RectTransform dailyPanel;
+        private RectTransform dailyContent;
+        private RectTransform milestonePanel;
+        private RectTransform milestoneList;
+        private Text dailyGoldText;
+        private Text milestoneGoldText;
+        private Button dailyMenuButton;
+        private Button milestoneMenuButton;
         private Text achievementSummary;
 
         private Text message;
@@ -66,12 +74,16 @@ namespace MultiverseCardBattle.Screens
             helpPanel = CreatePanel("HelpPanel");
             glossaryPanel = CreatePanel("GlossaryPanel");
             achievementPanel = CreatePanel("AchievementPanel");
+            dailyPanel = CreatePanel("DailyPanel");
+            milestonePanel = CreatePanel("MilestonePanel");
 
             BuildMain();
             BuildShop();
             BuildHelp();
             BuildGlossary();
             BuildAchievements();
+            BuildDaily();
+            BuildMilestones();
 
             Show(mainPanel);
         }
@@ -92,7 +104,10 @@ namespace MultiverseCardBattle.Screens
             helpPanel.gameObject.SetActive(panel == helpPanel);
             glossaryPanel.gameObject.SetActive(panel == glossaryPanel);
             achievementPanel.gameObject.SetActive(panel == achievementPanel);
+            dailyPanel.gameObject.SetActive(panel == dailyPanel);
+            milestonePanel.gameObject.SetActive(panel == milestonePanel);
 
+            RefreshMenuNotices();
             RefreshGold();
         }
 
@@ -106,6 +121,29 @@ namespace MultiverseCardBattle.Screens
 
             if (shopGoldText != null)
                 shopGoldText.text = gold;
+
+            if (dailyGoldText != null)
+                dailyGoldText.text = gold;
+
+            if (milestoneGoldText != null)
+                milestoneGoldText.text = gold;
+        }
+
+        // ปุ่มเมนูมี "(!)" เมื่อมีรางวัลให้รับ
+        private void RefreshMenuNotices()
+        {
+            if (dailyMenuButton == null)
+                return;
+
+            PlayerProfile profile = SaveManager.Profile;
+
+            UIFactory.SetButtonLabel(
+                dailyMenuButton,
+                DailyService.HasClaimable(profile) ? "Daily Rewards (!)" : "Daily Rewards");
+
+            UIFactory.SetButtonLabel(
+                milestoneMenuButton,
+                MilestoneService.HasClaimable(profile) ? "Milestones (!)" : "Milestones");
         }
 
         // ---------- เมนูหลัก ----------
@@ -154,10 +192,10 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.AddTextShadow(goldText);
 
-            // ปุ่มเมนู 2 คอลัมน์ 5 แถว + ปุ่มออกตรงกลางแถวสุดท้าย
-            float y = 0.70f;
-            const float height = 0.08f;
-            const float step = 0.095f;
+            // ปุ่มเมนู 2 คอลัมน์ 6 แถว + ปุ่มออกตรงกลางแถวสุดท้าย
+            float y = 0.725f;
+            const float height = 0.07f;
+            const float step = 0.082f;
 
             ScreenKit.AddButton(mainPanel, "Campaign",
                 () => SceneLoader.Go(GameScene.Campaign),
@@ -200,6 +238,26 @@ namespace MultiverseCardBattle.Screens
                     Show(achievementPanel);
                 },
                 UIFactory.Accent, 0.51f, y, 0.78f, y + height);
+
+            y -= step;
+
+            dailyMenuButton = ScreenKit.AddButton(mainPanel, "Daily Rewards",
+                () =>
+                {
+                    RebuildDaily();
+
+                    Show(dailyPanel);
+                },
+                UIFactory.Success, 0.22f, y, 0.49f, y + height, 26);
+
+            milestoneMenuButton = ScreenKit.AddButton(mainPanel, "Milestones",
+                () =>
+                {
+                    RebuildMilestones();
+
+                    Show(milestonePanel);
+                },
+                UIFactory.Accent, 0.51f, y, 0.78f, y + height, 26);
 
             y -= step;
 
@@ -463,6 +521,288 @@ namespace MultiverseCardBattle.Screens
                     24, UIFactory.TextColor, TextAnchor.MiddleRight, FontStyle.Bold);
 
                 UIFactory.SetAnchors(state.rectTransform, 0.6f, 0.05f, 0.97f, 0.5f);
+            }
+        }
+
+        // ---------- Daily Rewards ----------
+
+        private void BuildDaily()
+        {
+            UIFactory.CreateTitle(dailyPanel, "DAILY REWARDS");
+
+            dailyGoldText = ScreenKit.AddLabel(
+                dailyPanel, "", 30, TextAnchor.MiddleRight,
+                0.62f, 0.93f, 0.98f, 0.99f, FontStyle.Bold);
+
+            dailyGoldText.color = UIFactory.Gold;
+
+            dailyContent = UIFactory.CreateZone(
+                dailyPanel, "DailyContent", 0.04f, 0.13f, 0.96f, 0.9f);
+
+            ScreenKit.AddButton(dailyPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+
+        private void RebuildDaily()
+        {
+            ScreenKit.ClearNow(dailyContent);
+
+            PlayerProfile profile = SaveManager.Profile;
+
+            DailyService.EnsureToday(profile);
+
+            // ----- Daily Login -----
+            Text loginTitle = ScreenKit.AddLabel(
+                dailyContent, "Daily Login  -  come back every day (a missed day restarts the 7-day cycle)",
+                26, TextAnchor.MiddleLeft, 0f, 0.88f, 1f, 1f, FontStyle.Bold);
+
+            loginTitle.color = UIFactory.Gold;
+
+            int claimedDays = DailyService.ClaimedDaysInCycle(profile);
+            bool canClaim = DailyService.CanClaimLogin(profile);
+            int nextDay = DailyService.NextLoginDay(profile);
+
+            int cells = DailyService.LoginRewards.Length;
+
+            for (int i = 0; i < cells; i++)
+            {
+                float x0 = i / (float)cells + 0.004f;
+                float x1 = (i + 1) / (float)cells - 0.004f;
+
+                bool done = i < claimedDays;
+                bool isNext = canClaim && i + 1 == nextDay;
+
+                Image cell = UIFactory.CreateFramedPanel(
+                    dailyContent, "Login" + (i + 1),
+                    done
+                        ? new Color(0.22f, 0.17f, 0.08f, 0.96f)
+                        : (isNext ? new Color(0.3f, 0.22f, 0.08f, 0.98f) : UIFactory.Panel));
+
+                UIFactory.SetAnchors(cell.rectTransform, x0, 0.62f, x1, 0.86f);
+
+                Text day = UIFactory.CreateText(
+                    cell.transform, "Day " + (i + 1), 24,
+                    done || isNext ? UIFactory.Gold : UIFactory.TextColor,
+                    TextAnchor.MiddleCenter, FontStyle.Bold);
+
+                UIFactory.SetAnchors(day.rectTransform, 0.02f, 0.62f, 0.98f, 0.98f);
+
+                Text reward = UIFactory.CreateText(
+                    cell.transform,
+                    done ? "<color=#70E080>CLAIMED</color>" : DailyService.LoginRewards[i].Text,
+                    20, UIFactory.TextColor, TextAnchor.MiddleCenter);
+
+                UIFactory.SetAnchors(reward.rectTransform, 0.02f, 0.05f, 0.98f, 0.6f);
+            }
+
+            Button claim = ScreenKit.AddButton(
+                dailyContent,
+                canClaim ? "Claim Day " + nextDay + " Reward" : "Come back tomorrow",
+                () =>
+                {
+                    DailyService.ClaimLogin(SaveManager.Profile);
+
+                    SaveManager.Save();
+
+                    Sfx.Play(SoundId.Pack);
+
+                    RebuildDaily();
+                    RefreshGold();
+                    RefreshMenuNotices();
+                },
+                canClaim ? UIFactory.Success : UIFactory.Muted,
+                0.3f, 0.5f, 0.7f, 0.6f, 26);
+
+            claim.interactable = canClaim;
+
+            // ----- Daily Quests -----
+            System.TimeSpan left = DailyService.TimeUntilReset;
+
+            Text questTitle = ScreenKit.AddLabel(
+                dailyContent,
+                "Daily Quests  -  new quests in " + (int)left.TotalHours + "h " + left.Minutes + "m",
+                26, TextAnchor.MiddleLeft, 0f, 0.4f, 1f, 0.48f, FontStyle.Bold);
+
+            questTitle.color = UIFactory.Gold;
+
+            RectTransform questZone = UIFactory.CreateZone(
+                dailyContent, "Quests", 0f, 0.1f, 1f, 0.4f);
+
+            UIFactory.AddVertical(questZone, 8f, 0);
+
+            foreach (DailyQuestState state in DailyService.Quests(profile))
+            {
+                QuestDef def = DailyService.GetDef(state.Id);
+
+                if (def == null)
+                    continue;
+
+                bool complete = DailyService.IsComplete(state);
+
+                Image row = UIFactory.CreateFramedPanel(
+                    questZone, "Quest_" + def.Id,
+                    state.Claimed
+                        ? new Color(0.2f, 0.16f, 0.1f, 0.9f)
+                        : UIFactory.Panel);
+
+                row.rectTransform.sizeDelta = new Vector2(0f, 76f);
+
+                string reward = new LoginReward { Gold = def.RewardGold, Dust = def.RewardDust }.Text;
+
+                Text title = UIFactory.CreateText(
+                    row.transform, def.Description, 26,
+                    state.Claimed ? UIFactory.GoldDim : UIFactory.TextColor,
+                    TextAnchor.MiddleLeft, FontStyle.Bold);
+
+                UIFactory.SetAnchors(title.rectTransform, 0.02f, 0.08f, 0.5f, 0.92f);
+
+                Text progress = UIFactory.CreateText(
+                    row.transform,
+                    Mathf.Min(state.Progress, def.Target) + " / " + def.Target,
+                    26, UIFactory.TextColor, TextAnchor.MiddleCenter);
+
+                UIFactory.SetAnchors(progress.rectTransform, 0.5f, 0.08f, 0.62f, 0.92f);
+
+                Text rewardText = UIFactory.CreateText(
+                    row.transform, reward, 22, UIFactory.GoldDim,
+                    TextAnchor.MiddleCenter);
+
+                UIFactory.SetAnchors(rewardText.rectTransform, 0.62f, 0.08f, 0.8f, 0.92f);
+
+                string questId = def.Id;
+
+                Button button = ScreenKit.AddButton(
+                    row.transform,
+                    state.Claimed ? "Claimed" : (complete ? "Claim" : "In progress"),
+                    () =>
+                    {
+                        DailyService.Claim(SaveManager.Profile, questId);
+
+                        SaveManager.Save();
+
+                        Sfx.Play(SoundId.Pack);
+
+                        RebuildDaily();
+                        RefreshGold();
+                        RefreshMenuNotices();
+                    },
+                    complete && !state.Claimed ? UIFactory.Success : UIFactory.Muted,
+                    0.82f, 0.12f, 0.98f, 0.88f, 22);
+
+                button.interactable = complete && !state.Claimed;
+            }
+
+            bool bonus = DailyService.CanClaimBonus(profile);
+
+            Button bonusButton = ScreenKit.AddButton(
+                dailyContent,
+                profile.Data.QuestBonusClaimed
+                    ? "Bonus claimed"
+                    : "All quests bonus: +" + DailyService.BonusGold + " Gold  +" +
+                      DailyService.BonusDust + " Dust",
+                () =>
+                {
+                    DailyService.ClaimBonus(SaveManager.Profile);
+
+                    SaveManager.Save();
+
+                    Sfx.Play(SoundId.Pack);
+
+                    RebuildDaily();
+                    RefreshGold();
+                    RefreshMenuNotices();
+                },
+                bonus ? UIFactory.Success : UIFactory.Muted,
+                0.25f, 0f, 0.75f, 0.09f, 24);
+
+            bonusButton.interactable = bonus;
+        }
+
+        // ---------- Collection Milestones ----------
+
+        private void BuildMilestones()
+        {
+            UIFactory.CreateTitle(milestonePanel, "COLLECTION MILESTONES");
+
+            milestoneGoldText = ScreenKit.AddLabel(
+                milestonePanel, "", 30, TextAnchor.MiddleRight,
+                0.62f, 0.93f, 0.98f, 0.99f, FontStyle.Bold);
+
+            milestoneGoldText.color = UIFactory.Gold;
+
+            ScreenKit.AddScroll(
+                milestonePanel, "MilestoneScroll",
+                0.08f, 0.14f, 0.92f, 0.9f, out milestoneList);
+
+            UIFactory.AddVertical(milestoneList, 8f, 10);
+
+            ScreenKit.AddButton(milestonePanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+
+        private void RebuildMilestones()
+        {
+            ScreenKit.ClearNow(milestoneList);
+
+            PlayerProfile profile = SaveManager.Profile;
+
+            foreach (MilestoneDef def in MilestoneService.All)
+            {
+                bool claimed = MilestoneService.IsClaimed(profile, def);
+                bool reached = MilestoneService.IsReached(profile, def);
+
+                Image row = UIFactory.CreateFramedPanel(
+                    milestoneList, "Row_" + def.Id,
+                    claimed
+                        ? new Color(0.2f, 0.16f, 0.1f, 0.9f)
+                        : UIFactory.Panel);
+
+                row.rectTransform.sizeDelta = new Vector2(0f, 96f);
+
+                Text title = UIFactory.CreateText(
+                    row.transform, def.Title, 28,
+                    claimed ? UIFactory.GoldDim : UIFactory.Gold,
+                    TextAnchor.MiddleLeft, FontStyle.Bold);
+
+                UIFactory.SetAnchors(title.rectTransform, 0.02f, 0.5f, 0.55f, 0.95f);
+
+                Text description = UIFactory.CreateText(
+                    row.transform,
+                    def.Description + "   (" +
+                    Mathf.Min(def.Progress(profile), def.Target) + " / " + def.Target + ")",
+                    22, new Color(0.8f, 0.76f, 0.68f, 1f), TextAnchor.MiddleLeft);
+
+                UIFactory.SetAnchors(description.rectTransform, 0.02f, 0.05f, 0.55f, 0.5f);
+
+                Text reward = UIFactory.CreateText(
+                    row.transform, def.RewardText, 24, UIFactory.GoldDim,
+                    TextAnchor.MiddleCenter);
+
+                UIFactory.SetAnchors(reward.rectTransform, 0.55f, 0.1f, 0.77f, 0.9f);
+
+                string milestoneId = def.Id;
+
+                Button button = ScreenKit.AddButton(
+                    row.transform,
+                    claimed ? "Claimed" : (reached ? "Claim" : "Locked"),
+                    () =>
+                    {
+                        MilestoneService.Claim(SaveManager.Profile, milestoneId);
+
+                        SaveManager.Save();
+
+                        Sfx.Play(SoundId.Pack);
+
+                        RebuildMilestones();
+                        RefreshGold();
+                        RefreshMenuNotices();
+                    },
+                    reached && !claimed ? UIFactory.Success : UIFactory.Muted,
+                    0.79f, 0.15f, 0.98f, 0.85f, 24);
+
+                button.interactable = reached && !claimed;
             }
         }
 

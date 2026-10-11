@@ -32,6 +32,26 @@ namespace MultiverseCardBattle.Data
         }
     }
 
+    /// <summary>ภารกิจรายวันที่สุ่มได้วันนี้ และความคืบหน้า</summary>
+    [Serializable]
+    public class DailyQuestState
+    {
+        public string Id;
+        public int Progress;
+        public bool Claimed;
+    }
+
+    /// <summary>ค่าความชำนาญ (Mastery) ของการ์ดแต่ละใบ</summary>
+    [Serializable]
+    public class MasteryEntry
+    {
+        public string CardID;
+        public int Xp;
+
+        // เลเวลสูงสุดที่แจกรางวัลไปแล้ว
+        public int RewardedLevel;
+    }
+
     /// <summary>
     /// ข้อมูลที่บันทึกลงไฟล์ (JsonUtility)
     /// </summary>
@@ -39,7 +59,8 @@ namespace MultiverseCardBattle.Data
     public class SaveData
     {
         // 1 = ก่อนมี Gold / 2 = มี Gold และตั้งค่าเสียง / 3 = มี Dust และ Achievement
-        public const int CurrentVersion = 3;
+        // 4 = มี Daily Login / Daily Quest / Mastery / Milestone
+        public const int CurrentVersion = 4;
 
         public int Version = CurrentVersion;
 
@@ -71,6 +92,21 @@ namespace MultiverseCardBattle.Data
 
         // Achievement ที่ปลดล็อกแล้ว (รางวัลถูกแจกตอนปลดล็อก)
         public List<string> Achievements = new List<string>();
+
+        // Daily Login: วันที่รับล่าสุด (yyyy-MM-dd) และจำนวนวันติดต่อกัน
+        public string LoginLastClaim = "";
+        public int LoginStreak;
+
+        // Daily Quest: วันที่ของชุดภารกิจนี้ + สถานะ + รับโบนัสครบทุกอันแล้วหรือยัง
+        public string QuestDate = "";
+        public List<DailyQuestState> Quests = new List<DailyQuestState>();
+        public bool QuestBonusClaimed;
+
+        // Mastery ของการ์ด Epic ขึ้นไป
+        public List<MasteryEntry> Mastery = new List<MasteryEntry>();
+
+        // Collection Milestone ที่รับรางวัลแล้ว
+        public List<string> ClaimedMilestones = new List<string>();
     }
 
     /// <summary>

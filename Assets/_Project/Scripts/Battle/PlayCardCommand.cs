@@ -33,6 +33,8 @@ namespace MultiverseCardBattle.Battle
 
             battle.Log(Player.Name + " plays " + Card.Data.CardName);
 
+            battle.Stats.AddCardPlayed(Player.PlayerID, Card.Data.CardID);
+
             bool isUnit = Card.Data.Type == CardType.Unit;
 
             if (isUnit)
