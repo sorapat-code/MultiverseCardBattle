@@ -25,7 +25,6 @@ namespace MultiverseCardBattle.Screens
         private static readonly Vector2 PreviewCardSize = new Vector2(250f, 350f);
 
         private const float AIActionDelay = 0.6f;
-        private const int MaxLogLinesShown = 14;
 
         private BattleManager battle;
 
@@ -38,6 +37,8 @@ namespace MultiverseCardBattle.Screens
         private Text turnText;
         private Text hintText;
         private Text logText;
+        private ScrollRect logScroll;
+        private string lastLogShown = "";
         private Text termsText;
 
         // ป้ายประกาศผลโยนเหรียญตอนเริ่ม
@@ -434,25 +435,50 @@ namespace MultiverseCardBattle.Screens
         {
             root = UIFactory.CreateScreenRoot("BattleCanvas", true);
 
-            // ----- แถบข้างซ้าย: พรีวิวการ์ด + คำอธิบายศัพท์ + บันทึกการต่อสู้ -----
+            // ----- แถบข้างซ้าย: พรีวิวการ์ด + คำอธิบายศัพท์ + ประวัติการต่อสู้ (เลื่อนดูย้อนหลังได้) -----
             ScreenKit.AddPanel(
-                root, "SidePanel", new Color(0f, 0f, 0f, 0.42f),
+                root, "SidePanel", new Color(0.04f, 0.03f, 0.03f, 0.72f),
                 0.005f, 0.01f, 0.168f, 0.99f);
 
-            logText = ScreenKit.AddLabel(
-                root, "", 16, TextAnchor.LowerLeft,
-                0.012f, 0.02f, 0.162f, 0.32f);
+            AddSideHeader("KEYWORDS", 0.586f, 0.608f);
+
+            Image termsPanel = ScreenKit.AddPanel(
+                root, "TermsPanel", new Color(0f, 0f, 0f, 0.35f),
+                0.011f, 0.385f, 0.162f, 0.584f);
+
+            termsPanel.raycastTarget = false;
 
             termsText = ScreenKit.AddLabel(
                 root, "", 15, TextAnchor.UpperLeft,
-                0.012f, 0.335f, 0.162f, 0.585f);
+                0.016f, 0.39f, 0.158f, 0.58f);
 
             termsText.resizeTextForBestFit = true;
             termsText.resizeTextMinSize = 9;
             termsText.resizeTextMaxSize = 15;
 
-            UIFactory.CreateDivider(root, 0.012f, 0.328f, 0.162f, 0.334f);
-            UIFactory.CreateDivider(root, 0.012f, 0.588f, 0.162f, 0.594f);
+            AddSideHeader("BATTLE LOG", 0.354f, 0.378f);
+
+            RectTransform logContent;
+
+            logScroll = ScreenKit.AddScroll(
+                root, "LogScroll", 0.011f, 0.018f, 0.162f, 0.352f,
+                out logContent);
+
+            VerticalLayoutGroup logLayout =
+                logContent.gameObject.AddComponent<VerticalLayoutGroup>();
+
+            logLayout.padding = new RectOffset(8, 8, 6, 6);
+            logLayout.childControlWidth = true;
+            logLayout.childControlHeight = true;
+            logLayout.childForceExpandWidth = true;
+            logLayout.childForceExpandHeight = false;
+
+            logText = UIFactory.CreateText(
+                logContent, "", 16, UIFactory.TextColor,
+                TextAnchor.UpperLeft);
+
+            logText.verticalOverflow = VerticalWrapMode.Overflow;
+            logText.lineSpacing = 1.08f;
 
             previewZone = UIFactory.CreateZone(
                 root, "PreviewZone", 0.005f, 0.60f, 0.168f, 0.99f);
@@ -840,7 +866,7 @@ namespace MultiverseCardBattle.Screens
             cancelButton.gameObject.SetActive(
                 selectedHand != null || selectedAttacker != null);
 
-            logText.text = BuildLog();
+            RefreshLog();
 
             RefreshOverlay();
             RefreshPile();
@@ -863,18 +889,60 @@ namespace MultiverseCardBattle.Screens
             return false;
         }
 
+        private void AddSideHeader(string title, float yMin, float yMax)
+        {
+            Text header = ScreenKit.AddLabel(
+                root, title, 15, TextAnchor.MiddleLeft,
+                0.016f, yMin, 0.158f, yMax, FontStyle.Bold);
+
+            header.color = UIFactory.Gold;
+        }
+
+        // แสดงประวัติทั้งหมดในกล่องเลื่อน: เลื่อนขึ้นดูย้อนหลังได้ ถ้าอยู่ล่างสุดจะตามบรรทัดใหม่
+        private void RefreshLog()
+        {
+            if (logText == null || logScroll == null)
+                return;
+
+            string text = BuildLog();
+
+            if (text == lastLogShown)
+                return;
+
+            lastLogShown = text;
+
+            bool atBottom =
+                logScroll.verticalNormalizedPosition <= 0.02f ||
+                logScroll.content.rect.height <= logScroll.viewport.rect.height + 1f;
+
+            logText.text = text;
+
+            if (!atBottom)
+                return;
+
+            Canvas.ForceUpdateCanvases();
+
+            LayoutRebuilder.ForceRebuildLayoutImmediate(logScroll.content);
+
+            logScroll.verticalNormalizedPosition = 0f;
+        }
+
         private string BuildLog()
         {
             StringBuilder text = new StringBuilder();
 
-            int start = Mathf.Max(0, battle.LogLines.Count - MaxLogLinesShown);
+            int count = battle.LogLines.Count;
 
-            for (int i = start; i < battle.LogLines.Count; i++)
+            for (int i = 0; i < count; i++)
             {
-                if (text.Length > 0)
+                if (i > 0)
                     text.Append('\n');
 
-                text.Append(battle.LogLines[i]);
+                bool newest = i == count - 1;
+
+                text.Append(newest ? "<color=#F2D27A>" : "<color=#BDB4A2>");
+                text.Append("\u203A ").Append(battle.LogLines[i]);
+                text.Append("</color>");
             }
 
             return text.ToString();

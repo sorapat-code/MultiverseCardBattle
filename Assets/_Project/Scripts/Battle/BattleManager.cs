@@ -11,7 +11,7 @@ namespace MultiverseCardBattle.Battle
 {
     public class BattleManager : MonoBehaviour
     {
-        private const int MaxLogLines = 60;
+        private const int MaxLogLines = 400;
 
         private const int FirstOpeningHand = 3;
         private const int SecondOpeningHand = 4;
