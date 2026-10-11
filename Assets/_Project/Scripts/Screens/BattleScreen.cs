@@ -127,6 +127,9 @@ namespace MultiverseCardBattle.Screens
 
         private Dictionary<int, int> lastHealth = new Dictionary<int, int>();
         private Dictionary<int, int> lastAttacks = new Dictionary<int, int>();
+
+        // CardID ล่าสุดของยูนิตแต่ละใบ (ใช้จับการแปลงร่างเพื่อเล่นเอฟเฟกต์)
+        private readonly Dictionary<int, string> lastForms = new Dictionary<int, string>();
         private Dictionary<int, Vector3> lastPositions = new Dictionary<int, Vector3>();
         private Dictionary<int, Vector3> lastHandPositions = new Dictionary<int, Vector3>();
         private int lastAiHandCount = -1;
@@ -1762,6 +1765,10 @@ namespace MultiverseCardBattle.Screens
 
                 ApplyKaiokenAura(owner, card, view);
 
+                // Bankai: ออร่าแดงเข้มลุกรอบการ์ดตลอดเวลาที่อยู่บนสนาม
+                if (card.Data != null && card.Data.RevertsOnLeaveField)
+                    CardFx.Aura(view, fxLayer, new Color(0.9f, 0.1f, 0.14f, 1f), 1000000f);
+
                 CardHighlight highlight = CardHighlight.None;
 
                 if (card == selectedAttacker)
@@ -2122,6 +2129,20 @@ namespace MultiverseCardBattle.Screens
                     }
 
                     nowAttacks[card.InstanceID] = card.AttacksThisTurn;
+
+                    // แปลงร่าง (เช่น Ichigo -> Bankai): เอฟเฟกต์ที่การ์ด
+                    string form = card.Data != null ? card.Data.CardID : "";
+                    string previousForm;
+
+                    if (known &&
+                        lastForms.TryGetValue(card.InstanceID, out previousForm) &&
+                        previousForm != form &&
+                        viewsByInstance.TryGetValue(card.InstanceID, out CardView transformed))
+                    {
+                        PlayTransformFx(card, transformed);
+                    }
+
+                    lastForms[card.InstanceID] = form;
 
                     CardView located;
 
@@ -3565,6 +3586,40 @@ namespace MultiverseCardBattle.Screens
                 return;
 
             CardFx.Aura(view, fxLayer, KaiokenRed, 1000000f);
+        }
+
+        // แปลงร่าง: แสงวาบ วงแหวน เสาแสง และประกายจากการ์ด (Bankai ใช้สีแดงเข้ม + ข้อความ BANKAI!)
+        private void PlayTransformFx(CardInstance card, CardView view)
+        {
+            if (view == null)
+                return;
+
+            bool bankai = card.Data != null && card.Data.RevertsOnLeaveField;
+
+            Color theme = bankai
+                ? new Color(0.95f, 0.12f, 0.14f, 1f)
+                : new Color(1f, 0.85f, 0.45f, 1f);
+
+            Vector3 origin = UiFx.ScreenOf(view.transform);
+
+            CardFx.Pop(view);
+            CardFx.Flash(view, new Color(1f, 1f, 1f, 0.9f));
+
+            UiFx.Ring(fxLayer, origin, theme, 50f, 460f, 0.7f);
+            UiFx.Ring(fxLayer, origin, Color.white, 30f, 300f, 0.5f);
+            UiFx.Beam(fxLayer, origin, theme, 150f, 720f, 0.9f);
+            UiFx.Burst(fxLayer, origin, theme, 36, 520f, 30f, 0.9f, -140f);
+
+            if (bankai)
+            {
+                // ควันดำของพลังวิญญาณ
+                UiFx.Burst(fxLayer, origin, new Color(0.08f, 0.02f, 0.06f, 0.9f), 18, 260f, 54f, 1.1f, -90f);
+
+                FloatingText.Spawn(
+                    fxLayer, origin + new Vector3(0f, 130f, 0f), "BANKAI!", theme);
+            }
+
+            Sfx.Play(SoundId.Skill);
         }
 
         // Kaioken: สีแดงเข้มของพลังเพิ่มร่าง (ใช้กับสกิลเพิ่ม ATK ของ Goku)

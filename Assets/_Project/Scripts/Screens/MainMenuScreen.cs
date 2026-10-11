@@ -46,6 +46,7 @@ namespace MultiverseCardBattle.Screens
         private RectTransform achievementList;
         private RectTransform poolPanel;
         private RectTransform poolGrid;
+        private CardDetailModal poolModal;
         private Text poolTitle;
         private Text poolSummary;
         private RectTransform dailyPanel;
@@ -138,6 +139,8 @@ namespace MultiverseCardBattle.Screens
             dailyPanel.gameObject.SetActive(panel == dailyPanel);
             if (poolPanel != null)
                 poolPanel.gameObject.SetActive(panel == poolPanel);
+            if (poolModal != null && panel != poolPanel)
+                poolModal.Hide();
             milestonePanel.gameObject.SetActive(panel == milestonePanel);
             if (devPanel != null)
                 devPanel.gameObject.SetActive(panel == devPanel);
@@ -1255,6 +1258,9 @@ namespace MultiverseCardBattle.Screens
 
                 view.ShowData(card, count > 0 ? "x" + count : "");
                 view.SetDimmed(count == 0);
+
+                // คลิกการ์ดเพื่ออ่านรายละเอียดเต็มใบเหมือนใน Collection
+                view.Clicked += OnPoolCardClicked;
             }
 
             poolTitle.text = CardSetInfo.Name(set).ToUpperInvariant() + " - CARD POOL";
@@ -1264,6 +1270,17 @@ namespace MultiverseCardBattle.Screens
                 : "Owned " + owned + " / " + pool.Count + " different cards";
 
             Show(poolPanel);
+        }
+
+        private void OnPoolCardClicked(CardView view)
+        {
+            if (view == null || view.Data == null)
+                return;
+
+            if (poolModal == null)
+                poolModal = new CardDetailModal(root);
+
+            poolModal.Show(view.Data, SaveManager.Profile.GetOwnedCount(view.Data.CardID));
         }
 
         private void ShowUnlocked(List<AchievementDef> list)

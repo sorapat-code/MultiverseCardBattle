@@ -59,6 +59,10 @@ namespace MultiverseCardBattle.Screens
         private Text badgeText;
         private Text stateText;
 
+        // ป้ายร่างพิเศษ (เช่น BANKAI) ข้างป้ายประเภทการ์ด แสดงตลอดเวลา
+        private Image formBox;
+        private Text formText;
+
         private Image attackBox;
         private Image healthBox;
 
@@ -178,6 +182,31 @@ namespace MultiverseCardBattle.Screens
             typeText.resizeTextForBestFit = true;
             typeText.resizeTextMinSize = 6;
             typeText.resizeTextMaxSize = Font(10);
+
+            // ป้ายร่างพิเศษ (BANKAI) อยู่ขวาของป้ายประเภทการ์ด
+            formBox = UIFactory.CreateRoundedPanel(
+                root, "FormBox", new Color(0.55f, 0.04f, 0.08f, 0.96f), 4f * scale);
+
+            UIFactory.SetAnchors(formBox.rectTransform, 0.64f, 0.845f, 0.96f, 0.9f);
+
+            formBox.raycastTarget = false;
+
+            Outline formRing = formBox.gameObject.AddComponent<Outline>();
+
+            formRing.effectColor = new Color(1f, 0.82f, 0.3f, 0.95f);
+            formRing.effectDistance = new Vector2(1f, -1f);
+
+            formText = UIFactory.CreateText(
+                formBox.transform, "", Font(10), new Color(1f, 0.9f, 0.5f, 1f),
+                TextAnchor.MiddleCenter, FontStyle.Bold);
+
+            UIFactory.Stretch(formText.rectTransform);
+
+            formText.resizeTextForBestFit = true;
+            formText.resizeTextMinSize = 6;
+            formText.resizeTextMaxSize = Font(10);
+
+            formBox.gameObject.SetActive(false);
 
             // กล่องข้อความด้านล่าง
             Image bodyBox = UIFactory.CreateRoundedPanel(
@@ -429,6 +458,14 @@ namespace MultiverseCardBattle.Screens
 
             typeText.text = TypeLabel(data.Type);
             typeBox.color = TypeColor(data.Type);
+
+            // ร่างที่อยู่ได้เฉพาะบนสนาม (Bankai) มีป้ายชื่อสถานะบนการ์ดตลอดเวลา
+            bool special = data.RevertsOnLeaveField;
+
+            formBox.gameObject.SetActive(special);
+
+            if (special)
+                formText.text = "BANKAI";
 
             if (data.Artwork != null)
             {
