@@ -24,6 +24,52 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
+        public void SkillText_ListsKeywordsAndAbilityText()
+        {
+            CardData march = CardRegistry.Get("SUP_008");
+
+            string text = GameGlossary.SkillTextFor(march, null);
+
+            StringAssert.Contains("Taunt", text);
+            StringAssert.Contains("Battlecry", text);
+            StringAssert.Contains("Barrier", text);
+            StringAssert.DoesNotContain("<", text);
+        }
+
+        [Test]
+        public void SkillTerms_CoverEveryWordUnderlinedInTheSkillText()
+        {
+            CardData march = CardRegistry.Get("SUP_008");
+
+            List<string[]> terms = GameGlossary.TermsFor(march, null);
+
+            bool taunt = false;
+            bool battlecry = false;
+            bool barrier = false;
+
+            foreach (string[] term in terms)
+            {
+                Assert.IsNotEmpty(term[1], term[0]);
+
+                taunt |= term[0] == "Taunt";
+                battlecry |= term[0] == "Battlecry";
+                barrier |= term[0] == "Barrier";
+            }
+
+            Assert.IsTrue(taunt && battlecry && barrier);
+        }
+
+        [Test]
+        public void SkillText_ShowsStatusesOfAnInstance()
+        {
+            CardInstance card = new CardInstance(CardRegistry.Get("SUP_009"));
+
+            card.AddStatus(StatusType.Burn, 2, 2);
+
+            StringAssert.Contains("Status: Burn", GameGlossary.SkillTextFor(card.Data, card));
+        }
+
+        [Test]
         public void FullGlossary_ListsEveryKeywordAndStatus()
         {
             string text = GameGlossary.Build();

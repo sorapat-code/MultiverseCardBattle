@@ -180,6 +180,105 @@ namespace MultiverseCardBattle.Data
             if (data == null)
                 return "";
 
+            List<string[]> terms = CollectTerms(data, instance);
+
+            StringBuilder text = new StringBuilder();
+
+            // ไม่ยาวเกินพื้นที่แสดงผล
+            for (int i = 0; i < terms.Count && i < 7; i++)
+            {
+                if (text.Length > 0)
+                    text.Append('\n');
+
+                text.Append("<b>").Append(terms[i][0]).Append("</b>: ")
+                    .Append(terms[i][1]);
+            }
+
+            return text.ToString();
+        }
+
+        /// <summary>
+        /// ข้อความสกิลของการ์ด (ข้อความล้วน ไม่มี Rich Text): บรรทัด Keyword + คำอธิบายความสามารถ
+        /// + สถานะที่ติดอยู่ (ถ้ามี instance) ใช้ในแผง SKILL ของหน้าต่อสู้
+        /// </summary>
+        public static string SkillTextFor(CardData data, CardInstance instance)
+        {
+            if (data == null)
+                return "";
+
+            Keyword keywords = instance != null ? instance.Keywords : data.Keywords;
+
+            string keywordLine = CardTextGenerator.KeywordText(
+                keywords, data.EffectiveImmuneAmount, data.EffectiveOverloadAmount);
+
+            string actions = CardTextGenerator.ActionsText(data);
+
+            List<string> lines = new List<string>();
+
+            if (!string.IsNullOrEmpty(keywordLine))
+                lines.Add(keywordLine);
+
+            if (!string.IsNullOrEmpty(actions))
+                lines.Add(actions);
+
+            if (instance != null && instance.Statuses.Count > 0)
+            {
+                List<string> names = new List<string>();
+
+                foreach (StatusEffect status in instance.Statuses)
+                {
+                    string name = StatusInfo.DisplayName(status.Type);
+
+                    if (status.Value > 0)
+                        name += " " + status.Value;
+
+                    names.Add(name);
+                }
+
+                lines.Add("Status: " + string.Join(", ", names.ToArray()));
+            }
+
+            return string.Join("\n", lines.ToArray());
+        }
+
+        /// <summary>
+        /// ศัพท์ที่ขีดเส้นใต้ได้ในแผงสกิล: ศัพท์เฉพาะของการ์ดใบนี้ก่อน (เช่น Immune 3) ตามด้วยศัพท์ทั่วไป
+        /// ทั้งหมด (Keyword, สถานะ, ความสามารถ) ใครอยู่ในข้อความก็ขีดเส้นใต้
+        /// แต่ละรายการเป็น { ชื่อ, คำอธิบาย }
+        /// </summary>
+        public static List<string[]> TermsFor(CardData data, CardInstance instance)
+        {
+            List<string[]> terms = data != null
+                ? CollectTerms(data, instance)
+                : new List<string[]>();
+
+            foreach (Keyword keyword in Enum.GetValues(typeof(Keyword)))
+            {
+                if (keyword != Keyword.None)
+                {
+                    AddTerm(terms, CardTextGenerator.KeywordName(keyword),
+                        KeywordDescription(keyword));
+                }
+            }
+
+            foreach (StatusType status in Enum.GetValues(typeof(StatusType)))
+            {
+                if (status != StatusType.None)
+                {
+                    AddTerm(terms, StatusInfo.DisplayName(status),
+                        StatusInfo.Description(status));
+                }
+            }
+
+            foreach (string[] pair in AbilityKeywords)
+                AddTerm(terms, pair[0], pair[1]);
+
+            return terms;
+        }
+
+        // ศัพท์ที่เกี่ยวกับการ์ดใบนี้จริงๆ (Keyword, สถานะที่ติด, ชนิดความสามารถ, เอฟเฟกต์)
+        private static List<string[]> CollectTerms(CardData data, CardInstance instance)
+        {
             List<string[]> terms = new List<string[]>();
 
             Keyword keywords = instance != null ? instance.Keywords : data.Keywords;
@@ -262,19 +361,7 @@ namespace MultiverseCardBattle.Data
                 }
             }
 
-            StringBuilder text = new StringBuilder();
-
-            // ไม่ยาวเกินพื้นที่แสดงผล
-            for (int i = 0; i < terms.Count && i < 7; i++)
-            {
-                if (text.Length > 0)
-                    text.Append('\n');
-
-                text.Append("<b>").Append(terms[i][0]).Append("</b>: ")
-                    .Append(terms[i][1]);
-            }
-
-            return text.ToString();
+            return terms;
         }
 
         private static void AddEffectTerm(List<string[]> terms, EffectData effect)

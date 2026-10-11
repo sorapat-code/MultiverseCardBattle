@@ -43,7 +43,7 @@ namespace MultiverseCardBattle.Screens
         private int logBuilt;
         private int lastLogSide = 99;
         private const int MaxLogBubbles = 150;
-        private Text termsText;
+        private SkillTextView skillView;
         private Image termsPanel;
         private Text termsHeader;
         private Image previewGlow;
@@ -422,15 +422,15 @@ namespace MultiverseCardBattle.Screens
         // กรอบคำอธิบายศัพท์โผล่เฉพาะตอนชี้การ์ด
         private void UpdateTermsVisibility()
         {
-            if (termsText == null || termsPanel == null)
+            if (skillView == null || termsPanel == null)
                 return;
 
-            bool show = !string.IsNullOrEmpty(termsText.text);
+            bool show = skillView.HasContent;
 
             if (termsPanel.gameObject.activeSelf != show)
             {
                 termsPanel.gameObject.SetActive(show);
-                termsText.gameObject.SetActive(show);
+                skillView.gameObject.SetActive(show);
 
                 if (termsHeader != null)
                     termsHeader.gameObject.SetActive(show);
@@ -786,7 +786,7 @@ namespace MultiverseCardBattle.Screens
             termsPanel.raycastTarget = false;
 
             termsHeader = ScreenKit.AddLabel(
-                root, "KEYWORDS", 14, TextAnchor.MiddleLeft,
+                root, "SKILL", 14, TextAnchor.MiddleLeft,
                 0.014f, 0.452f, 0.15f, 0.48f, FontStyle.Bold);
 
             termsHeader.color = UIFactory.Gold;
@@ -795,13 +795,9 @@ namespace MultiverseCardBattle.Screens
 
             termsHeader.gameObject.SetActive(false);
 
-            termsText = ScreenKit.AddLabel(
-                root, "", 16, TextAnchor.UpperLeft,
-                0.012f, 0.30f, 0.152f, 0.45f);
-
-            termsText.resizeTextForBestFit = true;
-            termsText.resizeTextMinSize = 9;
-            termsText.resizeTextMaxSize = 16;
+            // สกิลของการ์ด: ศัพท์ถูกขีดเส้นใต้ ชี้แล้วมีคำอธิบายเด้ง (คลิกการ์ดเพื่อปักหมุดแล้วค่อยเอาเมาส์ไปชี้)
+            skillView = SkillTextView.Create(
+                root, root, 0.012f, 0.30f, 0.152f, 0.45f, 17, 9);
 
             // ----- มุมซ้ายบน: เทิร์น + คำใบ้ -----
             turnText = ScreenKit.AddLabel(
@@ -1888,7 +1884,18 @@ namespace MultiverseCardBattle.Screens
 
             previewView.SetHighlight(CardHighlight.None);
 
-            termsText.text = GameGlossary.HintsFor(view.Data, view.Instance);
+            SetSkill(view.Data, view.Instance);
+        }
+
+        // แผงสกิลใต้การ์ดพรีวิว
+        private void SetSkill(CardData data, CardInstance instance)
+        {
+            if (skillView == null)
+                return;
+
+            skillView.Show(
+                GameGlossary.SkillTextFor(data, instance),
+                GameGlossary.TermsFor(data, instance));
         }
 
         private void HidePreview(CardView view)
@@ -1902,8 +1909,8 @@ namespace MultiverseCardBattle.Screens
                 if (previewGlow != null)
                     previewGlow.gameObject.SetActive(false);
 
-            if (termsText != null)
-                termsText.text = "";
+            if (skillView != null)
+                skillView.Clear();
         }
 
         // การ์ดที่คลิกซ้ายไว้ พรีวิวซ้ายบนจะค้างที่ใบนี้จนกว่าจะคลิกใบอื่น
@@ -1934,7 +1941,7 @@ namespace MultiverseCardBattle.Screens
 
         private bool ShowPinned()
         {
-            if (!PinnedValid() || previewView == null || termsText == null)
+            if (!PinnedValid() || previewView == null || skillView == null)
             {
                 pinnedCard = null;
                 return false;
@@ -1946,7 +1953,7 @@ namespace MultiverseCardBattle.Screens
             if (previewGlow != null)
                 previewGlow.gameObject.SetActive(true);
 
-            termsText.text = GameGlossary.HintsFor(pinnedCard.Data, pinnedCard);
+            SetSkill(pinnedCard.Data, pinnedCard);
 
             return true;
         }
@@ -1976,14 +1983,15 @@ namespace MultiverseCardBattle.Screens
             {
                 previewView.ShowInstance(shown);
 
-                termsText.text = GameGlossary.HintsFor(shown.Data, shown);
+                SetSkill(shown.Data, shown);
             }
             else if (!ShowPinned())
             {
                 previewView.gameObject.SetActive(false);
                 if (previewGlow != null)
                     previewGlow.gameObject.SetActive(false);
-                termsText.text = "";
+                if (skillView != null)
+                    skillView.Clear();
             }
         }
 
