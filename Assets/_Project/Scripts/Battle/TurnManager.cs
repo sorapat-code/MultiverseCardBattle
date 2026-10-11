@@ -63,8 +63,10 @@ namespace MultiverseCardBattle.Battle
 
             // ยูนิตของผู้เล่นกลับมาโจมตีได้อีกครั้ง
             foreach (CardInstance card in player.Field)
+            {
                 card.AttacksThisTurn = 0;
                 card.UnitAttacksThisTurn = 0;
+            }
 
             player.CardsPlayedThisTurn = 0;
             player.SpellsPlayedThisTurn = 0;
