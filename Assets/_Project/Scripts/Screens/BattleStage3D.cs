@@ -759,7 +759,7 @@ namespace MultiverseCardBattle.Screens
         }
 
         /// <summary>ผูกกับ CardView: ใช้ซ่อนตัวการ์ดตอนหน้าการ์ดโปร่งใส และยกการ์ดลอยเมื่อชี้</summary>
-        public void Bind(Cards.CardView view)
+        public void Bind(CardView view)
         {
             if (view == null)
                 return;
@@ -770,12 +770,12 @@ namespace MultiverseCardBattle.Screens
             view.HoverExited += OnHoverExited;
         }
 
-        private void OnHoverEntered(Cards.CardView view)
+        private void OnHoverEntered(CardView view)
         {
             hovered = true;
         }
 
-        private void OnHoverExited(Cards.CardView view)
+        private void OnHoverExited(CardView view)
         {
             hovered = false;
         }
