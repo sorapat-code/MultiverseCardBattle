@@ -16,8 +16,11 @@ namespace MultiverseCardBattle.Screens
     {
         public static bool IsSecret(CardData data)
         {
+            // การ์ดลับ (Rarity Secret), ร่าง Devil Trigger และการ์ด Keyword Unique ทุกใบ
+            // (รวมการ์ดที่เพิ่มในอนาคตโดยอัตโนมัติ)
             return data != null &&
                    (data.Rarity == CardRarity.Secret ||
+                    (data.Keywords & Keyword.Unique) != 0 ||
                     data.CardID == StarterCardLibrary.DevilTriggerId);
         }
 
@@ -43,8 +46,21 @@ namespace MultiverseCardBattle.Screens
                     return new Color(0.27f, 0.62f, 1f, 1f);       // น้ำเงิน Yamato
 
                 default:
-                    return new Color(1f, 0.4f, 0.5f, 1f);
+                    return AutoTint(data.CardID);
             }
+        }
+
+        // การ์ดที่ไม่มีสีกำหนดไว้ (Unique ใบอื่น / การ์ดลับใหม่): สุ่มสีสดคงที่จากรหัสการ์ด
+        private static Color AutoTint(string id)
+        {
+            int hash = 17;
+
+            foreach (char ch in id ?? "")
+                hash = hash * 31 + ch;
+
+            float hue = (Mathf.Abs(hash) % 360) / 360f;
+
+            return Color.HSVToRGB(hue, 0.62f, 1f);
         }
 
         // ---------- ส่วนประกอบพื้นฐาน ----------
@@ -135,7 +151,10 @@ namespace MultiverseCardBattle.Screens
                 case StarterCardLibrary.AinzId: return "The Supreme One takes the stage";
                 case StarterCardLibrary.VergilId: return "The Yamato is drawn";
                 case StarterCardLibrary.DevilTriggerId: return "Power beyond limits";
-                default: return "A secret awakens";
+                default:
+                    return data.Rarity == CardRarity.Secret
+                        ? "A secret awakens"
+                        : "One of a kind";
             }
         }
 
