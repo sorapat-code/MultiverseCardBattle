@@ -793,7 +793,7 @@ namespace MultiverseCardBattle.Screens
             enemyWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Ai),
                 () => OpenLeaderInfo(Ai, false),
-                0.405f, 0.815f, 0.595f, 0.985f);
+                0.385f, 0.805f, 0.615f, 0.99f);
 
             playerWidget = CreateLeaderWidget(
                 () => OnLeaderClicked(Human),
@@ -940,6 +940,9 @@ namespace MultiverseCardBattle.Screens
         // สนามหญ้า + แสงเรืองขอบ + เส้นกลาง + ช่องวางยูนิต + มือ
         private void BuildBoard()
         {
+            // กรอบหินอยู่หลังสนามหญ้า (โผล่ออกมารอบขอบ)
+            BoardDecor.BuildFrame(root);
+
             Image grass = UIFactory.CreatePanel(root, "Board", Color.white);
 
             grass.sprite = BoardArt.Grass;
@@ -958,6 +961,11 @@ namespace MultiverseCardBattle.Screens
             playerGlowLine = EdgeLine("PlayerGlowLine", 0.22f, 0.226f);
 
             UIFactory.CreateDivider(root, 0.11f, 0.4965f, 0.89f, 0.5035f);
+
+            // บรรยากาศขยับได้ (ลำแสง ลม หมอก หิ่งห้อย ใบไม้) พุ่มไม้ และเครื่องประดับทอง
+            BoardDecor.BuildAtmosphere(root);
+            BoardDecor.BuildFoliage(root);
+            BoardDecor.BuildOrnaments(root);
 
             // พื้นที่ปล่อยการ์ดที่ลากมาเล่น (ทั้งสนาม ไม่มีภาพ)
             dropZone = UIFactory.CreateZone(root, "DropZone", 0.10f, 0.22f, 0.90f, 0.78f);
@@ -1145,8 +1153,8 @@ namespace MultiverseCardBattle.Screens
             ringRect.anchorMin = new Vector2(0f, 1f);
             ringRect.anchorMax = new Vector2(0f, 1f);
             ringRect.pivot = new Vector2(0f, 1f);
-            ringRect.anchoredPosition = new Vector2(10f, -10f);
-            ringRect.sizeDelta = new Vector2(88f, 88f);
+            ringRect.anchoredPosition = new Vector2(12f, -12f);
+            ringRect.sizeDelta = new Vector2(104f, 104f);
 
             Image inner = UIFactory.CreatePanel(
                 goldRing.transform, "Portrait", new Color(0.1f, 0.07f, 0.05f, 1f));

@@ -19,6 +19,7 @@ namespace MultiverseCardBattle.Screens
         private static Sprite fadeUp;
         private static Sprite gem;
         private static Sprite dome;
+        private static Sprite stoneFrame;
 
         public static Sprite Grass
         {
@@ -74,6 +75,18 @@ namespace MultiverseCardBattle.Screens
                     gem = BuildGem();
 
                 return gem;
+            }
+        }
+
+        /// <summary>กรอบหินรอบสนาม (9-slice: ขอบหนา 20 หน่วย มีเส้นทองด้านใน)</summary>
+        public static Sprite StoneFrame
+        {
+            get
+            {
+                if (stoneFrame == null)
+                    stoneFrame = BuildStoneFrame();
+
+                return stoneFrame;
             }
         }
 
@@ -362,6 +375,79 @@ namespace MultiverseCardBattle.Screens
             }
 
             return ToSprite(texture);
+        }
+
+        // กรอบหิน: หินสีน้ำตาลเทามีลายนอยส์ ขอบนอกมืด ขอบเอียงสว่าง และเส้นทองบางๆ ด้านใน
+        private static Sprite BuildStoneFrame()
+        {
+            const int size = 64;
+            const int border = 20;
+
+            Texture2D texture = NewTexture(size, size, TextureFormat.RGBA32);
+
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    int d = Mathf.Min(Mathf.Min(x, size - 1 - x), Mathf.Min(y, size - 1 - y));
+
+                    float grain = 0.8f + Mathf.PerlinNoise(x * 0.35f, y * 0.35f) * 0.4f;
+
+                    Color color;
+
+                    if (d >= border)
+                    {
+                        // ส่วนกลาง (ถูกสนามบังอยู่)
+                        color = new Color(0.08f, 0.06f, 0.05f, 1f);
+                    }
+                    else if (d < 2)
+                    {
+                        color = new Color(0.04f, 0.03f, 0.025f, 1f);
+                    }
+                    else if (d < 5)
+                    {
+                        // ขอบเอียงสว่าง
+                        float k = 1f - (d - 2) / 3f;
+
+                        color = Color.Lerp(
+                            new Color(0.26f, 0.21f, 0.17f, 1f),
+                            new Color(0.42f, 0.35f, 0.27f, 1f), k) * grain;
+                    }
+                    else if (d >= border - 3 && d < border - 1)
+                    {
+                        // เส้นทองด้านใน
+                        color = new Color(0.78f, 0.6f, 0.26f, 1f);
+                    }
+                    else if (d >= border - 1)
+                    {
+                        color = new Color(0.05f, 0.04f, 0.03f, 1f);
+                    }
+                    else
+                    {
+                        // เนื้อหิน ลึกลงด้านในมืดลงเล็กน้อย
+                        float depth = (d - 5) / (float)(border - 8);
+
+                        color = Color.Lerp(
+                            new Color(0.24f, 0.19f, 0.15f, 1f),
+                            new Color(0.15f, 0.12f, 0.09f, 1f), depth) * grain;
+                    }
+
+                    color.a = 1f;
+
+                    texture.SetPixel(x, y, color);
+                }
+            }
+
+            texture.Apply();
+
+            return Sprite.Create(
+                texture,
+                new Rect(0f, 0f, size, size),
+                new Vector2(0.5f, 0.5f),
+                100f,
+                0,
+                SpriteMeshType.FullRect,
+                new Vector4(border, border, border, border));
         }
     }
 }
