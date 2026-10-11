@@ -331,7 +331,7 @@ namespace MultiverseCardBattle.Tests
         // ---------- Fast / เชน ----------
 
         [Test]
-        public void FastSpell_CannotBePlayedOutsideAResponseWindow()
+        public void FastSpell_CanBePlayedAnytime_EvenOnOpponentsTurn()
         {
             CardData shot = MakeSpell("SHOT", 1, Keyword.Fast,
                 Action(TargetRule.EnemyUnit, TargetSelection.Chosen,
@@ -344,7 +344,24 @@ namespace MultiverseCardBattle.Tests
 
             PutOnField(P1, "T", 1, 5, Keyword.None);
 
-            // ไม่ใช่เทิร์นของ P2 และไม่มีหน้าต่างตอบโต้
+            // ไม่ใช่เทิร์นของ P2 และไม่มีหน้าต่างตอบโต้ แต่ Fast spell เล่นได้ทุกจังหวะ
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P2, card)).Success);
+        }
+
+        [Test]
+        public void NonFastSpell_StillRequiresYourTurn()
+        {
+            CardData shot = MakeSpell("SLOW", 1, Keyword.None,
+                Action(TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Effect(EffectType.DealDamage, 3)));
+
+            CardInstance card = new CardInstance(shot);
+
+            P2.Hand.Add(card);
+            P2.CurrentEnergy = 5;
+
+            PutOnField(P1, "T", 1, 5, Keyword.None);
+
             Assert.IsFalse(battle.Submit(new PlayCardCommand(P2, card)).Success);
         }
 

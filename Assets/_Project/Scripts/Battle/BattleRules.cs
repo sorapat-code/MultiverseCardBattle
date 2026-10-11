@@ -46,7 +46,7 @@ namespace MultiverseCardBattle.Battle
 
         // ---------- Fast / Chain ----------
 
-        /// <summary>Fast spell: ตอบโต้การกระทำของศัตรูได้ แม้ในเทิร์นของศัตรู</summary>
+        /// <summary>Fast spell: เล่นได้ทุกจังหวะ ทั้งเทิร์นตัวเองและเทิร์นศัตรู และตอบโต้บนเชนได้</summary>
         public static bool IsFastSpell(CardInstance card)
         {
             return card != null && card.Data != null &&
@@ -204,7 +204,8 @@ namespace MultiverseCardBattle.Battle
                 if (battle.ChainBlocksActions)
                     return ActionResult.Fail("The chain is resolving");
 
-                if (battle.CurrentPlayer != player)
+                // Fast spell เล่นได้ทุกจังหวะ แม้ไม่ใช่เทิร์นของเรา (ถ้าเชนว่าง)
+                if (battle.CurrentPlayer != player && !IsFastSpell(card))
                     return ActionResult.Fail("It is not your turn");
 
                 if (HasEffect(card.Data, EffectType.Negate))

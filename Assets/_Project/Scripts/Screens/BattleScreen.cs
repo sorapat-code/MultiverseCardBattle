@@ -855,7 +855,12 @@ namespace MultiverseCardBattle.Screens
 
             RefreshField(enemyField, Ai, myTurn);
             RefreshField(playerField, Human, myTurn);
-            RefreshHand(myTurn || responding);
+            // Fast spell เล่นได้ทุกจังหวะ (ถ้าเชนว่าง) จึงเปิดมือไว้ตลอด
+            bool handActive =
+                responding ||
+                (!battle.IsOver && !battle.HasPendingChoice && !battle.ChainBlocksActions);
+
+            RefreshHand(handActive);
 
             // ต้องคำนวณ Layout ก่อน จึงจะรู้ตำแหน่งการ์ดสำหรับตัวเลขลอย
             LayoutRebuilder.ForceRebuildLayoutImmediate(enemyField);
@@ -2126,7 +2131,8 @@ namespace MultiverseCardBattle.Screens
             if (battle.ChainResponder == Human)
                 return true;
 
-            return battle.CurrentPlayer == Human && !battle.ChainBlocksActions;
+            // เชนว่างอยู่: เล่น Fast spell ได้ทุกเมื่อ (กติกาตรวจเทิร์นของการกระทำอื่นเอง)
+            return !battle.ChainBlocksActions;
         }
 
         // ---------- ลากการ์ด ----------
