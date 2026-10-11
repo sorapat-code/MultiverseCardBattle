@@ -769,6 +769,13 @@ namespace MultiverseCardBattle.Screens
         {
             widget.Title.text = "<b>" + player.Name + "</b>";
 
+            if (player.LeaderGear != null)
+            {
+                widget.Title.text +=
+                    "  <color=#F2B33D>[" + player.LeaderGear.Data.CardName +
+                    " " + player.LeaderGearTurns + "]</color>";
+            }
+
             float hp = player.MaxLeaderHealth > 0
                 ? Mathf.Clamp01((float)player.LeaderHealth / player.MaxLeaderHealth)
                 : 0f;

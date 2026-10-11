@@ -35,7 +35,7 @@ namespace MultiverseCardBattle.Cards
             pool.Add(new AdaptOption("Shield", 0, 0, Keyword.Shield));
             pool.Add(new AdaptOption("Taunt", 0, 0, Keyword.Taunt));
             pool.Add(new AdaptOption("Lifesteal", 0, 0, Keyword.Lifesteal));
-            pool.Add(new AdaptOption("Poison", 0, 0, Keyword.Poison));
+            pool.Add(new AdaptOption("Backstab", 0, 0, Keyword.Backstab));
             pool.Add(new AdaptOption("Quick Attack", 0, 0, Keyword.QuickAttack));
             pool.Add(new AdaptOption("Pierce", 0, 0, Keyword.Pierce));
             pool.Add(new AdaptOption("Reborn", 0, 0, Keyword.Reborn));

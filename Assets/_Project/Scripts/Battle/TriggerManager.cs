@@ -56,6 +56,10 @@ namespace MultiverseCardBattle.Battle
                         {
                             Fire(card, e);
                         }
+
+                        // อุปกรณ์ Leader ทำงานต้น/จบเทิร์นของเจ้าของ
+                        if (e.Player.LeaderGear != null)
+                            Fire(e.Player.LeaderGear, e);
                     }
                     break;
 

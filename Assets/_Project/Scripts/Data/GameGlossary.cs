@@ -31,7 +31,7 @@ namespace MultiverseCardBattle.Data
                 case Keyword.Immune: return "Reduces every hit it takes by the number shown (Immune 3 takes only 2 from a 5-damage hit) and blocks harmful statuses.";
                 case Keyword.Stealth: return "Cannot be targeted by enemies until it attacks.";
                 case Keyword.Reborn: return "The first time it dies, it returns to the field with 1 HP.";
-                case Keyword.Poison: return "Any unit damaged by this unit is destroyed.";
+                case Keyword.Backstab: return "Any unit damaged by this unit is destroyed.";
                 case Keyword.Shadowbound: return "While its owner controls a Token, it gains Unstoppable and enemy units cannot attack it (spells and abilities can still target it).";
                 case Keyword.Unique: return "Only 1 copy of this card can be put in a deck.";
                 case Keyword.Spellburst: return "Triggers once the first time its owner plays a spell.";
@@ -99,7 +99,7 @@ namespace MultiverseCardBattle.Data
         {
             new[] { Keyword.Rush, Keyword.Charge, Keyword.Taunt, Keyword.DoubleStrike,
                     Keyword.Lifesteal, Keyword.Pierce, Keyword.QuickAttack,
-                    Keyword.Overwhelm, Keyword.Unstoppable, Keyword.Guard, Keyword.Poison },
+                    Keyword.Overwhelm, Keyword.Unstoppable, Keyword.Guard, Keyword.Backstab },
             new[] { Keyword.Shield, Keyword.Ward, Keyword.Immune,
                     Keyword.Stealth, Keyword.Reborn, Keyword.Shadowbound },
             new[] { Keyword.Spellburst, Keyword.Unique }

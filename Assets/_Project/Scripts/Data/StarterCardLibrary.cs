@@ -91,7 +91,7 @@ namespace MultiverseCardBattle.Data
             CardData superGoku = Add(Unit(
                 "TKN_003", "Super Saiyan Goku",
                 Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
-                8, 7, 8, Keyword.DoubleStrike | Keyword.Unstoppable,
+                8, 9, 9, Keyword.DoubleStrike | Keyword.Unstoppable,
                 CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Token,
                 CardSource.Token));
 
@@ -99,7 +99,7 @@ namespace MultiverseCardBattle.Data
             CardData bankai = Add(Unit(
                 "TKN_004", "Ichigo, Bankai",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
-                6, 7, 7, Keyword.QuickAttack | Keyword.Pierce,
+                6, 9, 8, Keyword.QuickAttack | Keyword.Pierce,
                 CardTag.Human | CardTag.Spirit | CardTag.Melee | CardTag.Token,
                 CardSource.Token));
 
@@ -231,214 +231,229 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("STR_001", "Leaf Genin",
                 Universe.Naruto, Faction.LeafVillage, CardRarity.Common,
-                1, 1, 2, Keyword.None, CardTag.Human | CardTag.Melee));
+                1, 2, 2, Keyword.None, CardTag.Human | CardTag.Melee));
 
             Add(Unit("STR_002", "Shield Guardian",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
-                2, 1, 4, Keyword.Taunt, CardTag.Human | CardTag.Tank));
+                2, 2, 5, Keyword.Taunt, CardTag.Human | CardTag.Tank));
 
             Add(Unit("STR_003", "Field Medic",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
-                2, 2, 2, Keyword.None, CardTag.Human | CardTag.Support,
+                2, 2, 3, Keyword.None, CardTag.Human | CardTag.Support,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
-                    Fx(EffectType.Heal, 4))));
+                    Fx(EffectType.Heal, 5))));
 
             Add(Unit("STR_004", "Pirate Sharpshooter",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Common,
-                3, 3, 2, Keyword.None, CardTag.Human | CardTag.Ranged,
+                3, 3, 3, Keyword.None, CardTag.Human | CardTag.Ranged,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 2))));
+                    Fx(EffectType.DealDamage, 3))));
 
             Add(Unit("STR_005", "Iron Golem",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
-                4, 3, 6, Keyword.Taunt, CardTag.Machine | CardTag.Tank));
+                4, 4, 7, Keyword.Taunt, CardTag.Machine | CardTag.Tank));
 
             Add(Unit("STR_006", "Mist Assassin",
                 Universe.Naruto, Faction.MistVillage, CardRarity.Common,
-                3, 3, 2, Keyword.Stealth, CardTag.Human | CardTag.Assassin));
+                3, 4, 2, Keyword.Stealth, CardTag.Human | CardTag.Assassin));
 
             Add(Unit("STR_007", "Vampire Knight",
                 Universe.Original, Faction.Neutral, CardRarity.Rare,
-                3, 2, 4, Keyword.Lifesteal, CardTag.Undead | CardTag.Melee));
+                3, 3, 4, Keyword.Lifesteal, CardTag.Undead | CardTag.Melee));
 
             Add(Unit("STR_008", "Disaster Curse",
                 Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Rare,
-                2, 1, 2, Keyword.Poison, CardTag.Spirit | CardTag.Demon));
+                2, 2, 2, Keyword.Backstab, CardTag.Spirit | CardTag.Demon));
 
             Add(Unit("STR_009", "Megumi Fushiguro",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
-                4, 3, 3, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Melee));
+                4, 4, 4, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Melee,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxCard(EffectType.Summon, wisp))));
 
             Add(Unit("STR_010", "Soul Society Scout",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Common,
-                3, 3, 1, Keyword.Charge, CardTag.Spirit | CardTag.Melee));
+                3, 3, 2, Keyword.Charge, CardTag.Spirit | CardTag.Melee));
 
             Add(Unit("STR_011", "Twin Blade Duelist",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
-                4, 3, 3, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
+                4, 4, 3, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
 
             Add(Unit("STR_012", "Raid Skirmisher",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
-                3, 3, 2, Keyword.Rush, CardTag.Human | CardTag.Melee));
+                3, 3, 3, Keyword.Rush, CardTag.Human | CardTag.Melee));
 
             Add(Unit("STR_013", "Sage Scholar",
                 Universe.Fate, Faction.Chaldea, CardRarity.Common,
-                2, 1, 3, Keyword.None, CardTag.Human | CardTag.Magic,
+                2, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.DrawCard, 1))));
 
             Add(Unit("STR_014", "Nobara Kugisaki",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Common,
-                3, 3, 2, Keyword.None, CardTag.Human | CardTag.Magic,
+                3, 3, 3, Keyword.None, CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 1))));
+                    Fx(EffectType.DealDamage, 2))));
 
             Add(Unit("STR_015", "Death Cultist",
                 Universe.Original, Faction.Neutral, CardRarity.Common,
-                3, 2, 2, Keyword.None, CardTag.Human | CardTag.Magic,
+                3, 3, 2, Keyword.None, CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Death, TargetRule.EnemyLeader, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 3))));
+                    Fx(EffectType.DealDamage, 4))));
 
             Add(Unit("STR_016", "Spirit Caller",
                 Universe.Fate, Faction.Chaldea, CardRarity.Rare,
-                4, 2, 3, Keyword.None, CardTag.Spirit | CardTag.Magic,
+                4, 3, 4, Keyword.None, CardTag.Spirit | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                     FxCard(EffectType.Summon, wisp),
                     FxCard(EffectType.Summon, wisp))));
 
             Add(Unit("STR_017", "Pyromancer",
                 Universe.Original, Faction.Neutral, CardRarity.Rare,
-                4, 3, 4, Keyword.None, CardTag.Human | CardTag.Magic | CardTag.Fire,
+                4, 4, 4, Keyword.None, CardTag.Human | CardTag.Magic | CardTag.Fire,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    FxStatus(EffectType.Burn, 2, 3))));
+                    FxStatus(EffectType.Burn, 3, 3))));
 
             Add(Unit("STR_018", "Toge Inumaki",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
-                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic,
+                3, 3, 3, Keyword.None, CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxStatus(EffectType.Stun, 0, 1))));
 
             Add(Unit("STR_019", "Silencer Monk",
                 Universe.WutheringWaves, Faction.Jinzhou, CardRarity.Rare,
-                3, 3, 2, Keyword.None, CardTag.Human | CardTag.Melee,
+                3, 3, 3, Keyword.None, CardTag.Human | CardTag.Melee,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.Silence))));
 
             Add(Unit("STR_020", "Jogo, Volcano Curse",
                 Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Legendary,
-                7, 6, 7, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Fire,
+                7, 7, 7, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Fire,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 3))));
+                    Fx(EffectType.DealDamage, 3)),
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    FxStatus(EffectType.Burn, 2, 3))));
 
             Add(Unit("STR_021", "Titan Colossus",
                 Universe.Original, Faction.Neutral, CardRarity.Epic,
-                6, 6, 6, Keyword.Taunt, CardTag.Machine | CardTag.Elite));
+                6, 7, 8, Keyword.Taunt, CardTag.Machine | CardTag.Elite));
 
             Add(Unit("STR_022", "Shoko Ieiri",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Common,
-                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Support,
+                3, 2, 4, Keyword.None, CardTag.Human | CardTag.Support,
                 Act(TriggerType.TurnStart, TargetRule.AllyLeader, TargetSelection.All,
-                    Fx(EffectType.Heal, 2))));
+                    Fx(EffectType.Heal, 3))));
 
             Add(Unit("STR_023", "Berserker",
                 Universe.Fate, Faction.Chaldea, CardRarity.Common,
-                2, 2, 3, Keyword.None, CardTag.Human | CardTag.Melee,
+                2, 3, 3, Keyword.None, CardTag.Human | CardTag.Melee,
                 Act(TriggerType.DamageTaken, TargetRule.Self, TargetSelection.All,
                     Fx(EffectType.GainAttack, 1))));
 
             Add(Unit("STR_024", "Gladiator",
                 Universe.Original, Faction.Neutral, CardRarity.Epic,
-                5, 5, 5, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee));
+                5, 6, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee));
 
             // ---------- Multiverse Heroes ----------
             // ตัวละครจากหลายจักรวาล ประกอบจาก Trigger / Target / Effect เดิมทั้งหมด
 
             Add(Unit("NAR_001", "Naruto Uzumaki",
                 Universe.Naruto, Faction.LeafVillage, CardRarity.Epic,
-                5, 3, 4, Keyword.None, CardTag.Human | CardTag.Melee,
+                5, 4, 5, Keyword.None, CardTag.Human | CardTag.Melee,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxCard(EffectType.Summon, clone),
                     FxCard(EffectType.Summon, clone),
                     FxCard(EffectType.Summon, clone))));
 
             Add(Unit("NAR_002", "Sasuke Uchiha",
                 Universe.Naruto, Faction.LeafVillage, CardRarity.Rare,
-                4, 4, 3, Keyword.Charge, CardTag.Human | CardTag.Assassin | CardTag.Lightning));
+                4, 5, 3, Keyword.Charge, CardTag.Human | CardTag.Assassin | CardTag.Lightning,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 2))));
 
             Add(Unit("OPC_001", "Monkey D. Luffy",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Epic,
-                5, 4, 6, Keyword.Rush, CardTag.Human | CardTag.Melee));
+                5, 6, 6, Keyword.Rush, CardTag.Human | CardTag.Melee));
 
             Add(Unit("OPC_002", "Roronoa Zoro",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
-                5, 3, 5, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
+                5, 5, 5, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
 
             Add(Unit("BLE_001", "Ichigo Kurosaki",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
-                6, 5, 5, Keyword.Charge, CardTag.Human | CardTag.Spirit | CardTag.Melee));
+                6, 6, 6, Keyword.Charge | Keyword.Pierce, CardTag.Human | CardTag.Spirit | CardTag.Melee));
 
             Add(Unit("BLE_002", "Rukia Kuchiki",
                 Universe.Bleach, Faction.Gotei13, CardRarity.Rare,
-                3, 2, 3, Keyword.None, CardTag.Spirit | CardTag.Magic | CardTag.Ice,
+                3, 3, 3, Keyword.None, CardTag.Spirit | CardTag.Magic | CardTag.Ice,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxStatus(EffectType.Stun, 0, 1))));
 
             Add(Unit("DBZ_001", "Son Goku",
                 Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
-                8, 7, 7, Keyword.Charge, CardTag.Human | CardTag.Elite | CardTag.Melee,
+                8, 8, 8, Keyword.Charge, CardTag.Human | CardTag.Elite | CardTag.Melee,
                 Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 4))));
+                    Fx(EffectType.DealDamage, 5)),
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3))));
 
             Add(Unit("DBZ_002", "Vegeta",
                 Universe.DragonBall, Faction.ZFighters, CardRarity.Epic,
-                6, 5, 5, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee,
+                6, 6, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee,
                 Act(TriggerType.DamageTaken, TargetRule.Self, TargetSelection.All,
                     Fx(EffectType.GainAttack, 2))));
 
             Add(Unit("JJB_001", "Jotaro Kujo",
                 Universe.JoJo, Faction.StardustCrusaders, CardRarity.Epic,
-                6, 4, 5, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
+                6, 6, 6, Keyword.DoubleStrike, CardTag.Human | CardTag.Melee));
 
             Add(Unit("JJB_002", "Dio Brando",
                 Universe.JoJo, Faction.DioFollowers, CardRarity.Legendary,
-                7, 6, 6, Keyword.Lifesteal, CardTag.Undead | CardTag.Elite,
+                7, 7, 7, Keyword.Lifesteal, CardTag.Undead | CardTag.Elite,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.All,
                     FxStatus(EffectType.Stun, 0, 1))));
 
             Add(Unit("FAT_001", "Artoria Pendragon",
                 Universe.Fate, Faction.Chaldea, CardRarity.Legendary,
-                6, 5, 5, Keyword.Shield, CardTag.Human | CardTag.Melee | CardTag.Light,
+                7, 7, 7, Keyword.Shield, CardTag.Human | CardTag.Melee | CardTag.Light,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
-                    Fx(EffectType.Heal, 5))));
+                    Fx(EffectType.Heal, 8)),
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxApply(StatusType.Protected, 0, 2))));
 
             Add(Unit("HSR_001", "March 7th",
                 Universe.HonkaiStarRail, Faction.AstralExpress, CardRarity.Common,
-                3, 2, 3, Keyword.Taunt, CardTag.Human | CardTag.Ranged | CardTag.Ice,
+                3, 3, 3, Keyword.Taunt, CardTag.Human | CardTag.Ranged | CardTag.Ice,
                 Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
                     FxKeyword(EffectType.AddKeyword, Keyword.Shield))));
 
             Add(Unit("HSR_002", "Kafka",
                 Universe.HonkaiStarRail, Faction.StellaronHunters, CardRarity.Epic,
-                4, 3, 3, Keyword.None, CardTag.Human | CardTag.Magic | CardTag.Lightning,
+                4, 4, 4, Keyword.None, CardTag.Human | CardTag.Magic | CardTag.Lightning,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.All,
-                    FxStatus(EffectType.Burn, 1, 3))));
+                    FxStatus(EffectType.Burn, 2, 3))));
 
             Add(Unit("WUW_001", "Jiyan",
                 Universe.WutheringWaves, Faction.Jinzhou, CardRarity.Rare,
-                5, 4, 4, Keyword.Rush, CardTag.Human | CardTag.Melee | CardTag.Wind,
+                5, 5, 5, Keyword.Rush, CardTag.Human | CardTag.Melee | CardTag.Wind,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 2))));
+                    Fx(EffectType.DealDamage, 3))));
 
             Add(Unit("MYT_001", "Satoru Gojo",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Legendary,
-                9, 7, 7, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Boss,
+                8, 8, 8, Keyword.Shield, CardTag.Human | CardTag.Magic | CardTag.Boss,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 4))));
+                    Fx(EffectType.DealDamage, 4)),
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    FxApply(StatusType.Freeze, 0, 1))));
 
             Add(Unit("MYT_002", "Ryomen Sukuna",
                 Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Legendary,
-                7, 5, 6, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Dark,
+                7, 7, 6, Keyword.None, CardTag.Demon | CardTag.Boss | CardTag.Dark,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DestroyCard))));
+                    Fx(EffectType.DestroyCard)),
+                Act(TriggerType.TurnEnd, TargetRule.EnemyLeader, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 2))));
 
 
             // ---------- Keyword / Status Showcase ----------
@@ -446,36 +461,37 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("NAR_003", "Rock Lee",
                 Universe.Naruto, Faction.LeafVillage, CardRarity.Rare,
-                3, 3, 2, Keyword.Rush | Keyword.QuickAttack,
+                3, 4, 3, Keyword.Rush | Keyword.QuickAttack,
                 CardTag.Human | CardTag.Melee));
 
             Add(Unit("NAR_004", "Itachi Uchiha",
                 Universe.Naruto, Faction.Akatsuki, CardRarity.Epic,
-                5, 4, 4, Keyword.Stealth,
+                5, 5, 5, Keyword.Stealth,
                 CardTag.Human | CardTag.Assassin | CardTag.Dark,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    FxApply(StatusType.Confusion, 0, 2))));
+                    FxApply(StatusType.Confusion, 0, 2),
+                    FxStatus(EffectType.Stun, 0, 1))));
 
             Add(Unit("OPC_003", "Sanji",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
-                4, 3, 3, Keyword.None,
+                4, 4, 3, Keyword.None,
                 CardTag.Human | CardTag.Melee | CardTag.Fire,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DealDamage, 1)),
                 ActIf(ConditionType.Combo, 1,
                     TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 2))));
+                    Fx(EffectType.DealDamage, 3))));
 
             Add(Unit("OPC_004", "Jinbe",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
-                4, 3, 6, Keyword.Guard,
+                4, 3, 7, Keyword.Guard,
                 CardTag.Human | CardTag.Tank,
                 Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
                     FxApply(StatusType.DefenseUp, 2, 3))));
 
             CardData shikai = Add(Unit("BLE_003", "Ichigo, Shikai",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Rare,
-                4, 3, 4, Keyword.QuickAttack,
+                4, 4, 4, Keyword.QuickAttack,
                 CardTag.Human | CardTag.Spirit | CardTag.Melee));
 
             // Evolve: อยู่บนสนามครบ 2 เทิร์นแล้วปลดปล่อย Bankai
@@ -484,12 +500,12 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("BLE_004", "Kenpachi Zaraki",
                 Universe.Bleach, Faction.Gotei13, CardRarity.Epic,
-                6, 6, 5, Keyword.Unstoppable | Keyword.Rush,
+                6, 7, 6, Keyword.Unstoppable | Keyword.Rush,
                 CardTag.Human | CardTag.Elite | CardTag.Melee));
 
             Add(Unit("DBZ_003", "Goku, Saiyan Warrior",
                 Universe.DragonBall, Faction.ZFighters, CardRarity.Epic,
-                5, 4, 5, Keyword.None,
+                5, 5, 6, Keyword.None,
                 CardTag.Human | CardTag.Elite | CardTag.Melee,
                 ActIf(ConditionType.SelfHealthLessThan, 15,
                     TriggerType.TurnStart, TargetRule.Self, TargetSelection.All,
@@ -497,24 +513,28 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("DBZ_004", "Frieza",
                 Universe.DragonBall, Faction.FriezaForce, CardRarity.Epic,
-                7, 5, 6, Keyword.None,
+                7, 6, 7, Keyword.None,
                 CardTag.Elite | CardTag.Boss | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
-                    FxStatus(EffectType.Burn, 1, 3))));
+                    FxStatus(EffectType.Burn, 2, 3))));
 
             Add(Unit("DBZ_005", "Whis",
                 Universe.DragonBall, Faction.ZFighters, CardRarity.Legendary,
-                8, 3, 8, Keyword.Immune | Keyword.Guard,
-                CardTag.God | CardTag.Elite | CardTag.Support));
+                7, 4, 10, Keyword.Immune | Keyword.Guard,
+                CardTag.God | CardTag.Elite | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxApply(StatusType.Barrier, 2, 0)),
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 5))));
 
             Add(Unit("JJB_003", "Star Platinum",
                 Universe.JoJo, Faction.StardustCrusaders, CardRarity.Epic,
-                7, 6, 5, Keyword.QuickAttack | Keyword.Overwhelm,
+                7, 7, 6, Keyword.QuickAttack | Keyword.Overwhelm,
                 CardTag.Spirit | CardTag.Melee));
 
             CardData gilgamesh = Add(Unit("FAT_002", "Gilgamesh",
                 Universe.Fate, Faction.Chaldea, CardRarity.Legendary,
-                8, 6, 6, Keyword.Ward,
+                8, 8, 8, Keyword.Ward,
                 CardTag.Human | CardTag.Elite | CardTag.Light));
 
             // Aura: ยูนิตพวกเดียวกันตัวอื่นได้ +1 Attack ขณะ Gilgamesh อยู่บนสนาม
@@ -522,19 +542,19 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("FAT_003", "Medea, Witch of Betrayal",
                 Universe.Fate, Faction.Chaldea, CardRarity.Rare,
-                3, 2, 3, Keyword.Spellburst,
+                3, 3, 3, Keyword.Spellburst,
                 CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Spellburst, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.DrawCard, 1))));
 
             Add(Unit("HSR_003", "Dan Heng",
                 Universe.HonkaiStarRail, Faction.AstralExpress, CardRarity.Rare,
-                3, 3, 3, Keyword.Pierce,
+                3, 4, 3, Keyword.Pierce,
                 CardTag.Human | CardTag.Ranged | CardTag.Wind));
 
             Add(Unit("HSR_004", "Silver Wolf",
                 Universe.HonkaiStarRail, Faction.StellaronHunters, CardRarity.Epic,
-                4, 2, 4, Keyword.None,
+                4, 3, 4, Keyword.None,
                 CardTag.Human | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxApply(StatusType.Vulnerable, 0, 3),
@@ -542,26 +562,26 @@ namespace MultiverseCardBattle.Data
 
             Add(Unit("WUW_002", "Rover, Resonator",
                 Universe.WutheringWaves, Faction.BlackShores, CardRarity.Epic,
-                4, 3, 3, Keyword.None,
+                4, 3, 4, Keyword.None,
                 CardTag.Human | CardTag.Melee,
                 Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
                     Fx(EffectType.Adapt, 3))));
 
             Add(Unit("MYT_003", "Yuji Itadori",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Epic,
-                5, 4, 3, Keyword.Reborn,
+                5, 5, 4, Keyword.Reborn,
                 CardTag.Human | CardTag.Melee));
 
             Add(Unit("MYT_004", "Principal Yaga",
                 Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
-                4, 2, 5, Keyword.Ward,
+                4, 3, 6, Keyword.Ward,
                 CardTag.Human | CardTag.Support,
                 Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
                     FxApply(StatusType.Barrier, 2, 0))));
 
             Add(Unit("MYT_005", "Mahito",
                 Universe.JujutsuKaisen, Faction.CursedSpirits, CardRarity.Rare,
-                4, 3, 3, Keyword.None,
+                4, 4, 4, Keyword.None,
                 CardTag.Spirit | CardTag.Demon | CardTag.Magic,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     FxApply(StatusType.Disarm, 0, 2),
@@ -571,30 +591,30 @@ namespace MultiverseCardBattle.Data
 
             Add(Spell("SPL_001", "Lightning Bolt", CardRarity.Common, 1,
                 Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 3))));
+                    Fx(EffectType.DealDamage, 4))));
 
             Add(Spell("SPL_002", "Fireball", CardRarity.Common, 3,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 4))));
+                    Fx(EffectType.DealDamage, 5))));
 
             Add(Spell("SPL_003", "Healing Light", CardRarity.Common, 2,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
-                    Fx(EffectType.Heal, 5))));
+                    Fx(EffectType.Heal, 6))));
 
             Add(Spell("SPL_004", "Power Surge", CardRarity.Common, 1,
                 Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.GainAttack, 2),
-                    Fx(EffectType.GainHealth, 2))));
+                    Fx(EffectType.GainAttack, 3),
+                    Fx(EffectType.GainHealth, 3))));
 
-            Add(Spell("SPL_005", "Arcane Insight", CardRarity.Common, 3,
+            Add(Spell("SPL_005", "Arcane Insight", CardRarity.Common, 2,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.DrawCard, 2))));
 
             Add(Spell("SPL_006", "Mass Smite", CardRarity.Epic, 5,
                 Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
-                    Fx(EffectType.DealDamage, 3))));
+                    Fx(EffectType.DealDamage, 4))));
 
-            Add(Spell("SPL_007", "Assassinate", CardRarity.Rare, 4,
+            Add(Spell("SPL_007", "Assassinate", CardRarity.Rare, 3,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DestroyCard))));
 
@@ -629,7 +649,7 @@ namespace MultiverseCardBattle.Data
 
             Add(Spell("SPL_014", "Opportunist", CardRarity.Common, 2,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 2)),
+                    Fx(EffectType.DealDamage, 3)),
                 ActIf(ConditionType.Combo, 1,
                     TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                     Fx(EffectType.DrawCard, 1))));
@@ -638,6 +658,393 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
                     FxApply(StatusType.Protected, 0, 2),
                     FxApply(StatusType.DefenseUp, 1, 2))));
+
+            BuildRiftSet();
+        }
+
+        // ---------- Rift Pack (50 ใบ: ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ----------
+
+        private static CardData AddRift(CardData data)
+        {
+            data.Set = CardSet.Rift;
+
+            return Add(data);
+        }
+
+        private static CardData RiftToken(
+            string id, string name, Universe universe, Faction faction,
+            CardRarity rarity, int cost, int atk, int hp,
+            Keyword keywords, CardTag tags, params CardActionData[] actions)
+        {
+            return Add(Create(id, name, CardType.Unit, universe, faction, rarity,
+                cost, atk, hp, keywords, tags | CardTag.Token,
+                CardSource.Token, actions));
+        }
+
+        private static CardData RiftSpell(
+            string id, string name, CardRarity rarity, int cost,
+            params CardActionData[] actions)
+        {
+            return AddRift(Spell(id, name, rarity, cost, actions));
+        }
+
+        // อุปกรณ์สวมยูนิต: เลือกยูนิตพวกเรา 1 ตัวแล้วได้โบนัสถาวร
+        private static CardData UnitGear(
+            string id, string name, CardRarity rarity, int cost,
+            int attack, int health, Keyword keywords, string text)
+        {
+            CardData data = Create(id, name, CardType.Equipment,
+                Universe.Original, Faction.Neutral, rarity,
+                cost, 0, 0, Keyword.None, CardTag.None, CardSource.Starter,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                        Fx(EffectType.Equip))
+                });
+
+            data.GearAttack = attack;
+            data.GearHealth = health;
+            data.GearKeywords = keywords;
+            data.Description = text;
+
+            return AddRift(data);
+        }
+
+        // อุปกรณ์ Leader: อยู่ได้ N เทิร์น ทำงานตอนเริ่ม/จบเทิร์น
+        private static CardData LeaderGear(
+            string id, string name, CardRarity rarity, int cost,
+            int durability, string text, params EffectData[] turnStartEffects)
+        {
+            CardData data = Create(id, name, CardType.Equipment,
+                Universe.Original, Faction.Neutral, rarity,
+                cost, 0, 0, Keyword.None, CardTag.None, CardSource.Starter,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                        Fx(EffectType.EquipLeader)),
+                    Act(TriggerType.TurnStart, TargetRule.AllyLeader, TargetSelection.All,
+                        turnStartEffects)
+                });
+
+            data.GearDurability = durability;
+            data.Description = text;
+
+            return AddRift(data);
+        }
+
+        private static void BuildRiftSet()
+        {
+            // ----- Token -----
+
+            CardData toad = RiftToken("TKN_012", "Giant Toad",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Common,
+                3, 3, 3, Keyword.Taunt, CardTag.Beast);
+
+            CardData familiar = RiftToken("TKN_013", "Spirit Familiar",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Common,
+                1, 2, 1, Keyword.None, CardTag.Spirit);
+
+            CardData minatoForm = RiftToken("TKN_007", "Minato, Nine-Tails Mode",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Epic,
+                6, 9, 8, Keyword.Rush | Keyword.Unstoppable,
+                CardTag.Human | CardTag.Elite | CardTag.Melee);
+
+            CardData aceForm = RiftToken("TKN_008", "Ace, Flame Emperor",
+                Universe.OnePiece, Faction.WhitebeardPirates, CardRarity.Epic,
+                7, 9, 7, Keyword.Charge,
+                CardTag.Human | CardTag.Elite | CardTag.Fire,
+                Act(TriggerType.Attack, TargetRule.AllEnemies, TargetSelection.All,
+                    FxStatus(EffectType.Burn, 1, 2)));
+
+            CardData aizenForm = RiftToken("TKN_009", "Aizen, Hogyoku Fusion",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
+                6, 10, 10, Keyword.Lifesteal,
+                CardTag.Spirit | CardTag.Elite | CardTag.Boss | CardTag.Magic);
+
+            CardData gohanForm = RiftToken("TKN_010", "Gohan, Beast",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Epic,
+                7, 9, 9, Keyword.DoubleStrike,
+                CardTag.Human | CardTag.Elite | CardTag.Melee);
+
+            CardData erenForm = RiftToken("TKN_011", "Eren, Attack Titan",
+                Universe.AttackOnTitan, Faction.SurveyCorps, CardRarity.Epic,
+                6, 10, 10, Keyword.Taunt,
+                CardTag.Beast | CardTag.Elite | CardTag.Boss | CardTag.Melee);
+
+            // ----- Units: Common -----
+
+            AddRift(Unit("RFT_001", "Neji Hyuga",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Common,
+                2, 3, 3, Keyword.Rush, CardTag.Human | CardTag.Melee));
+
+            AddRift(Unit("RFT_002", "Usopp",
+                Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Common,
+                2, 2, 3, Keyword.Stealth, CardTag.Human | CardTag.Ranged,
+                Act(TriggerType.Attack, TargetRule.EnemyUnit, TargetSelection.Random,
+                    Fx(EffectType.DealDamage, 1))));
+
+            AddRift(Unit("RFT_003", "Chopper",
+                Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Common,
+                2, 2, 3, Keyword.None, CardTag.Beast | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 4))));
+
+            AddRift(Unit("RFT_004", "Uryu Ishida",
+                Universe.Bleach, Faction.Wandenreich, CardRarity.Common,
+                3, 4, 2, Keyword.None, CardTag.Human | CardTag.Ranged | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3))));
+
+            AddRift(Unit("RFT_005", "Krillin",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Common,
+                2, 2, 3, Keyword.None, CardTag.Human | CardTag.Melee,
+                Act(TriggerType.Death, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1))));
+
+            AddRift(Unit("RFT_006", "Joseph Joestar",
+                Universe.JoJo, Faction.StardustCrusaders, CardRarity.Common,
+                3, 4, 3, Keyword.QuickAttack, CardTag.Human | CardTag.Melee));
+
+            AddRift(Unit("RFT_007", "Lancer Cu Chulainn",
+                Universe.Fate, Faction.Chaldea, CardRarity.Common,
+                4, 5, 3, Keyword.Pierce, CardTag.Human | CardTag.Melee));
+
+            AddRift(Unit("RFT_008", "Tanjiro Kamado",
+                Universe.DemonSlayer, Faction.DemonSlayerCorps, CardRarity.Common,
+                3, 3, 4, Keyword.Lifesteal, CardTag.Human | CardTag.Melee | CardTag.Water));
+
+            AddRift(Unit("RFT_009", "Nezuko Kamado",
+                Universe.DemonSlayer, Faction.DemonSlayerCorps, CardRarity.Common,
+                2, 3, 2, Keyword.Reborn, CardTag.Demon | CardTag.Melee));
+
+            AddRift(Unit("RFT_010", "Mikasa Ackerman",
+                Universe.AttackOnTitan, Faction.SurveyCorps, CardRarity.Common,
+                4, 5, 4, Keyword.QuickAttack, CardTag.Human | CardTag.Melee));
+
+            AddRift(Unit("RFT_011", "Armin Arlert",
+                Universe.AttackOnTitan, Faction.SurveyCorps, CardRarity.Common,
+                2, 2, 3, Keyword.None, CardTag.Human | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1))));
+
+            // ----- Units: Rare -----
+
+            AddRift(Unit("RFT_012", "Jiraiya",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Rare,
+                5, 5, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxCard(EffectType.Summon, toad))));
+
+            AddRift(Unit("RFT_013", "Trafalgar Law",
+                Universe.OnePiece, Faction.None, CardRarity.Rare,
+                4, 4, 4, Keyword.None, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Freeze, 0, 1))));
+
+            AddRift(Unit("RFT_014", "Nico Robin",
+                Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
+                4, 4, 5, Keyword.Stealth, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.Silence))));
+
+            AddRift(Unit("RFT_015", "Renji Abarai",
+                Universe.Bleach, Faction.Gotei13, CardRarity.Rare,
+                5, 6, 5, Keyword.Overwhelm, CardTag.Spirit | CardTag.Melee));
+
+            AddRift(Unit("RFT_016", "Future Trunks",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Rare,
+                5, 5, 5, Keyword.None, CardTag.Human | CardTag.Melee,
+                Act(TriggerType.TurnEnd, TargetRule.Self, TargetSelection.All,
+                    Fx(EffectType.GainAttack, 1))));
+
+            AddRift(Unit("RFT_017", "Aoi Todo",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Rare,
+                4, 4, 4, Keyword.None, CardTag.Human | CardTag.Melee,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxCard(EffectType.Summon, familiar),
+                    FxCard(EffectType.Summon, familiar))));
+
+            AddRift(Unit("RFT_018", "Beru",
+                Universe.SoloLeveling, Faction.ShadowArmy, CardRarity.Rare,
+                6, 7, 5, Keyword.Backstab | Keyword.Stealth,
+                CardTag.Beast | CardTag.Elite | CardTag.Assassin));
+
+            AddRift(Unit("RFT_019", "Rengoku",
+                Universe.DemonSlayer, Faction.DemonSlayerCorps, CardRarity.Rare,
+                5, 5, 5, Keyword.None, CardTag.Human | CardTag.Melee | CardTag.Fire,
+                Act(TriggerType.Death, TargetRule.AllEnemies, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 4))));
+
+            AddRift(Unit("RFT_020", "Levi Ackerman",
+                Universe.AttackOnTitan, Faction.SurveyCorps, CardRarity.Rare,
+                5, 6, 5, Keyword.DoubleStrike, CardTag.Human | CardTag.Elite | CardTag.Melee));
+
+            AddRift(Unit("RFT_021", "Makima",
+                Universe.ChainsawMan, Faction.PublicSafety, CardRarity.Rare,
+                5, 4, 6, Keyword.None, CardTag.Demon | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.Stun, 2),
+                    FxApply(StatusType.Weakness, 0, 3),
+                    FxApply(StatusType.Vulnerable, 0, 3))));
+
+            // ----- Units: Epic (แปลงร่างด้วย Transform) -----
+
+            AddRift(Unit("RFT_022", "Minato Namikaze",
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Epic,
+                6, 6, 5, Keyword.QuickAttack, CardTag.Human | CardTag.Elite | CardTag.Melee,
+                ActIf(ConditionType.SelfHealthLessThan, 15,
+                    TriggerType.TurnStart, TargetRule.Self, TargetSelection.All,
+                    FxTransform(minatoForm, 3))));
+
+            AddRift(Unit("RFT_023", "Portgas D. Ace",
+                Universe.OnePiece, Faction.WhitebeardPirates, CardRarity.Epic,
+                7, 7, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Fire,
+                ActIf(ConditionType.AllyUnitCount, 3,
+                    TriggerType.TurnEnd, TargetRule.Self, TargetSelection.All,
+                    FxTransform(aceForm, 3))));
+
+            AddRift(Unit("RFT_024", "Sosuke Aizen",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
+                6, 6, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Magic,
+                Act(TriggerType.Attack, TargetRule.Self, TargetSelection.All,
+                    FxTransform(aizenForm, 0))));
+
+            AddRift(Unit("RFT_025", "Son Gohan",
+                Universe.DragonBall, Faction.ZFighters, CardRarity.Epic,
+                7, 6, 7, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee,
+                ActIf(ConditionType.SelfHealthLessThan, 15,
+                    TriggerType.TurnStart, TargetRule.Self, TargetSelection.All,
+                    FxTransform(gohanForm, 3))));
+
+            AddRift(Unit("RFT_026", "Giorno Giovanna",
+                Universe.JoJo, Faction.Passione, CardRarity.Epic,
+                6, 6, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Support,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    Fx(EffectType.GainAttack, 1),
+                    Fx(EffectType.GainHealth, 1)),
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 4))));
+
+            AddRift(Unit("RFT_027", "Eren Yeager",
+                Universe.AttackOnTitan, Faction.SurveyCorps, CardRarity.Epic,
+                6, 5, 6, Keyword.None, CardTag.Human | CardTag.Elite | CardTag.Melee,
+                Act(TriggerType.DamageTaken, TargetRule.Self, TargetSelection.All,
+                    FxTransform(erenForm, 0))));
+
+            // ----- Units: Legendary -----
+
+            AddRift(Unit("RFT_028", "Toji Fushiguro",
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Legendary,
+                7, 8, 6, Keyword.Stealth | Keyword.Pierce | Keyword.Unstoppable,
+                CardTag.Human | CardTag.Elite | CardTag.Assassin));
+
+            AddRift(Unit("RFT_029", "Muzan Kibutsuji",
+                Universe.DemonSlayer, Faction.Demons, CardRarity.Legendary,
+                8, 8, 8, Keyword.Lifesteal,
+                CardTag.Demon | CardTag.Elite | CardTag.Boss | CardTag.Dark,
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    FxApply(StatusType.Poison, 2, 3))));
+
+            AddRift(Unit("RFT_030", "Madara Uchiha",
+                Universe.Naruto, Faction.Akatsuki, CardRarity.Legendary,
+                8, 9, 8, Keyword.None,
+                CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Fire,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Random,
+                    Fx(EffectType.DestroyCard)),
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Random,
+                    Fx(EffectType.DestroyCard))));
+
+            // ----- Spells -----
+
+            RiftSpell("RFT_031", "Rasengan", CardRarity.Common, 2,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3)));
+
+            RiftSpell("RFT_032", "Water Breathing: Eleventh Form", CardRarity.Common, 2,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 3),
+                    Fx(EffectType.DrawCard, 1)));
+
+            RiftSpell("RFT_033", "Gomu Gomu Pistol", CardRarity.Common, 1,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 2)),
+                Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 1)));
+
+            RiftSpell("RFT_034", "Getsuga Tensho", CardRarity.Common, 3,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 5)));
+
+            RiftSpell("RFT_035", "Senzu Bean", CardRarity.Common, 1,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 6)));
+
+            RiftSpell("RFT_036", "Kamehameha", CardRarity.Rare, 4,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 6)),
+                Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 3)));
+
+            RiftSpell("RFT_037", "Chidori", CardRarity.Rare, 3,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 4),
+                    FxStatus(EffectType.Stun, 0, 1)));
+
+            RiftSpell("RFT_038", "Unlimited Blade Works", CardRarity.Rare, 5,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 2),
+                    Fx(EffectType.GainEnergy, 1)));
+
+            RiftSpell("RFT_039", "Domain Expansion", CardRarity.Rare, 5,
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    Fx(EffectType.Silence),
+                    Fx(EffectType.DealDamage, 2)));
+
+            RiftSpell("RFT_040", "Za Warudo", CardRarity.Epic, 6,
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    FxApply(StatusType.Freeze, 0, 2)),
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1)));
+
+            RiftSpell("RFT_041", "Black Flash", CardRarity.Epic, 4,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 7)));
+
+            RiftSpell("RFT_042", "Eye of the Moon", CardRarity.Legendary, 8,
+                Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 4),
+                    FxApply(StatusType.Freeze, 0, 2),
+                    FxApply(StatusType.Weakness, 0, 3)));
+
+            // ----- Equipment -----
+
+            UnitGear("RFT_043", "Leaf Headband", CardRarity.Common, 1,
+                1, 2, Keyword.None, "Equip: Choose a friendly unit. It gets +1/+2.");
+
+            UnitGear("RFT_044", "Straw Hat", CardRarity.Common, 1,
+                2, 1, Keyword.Rush, "Equip: Choose a friendly unit. It gets +2/+1 and Rush.");
+
+            UnitGear("RFT_045", "Wado Ichimonji", CardRarity.Rare, 2,
+                2, 0, Keyword.QuickAttack, "Equip: Choose a friendly unit. It gets +2 ATK and Quick Attack.");
+
+            UnitGear("RFT_046", "Hunter's Cloak", CardRarity.Rare, 3,
+                1, 3, Keyword.Stealth, "Equip: Choose a friendly unit. It gets +1/+3 and Stealth.");
+
+            LeaderGear("RFT_047", "Chaldea Mystic Code", CardRarity.Rare, 3, 4,
+                "Equip to your Leader for 4 turns.\nAt the start of your turn, restore 2 HP to your Leader.",
+                Fx(EffectType.Heal, 2));
+
+            UnitGear("RFT_048", "Playful Cloud", CardRarity.Epic, 4,
+                3, 2, Keyword.DoubleStrike, "Equip: Choose a friendly unit. It gets +3/+2 and Double Strike.");
+
+            UnitGear("RFT_049", "Excalibur", CardRarity.Epic, 5,
+                4, 2, Keyword.Shield | Keyword.Lifesteal, "Equip: Choose a friendly unit. It gets +4/+2, Shield and Lifesteal.");
+
+            LeaderGear("RFT_050", "Holy Grail", CardRarity.Legendary, 6, 3,
+                "Equip to your Leader for 3 turns.\nAt the start of your turn, draw a card, restore 3 HP and gain 1 Energy.",
+                Fx(EffectType.DrawCard, 1),
+                Fx(EffectType.Heal, 3),
+                Fx(EffectType.GainEnergy, 1));
         }
 
         // ---------- ตัวช่วยสร้างการ์ด ----------

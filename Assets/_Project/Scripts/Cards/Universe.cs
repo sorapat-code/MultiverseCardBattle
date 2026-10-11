@@ -22,6 +22,10 @@ namespace MultiverseCardBattle.Cards
 
         Overlord,
 
-        DevilMayCry
+        DevilMayCry,
+
+        DemonSlayer,
+        AttackOnTitan,
+        ChainsawMan
     }
 }

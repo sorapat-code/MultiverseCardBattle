@@ -152,6 +152,14 @@ namespace MultiverseCardBattle.Effects
                     Adapt(effect, context);
                     break;
 
+                case EffectType.Equip:
+                    Equip(context);
+                    break;
+
+                case EffectType.EquipLeader:
+                    EquipLeader(context);
+                    break;
+
                 case EffectType.GrantExtraAttack:
                     if (context.TargetCard != null)
                         context.TargetCard.ExtraAttacks += PositiveOr(effect.Value, 1);
@@ -169,6 +177,66 @@ namespace MultiverseCardBattle.Effects
         }
 
         private const int MaxEnergyCap = 10;
+
+        // ---------- Equipment ----------
+
+        private static void Equip(EffectContext context)
+        {
+            CardInstance target = context.TargetCard;
+            CardInstance gear = context.SourceCard;
+
+            if (target == null || gear == null || gear.Data == null)
+                return;
+
+            CardData data = gear.Data;
+
+            target.CurrentAttack = System.Math.Max(0, target.CurrentAttack + data.GearAttack);
+
+            if (data.GearHealth != 0)
+            {
+                target.MaxHealth = System.Math.Max(1, target.MaxHealth + data.GearHealth);
+                target.CurrentHealth = System.Math.Min(
+                    target.MaxHealth, target.CurrentHealth + data.GearHealth);
+            }
+
+            if (data.GearKeywords != Keyword.None)
+                target.AddKeyword(data.GearKeywords);
+
+            target.GearNames.Add(data.CardName);
+
+            if (context.Battle != null)
+            {
+                context.Battle.Log(
+                    target.Data.CardName + " equips " + data.CardName);
+
+                context.Battle.Touch();
+            }
+        }
+
+        private static void EquipLeader(EffectContext context)
+        {
+            CardInstance gear = context.SourceCard;
+            BattlePlayer player = context.SourcePlayer;
+
+            if (gear == null || gear.Data == null || player == null)
+                return;
+
+            // ของเก่าถูกแทนที่และลงสุสาน
+            if (player.LeaderGear != null && player.LeaderGear != gear)
+                player.AddToZone(player.LeaderGear, CardZone.Graveyard);
+
+            player.LeaderGear = gear;
+            player.LeaderGearTurns = System.Math.Max(1, gear.Data.GearDurability);
+
+            if (context.Battle != null)
+            {
+                context.Battle.Log(
+                    player.Name + " equips " + gear.Data.CardName +
+                    " (" + player.LeaderGearTurns + " turns)");
+
+                context.Battle.Touch();
+            }
+        }
 
         private static int PositiveOr(int value, int fallback)
         {

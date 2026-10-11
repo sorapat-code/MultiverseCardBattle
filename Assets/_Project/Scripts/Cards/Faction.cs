@@ -69,6 +69,19 @@ namespace MultiverseCardBattle.Cards
         Nazarick,
 
         // Devil May Cry
-        SpardaClan
+        SpardaClan,
+
+        // Demon Slayer
+        DemonSlayerCorps,
+        Demons,
+
+        // Attack on Titan
+        SurveyCorps,
+
+        // Chainsaw Man
+        PublicSafety,
+
+        // One Piece (เพิ่ม)
+        WhitebeardPirates
     }
 }

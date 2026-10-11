@@ -193,9 +193,9 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
-        public void Poison_KillsAfterAnyDamage()
+        public void Backstab_KillsAfterAnyDamage()
         {
-            CardInstance source = PutOnField(P1, "P", 1, 1, Keyword.Poison);
+            CardInstance source = PutOnField(P1, "P", 1, 1, Keyword.Backstab);
             CardInstance target = PutOnField(P2, "V", 1, 10, Keyword.None);
 
             battle.DamageUnit(source, target, 1);

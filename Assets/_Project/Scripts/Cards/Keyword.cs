@@ -27,7 +27,7 @@ namespace MultiverseCardBattle.Cards
         Lifesteal    = 1 << 4,
 
         // ยูนิตที่โดนความเสียหายจากการ์ดนี้จะตายทันที
-        Poison       = 1 << 5,
+        Backstab     = 1 << 5,
 
         // ศัตรูเลือกเป็นเป้าหมายไม่ได้ จนกว่าจะโจมตี
         Stealth      = 1 << 6,

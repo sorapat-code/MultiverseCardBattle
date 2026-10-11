@@ -29,6 +29,10 @@ namespace MultiverseCardBattle.Battle
         // Energy ที่ได้จาก Dark Wisdom ในเทิร์นนี้ (สูงสุด 3)
         public int DarkWisdomEnergyThisTurn;
 
+        // อุปกรณ์ Leader ที่สวมอยู่ (null = ไม่มี) กับจำนวนเทิร์นที่เหลือ
+        public CardInstance LeaderGear;
+        public int LeaderGearTurns;
+
         public Deck Deck;
         public Hand Hand;
 

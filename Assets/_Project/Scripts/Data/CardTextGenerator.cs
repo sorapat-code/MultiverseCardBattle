@@ -361,6 +361,12 @@ namespace MultiverseCardBattle.Data
                 case EffectType.Adapt:
                     return "Adapt";
 
+                case EffectType.Equip:
+                    return "equip " + target;
+
+                case EffectType.EquipLeader:
+                    return "equip to your Leader";
+
                 default:
                     return "";
             }

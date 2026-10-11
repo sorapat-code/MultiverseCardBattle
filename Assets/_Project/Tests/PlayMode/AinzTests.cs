@@ -220,7 +220,7 @@ namespace MultiverseCardBattle.Tests
         public void GraspHeart_KillSplashesTwoOtherEnemies()
         {
             CardInstance ainz = Place(P1, StarterCardLibrary.AinzId);
-            CardInstance weak = Place(P2, "STR_002");
+            CardInstance weak = Place(P2, "STR_001");
             CardInstance other1 = Place(P2, "STR_005");
             CardInstance other2 = Place(P2, "STR_005");
 
@@ -231,8 +231,8 @@ namespace MultiverseCardBattle.Tests
             Assert.IsTrue(battle.ResolvePendingTarget(weak));
 
             Assert.AreNotEqual(CardZone.Field, weak.Zone);
-            Assert.AreEqual(3, other1.CurrentHealth);
-            Assert.AreEqual(3, other2.CurrentHealth);
+            Assert.AreEqual(4, other1.CurrentHealth);
+            Assert.AreEqual(4, other2.CurrentHealth);
             Assert.IsFalse(battle.HasPendingTarget);
             Assert.AreEqual(CardZone.Field, ainz.Zone);
         }
@@ -249,8 +249,8 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsTrue(battle.ResolvePendingTarget(big));
 
-            Assert.AreEqual(2, big.CurrentHealth);
-            Assert.AreEqual(6, other.CurrentHealth);
+            Assert.AreEqual(3, big.CurrentHealth);
+            Assert.AreEqual(7, other.CurrentHealth);
         }
 
         [Test]

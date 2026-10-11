@@ -62,6 +62,12 @@ namespace MultiverseCardBattle.Effects
         Adapt,
 
         // ให้ยูนิตโจมตีเพิ่มได้ Value ครั้งในเทิร์นนี้ (Judgment Cut)
-        GrantExtraAttack
+        GrantExtraAttack,
+
+        // อุปกรณ์: Equip = สวมใส่ยูนิตเป้าหมาย (ใช้ค่า Gear* ของการ์ดต้นทาง)
+        Equip,
+
+        // อุปกรณ์ Leader: วางในช่อง Leader ของผู้เล่น มี Durability (เทิร์น)
+        EquipLeader
     }
 }

@@ -241,7 +241,7 @@ namespace MultiverseCardBattle.Battle
 
                 bool killsTarget =
                     attacker.CurrentAttack >= unit.CurrentHealth ||
-                    attacker.HasKeyword(Keyword.Poison);
+                    attacker.HasKeyword(Keyword.Backstab);
 
                 // ความเสียหายที่ตัวเองจะโดนสวนกลับจริง
                 int counter =

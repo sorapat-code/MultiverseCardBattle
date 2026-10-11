@@ -62,7 +62,8 @@ namespace MultiverseCardBattle.Battle
                 chosen: Target);
 
             // การ์ดที่ไม่ใช่ยูนิต (Spell/Equipment) ลงสุสานหลังใช้เสร็จ
-            if (!isUnit)
+            // (Leader gear ที่สวมอยู่จะอยู่ในช่องอุปกรณ์จนหมดอายุ)
+            if (!isUnit && Player.LeaderGear != Card)
             {
                 Player.AddToZone(Card, CardZone.Graveyard);
             }

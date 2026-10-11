@@ -107,7 +107,7 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, vergil)).Success);
 
-            Assert.AreEqual(3, enemy.CurrentHealth);
+            Assert.AreEqual(4, enemy.CurrentHealth);
 
             // Charge + โจมตีเพิ่ม 1 ครั้ง = 2 ครั้งในเทิร์นนี้
             Assert.IsTrue(battle.Submit(
@@ -184,12 +184,12 @@ namespace MultiverseCardBattle.Tests
             control.AddStatus(StatusType.DefenseUp, 3, 3);
 
             battle.DamageUnit(dt, target, 5);
-            Assert.AreEqual(1, target.CurrentHealth);
+            Assert.AreEqual(2, target.CurrentHealth);
 
             CardInstance normal = Place(P1, "STR_005");
 
             battle.DamageUnit(normal, control, 5);
-            Assert.AreEqual(4, control.CurrentHealth);
+            Assert.AreEqual(5, control.CurrentHealth);
         }
 
         [Test]
@@ -202,7 +202,7 @@ namespace MultiverseCardBattle.Tests
             Assert.IsTrue(battle.Submit(new AttackCommand(P1, dt, a, null)).Success);
 
             Assert.AreNotEqual(CardZone.Field, a.Zone);
-            Assert.AreEqual(3, b.CurrentHealth);
+            Assert.AreEqual(4, b.CurrentHealth);
         }
 
         [Test]

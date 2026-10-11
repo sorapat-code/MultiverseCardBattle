@@ -27,6 +27,9 @@ namespace MultiverseCardBattle.Cards
 
         public CardZone Zone;
 
+        // อุปกรณ์ที่สวมอยู่ (ชื่อ) ใช้แสดงผลเท่านั้น โบนัสถูกบวกเข้า ATK/HP/Keyword โดยตรง
+        public List<string> GearNames = new List<string>();
+
         // เทิร์นรวม (TurnManager.TotalTurns) ที่ลงสนาม ใช้ตรวจ Summoning Sickness
         public int SummonedOnTurn = -1;
 

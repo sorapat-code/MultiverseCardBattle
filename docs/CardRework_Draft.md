@@ -66,7 +66,7 @@ Token ร่างแปลง: TKN_003 SSJ Goku → 9/9 · TKN_004 Ichigo Banka
 | MYT_005 | Mahito | 4c 4/4 |
 | FAT_003 | Medea | 3c 3/3 Spellburst จั่ว 1 |
 | STR_007 | Vampire Knight | 3c 3/4 Lifesteal |
-| STR_008 | Disaster Curse | 2c 2/2 Poison |
+| STR_008 | Disaster Curse | 2c 2/2 Backstab |
 | STR_009 | Megumi | 4c 4/4 Shield, Play: Spirit Familiar 1/1 ×1 |
 | STR_011 | Twin Blade Duelist | 4c 4/3 Double Strike |
 | STR_016 | Spirit Caller | 4c 3/4 Wisp ×2 |
@@ -139,7 +139,7 @@ SPL_008/009/010/011/012/013/015 คงเดิม
 | 15 | Renji Abarai | Bleach | R | 5 | 6/5 | Overwhelm |
 | 16 | Future Trunks | Dragon Ball | R | 5 | 5/5 | จบเทิร์น: ATK +1 |
 | 17 | Aoi Todo | JJK | R | 4 | 4/4 | Play: เรียก Spirit Familiar 2/1 ×2 |
-| 18 | Beru | Solo Leveling | R | 6 | 7/5 | Poison, Stealth |
+| 18 | Beru | Solo Leveling | R | 6 | 7/5 | Backstab, Stealth |
 | 19 | Rengoku | Demon Slayer | R | 5 | 5/5 | Death: 4 ดาเมจศัตรูทั้งหมด |
 | 20 | Levi Ackerman | Attack on Titan | R | 5 | 6/5 | Double Strike |
 | 21 | Makima | Chainsaw Man | R | 5 | 4/6 | Play: ทำลายยูนิตศัตรู ATK ≤ 3 |

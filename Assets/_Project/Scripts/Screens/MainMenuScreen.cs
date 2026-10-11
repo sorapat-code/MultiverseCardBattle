@@ -23,7 +23,7 @@ namespace MultiverseCardBattle.Screens
             "<b>Attack</b>: click one of your ready units (green outline), then click an enemy unit or the enemy Leader. " +
             "A unit cannot attack the turn it is played unless it has Charge or Rush.\n\n" +
             "<b>Keywords</b>\n" +
-            "Taunt, Charge, Rush, Shield, Lifesteal, Poison, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
+            "Taunt, Charge, Rush, Shield, Lifesteal, Backstab, Stealth, Double Strike, Pierce, Quick Attack, Overwhelm, " +
             "Unstoppable, Guard, Ward, Immune, Reborn, Shadowbound, Unique, Battlecry, Deathrattle, Spellburst, Aura, Combo, Evolve, Adapt...\n" +
             "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
             "See <b>Keywords & Status</b> in the main menu for every keyword, status and game term (Discover, Energy, Graveyard...).\n" +

@@ -95,6 +95,8 @@ namespace MultiverseCardBattle.Battle
 
             StatusProcessor.OnTurnEnd(battleManager, ending);
 
+            battleManager.TickLeaderGear(ending);
+
             ClearTurnEffects();
 
             battleManager.Resolve();

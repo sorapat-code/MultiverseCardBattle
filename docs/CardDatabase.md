@@ -68,7 +68,7 @@ Trigger [เงื่อนไข, เงื่อนไข:ค่า] @Target[:
 - **Effect**: `DealDamage`, `DealTrueDamage`, `Heal`, `GainAttack`, `GainHealth`, `SetAttack`, `SetHealth`, `ReduceCost`, `IncreaseCost`, `SetCost`, `DrawCard`, `DiscardCard`, `CreateCard`, `DestroyCard`, `Summon`, `ReturnToHand`, `MoveToDeck`, `Banish`, `AddKeyword`, `RemoveKeyword`, `Silence`, `Stun`, `GainEnergy`, `SpendEnergy`, `Discover`, `Transform`, `Burn`, `Regen`, `ApplyStatus`, `RemoveStatus`, `Adapt`
 - **Condition**: `TurnNumber`, `IsFirstTurn`, `SelfHealthLessThan`, `SelfHealthGreaterThan`, `EnergyGreaterThan`, `EnergyLessThan`, `HandCount`, `DeckCount`, `GraveyardCount`, `AllyUnitCount`, `EnemyUnitCount`, `HasTag`, `HasFaction`, `HasUniverse`, `Chance`, `Combo`, `TargetMarked`
 - **Status**: `Stun`, `Silence`, `Burn`, `Regen`, `Freeze`, `Root`, `Disarm`, `Confusion`, `Poison`, `Bleed`, `Curse`, `Marked`, `AttackUp`, `AttackDown`, `DefenseUp`, `DefenseDown`, `Vulnerable`, `Weakness`, `Barrier`, `CostUp`, `CostDown`, `Exposed`, `Protected`, `Blessed`, `Transformed`, `TemporaryTransformation`, `TransformationLock`, `TransformationFatigue`
-- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Poison`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`, `Shadowbound`
+- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Backstab`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`, `Shadowbound`
 - **Tag**: `Human`, `Beast`, `Machine`, `Spirit`, `Undead`, `God`, `Demon`, `Dragon`, `Melee`, `Ranged`, `Magic`, `Support`, `Tank`, `Assassin`, `Leader`, `Elite`, `Boss`, `Summon`, `Token`, `Fire`, `Water`, `Wind`, `Earth`, `Lightning`, `Ice`, `Dark`, `Light`
 
 ## ตัวอย่าง
@@ -131,3 +131,19 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
 Put card images in `Assets/_Project/Resources/CardArt/{CardID}.png` (loaded by `Data/CardArtLoader.cs`, no Sprite import
 settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Artorias, `EVT_003` Ainz Ooal Gown,
 `EVT_004` Vergil, `TKN_006` Vergil Devil Trigger form (Ainz/Vergil cards are not implemented yet).
+
+## Equipment (อุปกรณ์)
+
+- `Type = Equipment` ใช้ Effect `Equip` (สวมยูนิตพวกเราที่เลือก ได้โบนัสถาวร ATK/HP/Keyword จาก `GearAttack/GearHealth/GearKeywords`) หรือ `EquipLeader` (ช่องอุปกรณ์ Leader อยู่ได้ `GearDurability` เทิร์น ทำงานตอน TurnStart/TurnEnd ของเจ้าของ)
+- ยูนิตที่ตาย → อุปกรณ์หายไปพร้อมกัน, Leader gear ที่ถูกแทนที่/หมดอายุลงสุสาน
+- ตัวอย่าง: `RFT_049 Excalibur` (Unit gear), `RFT_050 Holy Grail` (Leader gear)
+
+## Keyword Backstab (เดิมชื่อ Poison)
+
+ยูนิตที่โดนความเสียหายจากการ์ดที่มี `Backstab` จะถูกทำลาย (ใช้ใน CSV/ScriptableObject เป็น `Backstab` แทน `Poison`) ส่วนสถานะ `Poison` (ดาเมจต่อเนื่อง) ยังเป็นสถานะตามเดิม
+
+## ชุดการ์ด (CardSet)
+
+- `Core` (ซองละ 100 Gold) และ `Rift` (ซองละ 150 Gold) แยกกันที่ `CardData.Set`
+- `Rift`: 50 ใบ (ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ID `RFT_001`–`RFT_050` และ Token `TKN_007`–`TKN_013`
+- ดูรายชื่อทั้งหมดได้ใน `docs/CardRework_Draft.md` และปุ่ม "View Card Pool" ในร้านค้า

@@ -39,6 +39,16 @@ namespace MultiverseCardBattle.Cards
         // ชุดการ์ด (ใช้แยกซอง) ค่าเริ่มต้น = Core
         public CardSet Set;
 
+        [Header("Equipment")]
+
+        // โบนัสที่อุปกรณ์ให้ (ใช้กับ Effect Equip) / Leader gear ใช้ GearDurability
+        public int GearAttack;
+        public int GearHealth;
+        public Keyword GearKeywords;
+
+        // Leader gear: จำนวนเทิร์นของเจ้าของที่อุปกรณ์อยู่ได้ (0 = ไม่ใช่ Leader gear)
+        public int GearDurability;
+
         [Header("Stats")]
 
         public int Cost;

@@ -341,6 +341,27 @@ namespace MultiverseCardBattle.Battle
             StateVersion++;
         }
 
+        /// <summary>จบเทิร์นของเจ้าของ: อุปกรณ์ Leader เหลือเทิร์นน้อยลง หมดแล้วลงสุสาน</summary>
+        public void TickLeaderGear(BattlePlayer player)
+        {
+            if (player == null || player.LeaderGear == null)
+                return;
+
+            player.LeaderGearTurns--;
+
+            if (player.LeaderGearTurns > 0)
+                return;
+
+            Log(player.LeaderGear.Data.CardName + " is used up");
+
+            player.AddToZone(player.LeaderGear, CardZone.Graveyard);
+
+            player.LeaderGear = null;
+            player.LeaderGearTurns = 0;
+
+            Touch();
+        }
+
         // ---------- จั่ว / ทิ้ง ----------
 
         public CardInstance DrawCard(BattlePlayer player)
@@ -599,8 +620,8 @@ namespace MultiverseCardBattle.Battle
 
             Log(target.Data.CardName + " takes " + amount + " damage");
 
-            // Poison: ยูนิตที่โดนความเสียหายจริงจะตาย
-            if (source != null && source.HasKeyword(Keyword.Poison))
+            // Backstab: ยูนิตที่โดนความเสียหายจริงจะตาย
+            if (source != null && source.HasKeyword(Keyword.Backstab))
                 target.CurrentHealth = 0;
 
             // The Undead Overlord: ครั้งแรกที่จะตายจากความเสียหาย เหลือ HP 1 + Unstoppable ชั่วคราว

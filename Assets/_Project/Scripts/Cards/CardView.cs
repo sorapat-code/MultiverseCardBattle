@@ -577,6 +577,9 @@ namespace MultiverseCardBattle.Screens
                 case Universe.DevilMayCry: return new Color(0.08f, 0.2f, 0.45f, 1f);
                 case Universe.Overlord: return new Color(0.32f, 0.08f, 0.14f, 1f);
                 case Universe.JujutsuKaisen: return new Color(0.3f, 0.2f, 0.5f, 1f);
+                case Universe.DemonSlayer: return new Color(0.5f, 0.12f, 0.2f, 1f);
+                case Universe.AttackOnTitan: return new Color(0.28f, 0.34f, 0.2f, 1f);
+                case Universe.ChainsawMan: return new Color(0.6f, 0.2f, 0.1f, 1f);
                 default: return new Color(0.25f, 0.3f, 0.35f, 1f);
             }
         }
