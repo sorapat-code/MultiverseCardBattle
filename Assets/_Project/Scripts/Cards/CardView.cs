@@ -31,6 +31,7 @@ namespace MultiverseCardBattle.Screens
         IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public event Action<CardView> Clicked;
+        public event Action<CardView> RightClicked;
         public event Action<CardView> HoverEntered;
         public event Action<CardView> HoverExited;
 
@@ -537,6 +538,15 @@ namespace MultiverseCardBattle.Screens
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (eventData != null &&
+                eventData.button == PointerEventData.InputButton.Right)
+            {
+                if (RightClicked != null)
+                    RightClicked(this);
+
+                return;
+            }
+
             if (Clicked != null)
                 Clicked(this);
         }

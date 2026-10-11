@@ -159,7 +159,7 @@ namespace MultiverseCardBattle.Data
                     ("OPC_001", 2), ("OPC_002", 2), ("STR_004", 3),
                     ("STR_011", 3), ("STR_012", 3), ("STR_013", 2),
                     ("STR_009", 2), ("STR_007", 2), ("SPL_002", 3),
-                    ("SPL_001", 3), ("SPL_007", 2)),
+                    ("SPL_001", 3), ("SPL_007", 2), ("STR_010", 3)),
                 RewardCardIds = new List<string> { "OPC_001", "DBZ_002", "NAR_004", "BLE_004" }
             });
 
@@ -175,7 +175,7 @@ namespace MultiverseCardBattle.Data
                     ("BLE_001", 2), ("BLE_002", 3), ("JJB_001", 2),
                     ("STR_010", 3), ("STR_006", 3), ("STR_007", 3),
                     ("STR_017", 2), ("STR_018", 3), ("SPL_007", 2),
-                    ("SPL_002", 3), ("SPL_001", 3)),
+                    ("SPL_002", 3), ("SPL_001", 3), ("STR_009", 1)),
                 RewardCardIds = new List<string> { "BLE_001", "JJB_001", "BLE_003", "JJB_003", "DBZ_004", "SPL_015" }
             });
 
@@ -192,7 +192,8 @@ namespace MultiverseCardBattle.Data
                     ("FAT_001", 1), ("DBZ_001", 1), ("NAR_001", 2),
                     ("HSR_002", 2), ("WUW_001", 2), ("STR_020", 2),
                     ("STR_021", 2), ("STR_009", 2), ("STR_024", 2),
-                    ("STR_016", 2), ("SPL_006", 2), ("SPL_007", 2)),
+                    ("STR_016", 2), ("SPL_006", 2), ("SPL_007", 2),
+                    ("STR_010", 3), ("SPL_001", 2)),
                 RewardCardIds = new List<string>
                 {
                     "MYT_001", "MYT_002", "JJB_002", "FAT_001", "DBZ_001",

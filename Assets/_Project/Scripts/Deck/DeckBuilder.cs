@@ -35,8 +35,7 @@ namespace MultiverseCardBattle.Decks
     /// </summary>
     public static class DeckRules
     {
-        public const int MinDeckSize = 20;
-        public const int MaxDeckSize = 30;
+        public const int MinDeckSize = 30;
 
         public const int DefaultMaxCopies = 3;
 
@@ -74,12 +73,6 @@ namespace MultiverseCardBattle.Decks
                 problems.Add(
                     "Deck needs at least " + MinDeckSize + " cards (has " +
                     deck.CardIDs.Count + ")");
-            }
-
-            if (deck.CardIDs.Count > MaxDeckSize)
-            {
-                problems.Add(
-                    "Deck can have at most " + MaxDeckSize + " cards");
             }
 
             Dictionary<string, int> counts = new Dictionary<string, int>();

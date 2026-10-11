@@ -148,6 +148,7 @@ namespace MultiverseCardBattle.Screens
 
                 view.ShowData(data);
                 view.Clicked += OnCollectionCardClicked;
+                view.RightClicked += OnCollectionCardRightClicked;
 
                 views[data.CardID] = view;
             }
@@ -184,15 +185,18 @@ namespace MultiverseCardBattle.Screens
                 return;
             }
 
-            if (deck.CardIDs.Count >= DeckRules.MaxDeckSize)
-            {
-                Say("The deck is full (" + DeckRules.MaxDeckSize + " cards)");
-                return;
-            }
-
             deck.CardIDs.Add(id);
 
             Changed();
+        }
+
+        private void OnCollectionCardRightClicked(CardView view)
+        {
+            if (view == null || view.Data == null)
+                return;
+
+            if (Deck.CountOf(view.Data.CardID) > 0)
+                RemoveOne(view.Data.CardID);
         }
 
         private void RemoveOne(string id)
@@ -287,8 +291,8 @@ namespace MultiverseCardBattle.Screens
                 (active ? "  [ACTIVE]" : "");
 
             countText.text =
-                "Cards: " + deck.CardIDs.Count + " / " + DeckRules.MaxDeckSize +
-                "  (min " + DeckRules.MinDeckSize + ")";
+                "Cards: " + deck.CardIDs.Count +
+                "  (min " + DeckRules.MinDeckSize + ", no max)";
 
             foreach (KeyValuePair<string, CardView> pair in views)
             {

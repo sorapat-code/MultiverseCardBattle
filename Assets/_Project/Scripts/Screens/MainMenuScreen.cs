@@ -34,7 +34,7 @@ namespace MultiverseCardBattle.Screens
             "<b>Deck-out</b>: if your deck ever reaches 0 cards you lose immediately - watch your draws!\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
             "Spend Gold in the Shop to open packs, then build your deck in the Deck Builder.\n" +
-            "<b>Deck rules</b>: 20-30 cards, up to 3 copies of a card (Unique cards: 1). Secret cards appear in your Collection only after you unlock them.\n<b>Collection</b>: click a card to see it full size. Disenchant spare copies into Dust and spend Dust to craft cards you are missing.\n" +
+            "<b>Deck rules</b>: at least 30 cards (no maximum), up to 3 copies of a card (Unique cards: 1). In the deck builder, left-click a card to add it and right-click to remove it. Secret cards appear in your Collection only after you unlock them.\n<b>Collection</b>: click a card to see it full size. Disenchant spare copies into Dust and spend Dust to craft cards you are missing.\n" +
             "<b>Achievements</b>: complete goals for Gold and Dust. Some are hidden...";
 
         private RectTransform root;
