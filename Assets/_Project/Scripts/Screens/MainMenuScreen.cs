@@ -52,6 +52,9 @@ namespace MultiverseCardBattle.Screens
         private RectTransform dailyContent;
         private RectTransform milestonePanel;
         private RectTransform devPanel;
+        private RectTransform rewardsPanel;
+        private RectTransform optionsPanel;
+        private Button rewardsMenuButton;
         private Text devMessage;
         private RectTransform milestoneList;
         private Text dailyGoldText;
@@ -61,6 +64,7 @@ namespace MultiverseCardBattle.Screens
         private Text achievementSummary;
 
         private Text message;
+        private Text optionsMessage;
         private Text goldText;
         private Text shopGoldText;
         private Text shopMessage;
@@ -84,6 +88,8 @@ namespace MultiverseCardBattle.Screens
             dailyPanel = CreatePanel("DailyPanel");
             milestonePanel = CreatePanel("MilestonePanel");
             devPanel = CreatePanel("DevPanel");
+            rewardsPanel = CreatePanel("RewardsPanel");
+            optionsPanel = CreatePanel("OptionsPanel");
 
             BuildMain();
             BuildShop();
@@ -93,6 +99,8 @@ namespace MultiverseCardBattle.Screens
             BuildDaily();
             BuildMilestones();
             BuildDev();
+            BuildRewardsMenu();
+            BuildOptionsMenu();
 
             Show(mainPanel);
         }
@@ -119,6 +127,10 @@ namespace MultiverseCardBattle.Screens
             milestonePanel.gameObject.SetActive(panel == milestonePanel);
             if (devPanel != null)
                 devPanel.gameObject.SetActive(panel == devPanel);
+            if (rewardsPanel != null)
+                rewardsPanel.gameObject.SetActive(panel == rewardsPanel);
+            if (optionsPanel != null)
+                optionsPanel.gameObject.SetActive(panel == optionsPanel);
 
             RefreshMenuNotices();
             RefreshGold();
@@ -157,6 +169,11 @@ namespace MultiverseCardBattle.Screens
             UIFactory.SetButtonLabel(
                 milestoneMenuButton,
                 MilestoneService.HasClaimable(profile) ? "Milestones (!)" : "Milestones");
+
+            UIFactory.SetButtonLabel(
+                rewardsMenuButton,
+                DailyService.HasClaimable(profile) || MilestoneService.HasClaimable(profile)
+                    ? "Rewards (!)" : "Rewards");
         }
 
         // ---------- เมนูหลัก ----------
@@ -195,7 +212,7 @@ namespace MultiverseCardBattle.Screens
 
             ScreenKit.AddPanel(
                 mainPanel, "ButtonFrame", new Color(0f, 0f, 0f, 0.35f),
-                0.19f, 0.2f, 0.81f, 0.795f);
+                0.24f, 0.26f, 0.76f, 0.81f);
 
             goldText = ScreenKit.AddLabel(
                 mainPanel, "", 30, TextAnchor.MiddleRight,
@@ -205,18 +222,30 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.AddTextShadow(goldText);
 
-            // ปุ่มเมนู 2 คอลัมน์ 6 แถว + ปุ่มออกตรงกลางแถวสุดท้าย
-            float y = 0.725f;
-            const float height = 0.07f;
-            const float step = 0.082f;
+            // เมนูหลัก: ปุ่มเล่นใหญ่ 2 ปุ่ม + หมวดจัดการ + ปุ่มหมวดย่อย (Rewards / Options)
+            float y = 0.715f;
+            const float height = 0.085f;
+            const float step = 0.105f;
 
             ScreenKit.AddButton(mainPanel, "Story Mode",
                 () => SceneLoader.Go(GameScene.Campaign),
-                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+                UIFactory.Accent, 0.28f, y, 0.72f, y + height, 36);
+
+            y -= step;
 
             ScreenKit.AddButton(mainPanel, "Quick Battle",
                 StartQuickBattle,
-                UIFactory.Success, 0.51f, y, 0.78f, y + height);
+                UIFactory.Success, 0.28f, y, 0.72f, y + height, 36);
+
+            y -= step;
+
+            ScreenKit.AddButton(mainPanel, "Deck Builder",
+                () => SceneLoader.Go(GameScene.DeckBuilder),
+                UIFactory.Accent, 0.28f, y, 0.49f, y + height);
+
+            ScreenKit.AddButton(mainPanel, "Collection",
+                () => SceneLoader.Go(GameScene.Collection),
+                UIFactory.Accent, 0.51f, y, 0.72f, y + height);
 
             y -= step;
 
@@ -231,80 +260,112 @@ namespace MultiverseCardBattle.Screens
 
                     Show(shopPanel);
                 },
-                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+                UIFactory.Accent, 0.28f, y, 0.49f, y + height);
 
-            ScreenKit.AddButton(mainPanel, "Deck Builder",
-                () => SceneLoader.Go(GameScene.DeckBuilder),
-                UIFactory.Accent, 0.51f, y, 0.78f, y + height);
+            rewardsMenuButton = ScreenKit.AddButton(mainPanel, "Rewards",
+                () => Show(rewardsPanel),
+                UIFactory.Accent, 0.51f, y, 0.72f, y + height);
 
             y -= step;
 
-            ScreenKit.AddButton(mainPanel, "Collection",
-                () => SceneLoader.Go(GameScene.Collection),
-                UIFactory.Accent, 0.22f, y, 0.49f, y + height);
+            ScreenKit.AddButton(mainPanel, "Help & Options",
+                () => Show(optionsPanel),
+                UIFactory.Muted, 0.28f, y, 0.49f, y + height, 26);
 
-            ScreenKit.AddButton(mainPanel, "Achievements",
+#if !UNITY_WEBGL
+            ScreenKit.AddButton(mainPanel, "Quit",
+                Application.Quit,
+                UIFactory.Danger, 0.51f, y, 0.72f, y + height, 26);
+#endif
+
+            message = ScreenKit.AddLabel(
+                mainPanel, "", 26, TextAnchor.MiddleCenter,
+                0.1f, 0.02f, 0.9f, 0.1f);
+        }
+
+        private void BuildRewardsMenu()
+        {
+            UIFactory.CreateTitle(rewardsPanel, "REWARDS");
+
+            float y = 0.62f;
+            const float height = 0.09f;
+            const float step = 0.12f;
+
+            ScreenKit.AddButton(rewardsPanel, "Achievements",
                 () =>
                 {
                     RebuildAchievements();
 
                     Show(achievementPanel);
                 },
-                UIFactory.Accent, 0.51f, y, 0.78f, y + height);
+                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
 
             y -= step;
 
-            dailyMenuButton = ScreenKit.AddButton(mainPanel, "Daily Rewards",
+            dailyMenuButton = ScreenKit.AddButton(rewardsPanel, "Daily Rewards",
                 () =>
                 {
                     RebuildDaily();
 
                     Show(dailyPanel);
                 },
-                UIFactory.Success, 0.22f, y, 0.49f, y + height, 26);
+                UIFactory.Success, 0.3f, y, 0.7f, y + height);
 
-            milestoneMenuButton = ScreenKit.AddButton(mainPanel, "Milestones",
+            y -= step;
+
+            milestoneMenuButton = ScreenKit.AddButton(rewardsPanel, "Milestones",
                 () =>
                 {
                     RebuildMilestones();
 
                     Show(milestonePanel);
                 },
-                UIFactory.Accent, 0.51f, y, 0.78f, y + height, 26);
+                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
 
-            y -= step;
+            ScreenKit.AddButton(rewardsPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
 
-            ScreenKit.AddButton(mainPanel, "How to Play",
+        private void BuildOptionsMenu()
+        {
+            UIFactory.CreateTitle(optionsPanel, "HELP & OPTIONS");
+
+            float y = 0.62f;
+            const float height = 0.09f;
+            const float step = 0.12f;
+
+            ScreenKit.AddButton(optionsPanel, "How to Play",
                 () => Show(helpPanel),
-                UIFactory.Muted, 0.22f, y, 0.49f, y + height);
-
-            ScreenKit.AddButton(mainPanel, "Keywords & Status",
-                () => Show(glossaryPanel),
-                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
+                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
 
             y -= step;
 
-            soundButton = ScreenKit.AddButton(mainPanel, "",
+            ScreenKit.AddButton(optionsPanel, "Keywords & Status",
+                () => Show(glossaryPanel),
+                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
+
+            y -= step;
+
+            soundButton = ScreenKit.AddButton(optionsPanel, "",
                 ToggleSound,
-                UIFactory.Muted, 0.22f, y, 0.49f, y + height, 26);
+                UIFactory.Muted, 0.3f, y, 0.7f, y + height);
 
             RefreshSoundLabel();
 
-            resetButton = ScreenKit.AddButton(mainPanel, "Reset Progress",
-                OnResetClicked,
-                UIFactory.Muted, 0.51f, y, 0.78f, y + height, 24);
-
-#if !UNITY_WEBGL
             y -= step;
 
-            ScreenKit.AddButton(mainPanel, "Quit",
-                Application.Quit,
-                UIFactory.Danger, 0.36f, y, 0.64f, y + height);
-#endif
+            resetButton = ScreenKit.AddButton(optionsPanel, "Reset Progress",
+                OnResetClicked,
+                UIFactory.Muted, 0.3f, y, 0.7f, y + height);
 
-            message = ScreenKit.AddLabel(
-                mainPanel, "", 26, TextAnchor.MiddleCenter,
-                0.1f, 0.02f, 0.9f, 0.1f);
+            ScreenKit.AddButton(optionsPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+
+            optionsMessage = ScreenKit.AddLabel(
+                optionsPanel, "", 26, TextAnchor.MiddleCenter,
+                0.25f, 0.03f, 0.9f, 0.11f);
         }
 
         private void StartQuickBattle()
@@ -357,7 +418,7 @@ namespace MultiverseCardBattle.Screens
             RefreshSoundLabel();
             Sfx.RefreshMusicMute();
 
-            message.text = "Progress reset. Starter collection restored.";
+            optionsMessage.text = "Progress reset. Starter collection restored.";
         }
 
         // ---------- ร้านค้า ----------
@@ -562,7 +623,7 @@ namespace MultiverseCardBattle.Screens
             UIFactory.AddVertical(achievementList, 8f, 10);
 
             ScreenKit.AddButton(achievementPanel, "Back",
-                () => Show(mainPanel),
+                () => Show(rewardsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
@@ -642,7 +703,7 @@ namespace MultiverseCardBattle.Screens
                 dailyPanel, "DailyContent", 0.04f, 0.13f, 0.96f, 0.9f);
 
             ScreenKit.AddButton(dailyPanel, "Back",
-                () => Show(mainPanel),
+                () => Show(rewardsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
@@ -955,7 +1016,7 @@ namespace MultiverseCardBattle.Screens
             UIFactory.AddVertical(milestoneList, 8f, 10);
 
             ScreenKit.AddButton(milestonePanel, "Back",
-                () => Show(mainPanel),
+                () => Show(rewardsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
@@ -1050,7 +1111,7 @@ namespace MultiverseCardBattle.Screens
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             ScreenKit.AddButton(glossaryPanel, "Back",
-                () => Show(mainPanel),
+                () => Show(optionsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
@@ -1073,7 +1134,7 @@ namespace MultiverseCardBattle.Screens
             help.resizeTextMaxSize = 24;
 
             ScreenKit.AddButton(helpPanel, "Back",
-                () => Show(mainPanel),
+                () => Show(optionsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
     }
