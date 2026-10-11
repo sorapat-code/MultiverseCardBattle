@@ -289,20 +289,32 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
-        public void Kiana_Battlecry_DamagesBurnsAndTriggersBurnImmediately()
+        public void Kiana_Battlecry_WithoutBurn_JustDealsThreeDamage()
         {
             CardInstance enemy = EnemyWithHealth(9);
 
             CardInstance kiana = PlayKiana(enemy);
 
+            Assert.AreEqual(6, enemy.CurrentHealth);
+            Assert.IsFalse(enemy.HasStatus(StatusType.Burn));
+            Assert.IsFalse(kiana.HasKeyword(Keyword.Shield));
+        }
+
+        [Test]
+        public void Kiana_Battlecry_TriggersExistingBurnImmediatelyWithoutReducingItsTurns()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+
+            enemy.AddStatus(StatusType.Burn, 2, 2);
+
+            PlayKiana(enemy);
+
             // 3 (Battlecry) + 2 (Burn ทำงานทันที) = 5
             Assert.AreEqual(4, enemy.CurrentHealth);
 
-            // Burn ยังอยู่ครบ 2 เทิร์น (ไม่ลดจากการสั่งให้ทำงานทันที)
+            // Burn ยังอยู่ครบ 2 เทิร์น
             Assert.IsTrue(enemy.HasStatus(StatusType.Burn));
             Assert.AreEqual(2, enemy.Statuses.Find(x => x.Type == StatusType.Burn).Duration);
-
-            Assert.IsFalse(kiana.HasKeyword(Keyword.Shield));
         }
 
         [Test]

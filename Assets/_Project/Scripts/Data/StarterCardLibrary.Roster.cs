@@ -192,10 +192,9 @@ namespace MultiverseCardBattle.Data
                 Universe.HonkaiImpact, Faction.Schicksal, CardRarity.Epic,
                 6, 6, 6, Keyword.Charge,
                 CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Fire,
-                // Battlecry: 3 ดาเมจ + ใส่ Burn (2 x 2 เทิร์น) แล้วสั่งให้ Burn ทำงานทันที (ไม่ลดเทิร์น)
+                // Battlecry: 3 ดาเมจ ถ้าเป้าหมายมี Burn อยู่ สั่งให้ Burn ทำงานทันที (ดาเมจตาม Burn, ไม่ลดเทิร์น)
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
                     Fx(EffectType.DealDamage, 3),
-                    FxStatus(EffectType.Burn, 2, 2),
                     Fx(EffectType.TriggerBurn)),
                 // Bond of Thunder: มี Mei บนสนาม = Kiana ได้ Shield (Mei ได้ Attack Up จากสกิลของ Mei เอง)
                 ActWhen(TriggerType.Play, TargetRule.Self, TargetSelection.All,
@@ -214,8 +213,8 @@ namespace MultiverseCardBattle.Data
                     "SUP_029"));
 
             kiana.Description =
-                "Battlecry: Deal 3 damage to an enemy unit, apply Burn (2 damage, 2 turns), " +
-                "then trigger its Burn immediately without reducing its duration.\n" +
+                "Battlecry: Deal 3 damage to an enemy unit. If it has Burn, trigger its Burn immediately " +
+                "(it deals its normal Burn damage) without reducing its duration.\n" +
                 "Bond of Thunder: If you control Raiden Mei, Kiana gains Shield and Mei gains +2 Attack until end of turn.\n" +
                 "Together Again: The first time each turn Kiana or Mei attacks an enemy unit, the other gains Shield if it is still on the field.";
 
