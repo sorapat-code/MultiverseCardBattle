@@ -368,7 +368,7 @@ namespace MultiverseCardBattle.Data
             BuildRoster();
         }
 
-        // ---------- Rift Pack (50 ใบ: ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ----------
+        // ---------- ตัวช่วยสำหรับ Rift set (ตอนนี้ยังไม่มีการ์ดใน set นี้) ----------
 
         private static CardData AddRift(CardData data)
         {
@@ -413,7 +413,7 @@ namespace MultiverseCardBattle.Data
             data.GearKeywords = keywords;
             data.Description = text;
 
-            return AddRift(data);
+            return Add(data);
         }
 
         // อุปกรณ์ Leader: อยู่ได้ N เทิร์น ทำงานตอนเริ่ม/จบเทิร์น
@@ -435,7 +435,7 @@ namespace MultiverseCardBattle.Data
             data.GearDurability = durability;
             data.Description = text;
 
-            return AddRift(data);
+            return Add(data);
         }
 
         // ---------- Chain Cards (Keyword ใหม่ + Fast spell ตอบโต้ได้ในเทิร์นศัตรู) ----------

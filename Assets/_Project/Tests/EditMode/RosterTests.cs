@@ -33,6 +33,31 @@ namespace MultiverseCardBattle.Tests
         }
 
         [Test]
+        public void Equipment_HasFiveUnitGearAndThreeLeaderGear_NeverAboveEpic()
+        {
+            int unitGear = 0;
+            int leaderGear = 0;
+
+            foreach (CardData card in StarterCardLibrary.All)
+            {
+                if (!card.CardID.StartsWith("EQP_"))
+                    continue;
+
+                Assert.AreEqual(CardType.Equipment, card.Type, card.CardID);
+                Assert.LessOrEqual((int)card.Rarity, (int)CardRarity.Epic, card.CardID);
+                Assert.AreEqual(CardSet.Core, card.Set, card.CardID);
+
+                if (card.GearDurability > 0)
+                    leaderGear++;
+                else
+                    unitGear++;
+            }
+
+            Assert.AreEqual(5, unitGear);
+            Assert.AreEqual(3, leaderGear);
+        }
+
+        [Test]
         public void SupportingCharacters_AreNeverAboveEpic()
         {
             foreach (CardData card in StarterCardLibrary.All)

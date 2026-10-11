@@ -242,6 +242,41 @@ namespace MultiverseCardBattle.Data
                     Fx(EffectType.DestroyCard)),
                 Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
                     Fx(EffectType.DealDamage, 4)));
+
+            BuildEquipment();
+        }
+
+        // ---------- การ์ดสวมใส่ (Equipment): ยูนิต 5 ใบ + Leader 3 ใบ (ไม่เกิน Epic) ----------
+
+        private static void BuildEquipment()
+        {
+            UnitGear("EQP_001", "Iron Katana", CardRarity.Common, 1,
+                2, 0, Keyword.None, "Equip: Choose a friendly unit. It gets +2 ATK.");
+
+            UnitGear("EQP_002", "Guardian Plate", CardRarity.Common, 2,
+                1, 3, Keyword.Taunt, "Equip: Choose a friendly unit. It gets +1/+3 and Taunt.");
+
+            UnitGear("EQP_003", "Windrunner Boots", CardRarity.Rare, 2,
+                1, 1, Keyword.QuickAttack, "Equip: Choose a friendly unit. It gets +1/+1 and Quick Attack.");
+
+            UnitGear("EQP_004", "Crimson Fang", CardRarity.Rare, 3,
+                3, 1, Keyword.Lifesteal, "Equip: Choose a friendly unit. It gets +3/+1 and Lifesteal.");
+
+            UnitGear("EQP_005", "Moonlit Blade", CardRarity.Epic, 4,
+                3, 3, Keyword.Pierce | Keyword.Shield, "Equip: Choose a friendly unit. It gets +3/+3, Pierce and Shield.");
+
+            LeaderGear("EQP_006", "Healer's Charm", CardRarity.Common, 2, 3,
+                "Equip to your Leader for 3 turns.\nAt the start of your turn, restore 2 HP to your Leader.",
+                Fx(EffectType.Heal, 2));
+
+            LeaderGear("EQP_007", "Scholar's Monocle", CardRarity.Rare, 3, 3,
+                "Equip to your Leader for 3 turns.\nAt the start of your turn, draw a card.",
+                Fx(EffectType.DrawCard, 1));
+
+            LeaderGear("EQP_008", "Arcane Brazier", CardRarity.Epic, 4, 3,
+                "Equip to your Leader for 3 turns.\nAt the start of your turn, gain 1 Energy and restore 1 HP.",
+                Fx(EffectType.GainEnergy, 1),
+                Fx(EffectType.Heal, 1));
         }
     }
 }

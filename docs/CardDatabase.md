@@ -136,7 +136,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 - `Type = Equipment` ใช้ Effect `Equip` (สวมยูนิตพวกเราที่เลือก ได้โบนัสถาวร ATK/HP/Keyword จาก `GearAttack/GearHealth/GearKeywords`) หรือ `EquipLeader` (ช่องอุปกรณ์ Leader อยู่ได้ `GearDurability` เทิร์น ทำงานตอน TurnStart/TurnEnd ของเจ้าของ)
 - ยูนิตที่ตาย → อุปกรณ์หายไปพร้อมกัน, Leader gear ที่ถูกแทนที่/หมดอายุลงสุสาน
-- ตอนนี้ยังไม่มีการ์ดอุปกรณ์ในคลัง (ชุดเก่าถูกลบ) แต่ระบบยังใช้งานได้: ใช้ helper `UnitGear` / `LeaderGear` ใน `StarterCardLibrary.cs` หรือแถว CSV ที่ `Type=Equipment` ตัวอย่างการทดสอบอยู่ที่ `Tests/PlayMode/EquipmentTests.cs`
+- การ์ดอุปกรณ์ปัจจุบัน 8 ใบ (`EQP_001`–`EQP_008`, `BuildEquipment()` ใน `StarterCardLibrary.Roster.cs`, ไม่เกิน Epic): ยูนิต 5 ใบ = Iron Katana, Guardian Plate, Windrunner Boots, Crimson Fang, Moonlit Blade / Leader 3 ใบ = Healer's Charm, Scholar's Monocle, Arcane Brazier ได้จากรางวัลด่าน 1–7 และ 9 เพิ่มใบใหม่ได้ด้วย helper `UnitGear` / `LeaderGear` หรือแถว CSV ที่ `Type=Equipment` ตัวอย่างการทดสอบอยู่ที่ `Tests/PlayMode/EquipmentTests.cs`
 
 ## Keyword Backstab (เดิมชื่อ Poison)
 
@@ -150,7 +150,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 ## ชุดการ์ดปัจจุบัน (Roster)
 
-เขียนอยู่ที่ `Data/StarterCardLibrary.Roster.cs` (41 ใบ) ตัวละครสำคัญระดับ Legendary/Secret เจ้าของโปรเจกต์เพิ่มเอง
+เขียนอยู่ที่ `Data/StarterCardLibrary.Roster.cs` (ตัวประกอบ 26 + เวทมนตร์ 15 + อุปกรณ์ 8 = 49 ใบ) ตัวละครสำคัญระดับ Legendary/Secret เจ้าของโปรเจกต์เพิ่มเอง
 ตัวประกอบทุกใบไม่เกิน Epic (มีเทสต์ตรวจ `RosterTests`)
 
 - **ตัวประกอบ `SUP_001`–`SUP_026`** (ยูนิต 26 ใบ จาก 16 จักรวาล): Common 11 / Rare 10 / Epic 5 — เช่น Konohamaru, Rock Lee, Usopp, Chopper, Krillin, Connie, Sasha, March 7th, Chixia, Kobeni, Crestfallen Warrior (Common); Nami, Uryu, Nobara, Mash, Zenitsu, Power, Lady, Solaire, Cha Hae-In, Polnareff (Rare); Igris, Albedo, Shalltear, Rengoku, Gaara (Epic)
@@ -160,7 +160,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 ### รูปการ์ด
 
-รูปของ SUP_/MAG_ สร้างด้วยสคริปต์ `tools/generate_card_art.py` (Python + Pillow, วาดเป็นภาพประกอบซิลูเอตต์ 640x480)
+รูปของ SUP_/MAG_/EQP_ สร้างด้วยสคริปต์ `tools/generate_card_art.py` (Python + Pillow + numpy, 640x480) สไตล์อนิเมะ: ตัวละครเป็นภาพครึ่งตัวหน้าอนิเมะ (ตา ผม เงาเซล) ส่วนเวท/อุปกรณ์เป็นวงหมุนรอยปาดพลังเวท โค้ดวาดแยกอยู่ใน `tools/cardart/` (`fx` แสง/รอยปาด, `magic` เวท+อุปกรณ์, `portrait` ตัวละคร, `characters` ค่าตั้งของตัวละครแต่ละคน)
 รันใหม่ได้: `python3 tools/generate_card_art.py` (ระบุ ID ท้ายคำสั่งเพื่อสร้างเฉพาะใบนั้น, `--keep` ข้ามใบที่มีไฟล์แล้ว)
 อยากใช้รูปจริง: วางไฟล์ PNG ชื่อ `{CardID}.png` ใน `Resources/CardArt/` ทับได้เลย
 
