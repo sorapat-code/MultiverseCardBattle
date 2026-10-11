@@ -36,9 +36,10 @@ namespace MultiverseCardBattle.Screens
 
         private Text turnText;
         private Text hintText;
-        private Text logText;
         private ScrollRect logScroll;
-        private string lastLogShown = "";
+        private int logBuilt;
+        private int lastLogSide = 99;
+        private const int MaxLogBubbles = 150;
         private Text termsText;
 
         // ป้ายประกาศผลโยนเหรียญตอนเริ่ม
@@ -467,18 +468,12 @@ namespace MultiverseCardBattle.Screens
             VerticalLayoutGroup logLayout =
                 logContent.gameObject.AddComponent<VerticalLayoutGroup>();
 
-            logLayout.padding = new RectOffset(8, 8, 6, 6);
+            logLayout.spacing = 4f;
+            logLayout.padding = new RectOffset(6, 6, 6, 6);
             logLayout.childControlWidth = true;
             logLayout.childControlHeight = true;
             logLayout.childForceExpandWidth = true;
             logLayout.childForceExpandHeight = false;
-
-            logText = UIFactory.CreateText(
-                logContent, "", 16, UIFactory.TextColor,
-                TextAnchor.UpperLeft);
-
-            logText.verticalOverflow = VerticalWrapMode.Overflow;
-            logText.lineSpacing = 1.08f;
 
             previewZone = UIFactory.CreateZone(
                 root, "PreviewZone", 0.005f, 0.60f, 0.168f, 0.99f);
@@ -898,54 +893,145 @@ namespace MultiverseCardBattle.Screens
             header.color = UIFactory.Gold;
         }
 
-        // แสดงประวัติทั้งหมดในกล่องเลื่อน: เลื่อนขึ้นดูย้อนหลังได้ ถ้าอยู่ล่างสุดจะตามบรรทัดใหม่
+        // แชทบับเบิล: ฝั่งผู้เล่นชิดขวา ศัตรูชิดซ้าย เหตุการณ์ทั่วไปอยู่กลาง เลื่อนดูย้อนหลังได้
         private void RefreshLog()
         {
-            if (logText == null || logScroll == null)
+            if (logScroll == null || battle == null)
                 return;
 
-            string text = BuildLog();
+            int add = battle.LogTotal - logBuilt;
 
-            if (text == lastLogShown)
+            if (add <= 0)
                 return;
 
-            lastLogShown = text;
+            logBuilt = battle.LogTotal;
 
             bool atBottom =
                 logScroll.verticalNormalizedPosition <= 0.02f ||
                 logScroll.content.rect.height <= logScroll.viewport.rect.height + 1f;
 
-            logText.text = text;
+            int count = battle.LogLines.Count;
+            int start = Mathf.Max(0, count - add);
+
+            for (int i = start; i < count; i++)
+                AddLogBubble(battle.LogLines[i]);
+
+            RectTransform content = logScroll.content;
+
+            while (content.childCount > MaxLogBubbles)
+            {
+                Transform old = content.GetChild(0);
+
+                old.SetParent(null, false);
+                Destroy(old.gameObject);
+            }
 
             if (!atBottom)
                 return;
 
             Canvas.ForceUpdateCanvases();
 
-            LayoutRebuilder.ForceRebuildLayoutImmediate(logScroll.content);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
 
             logScroll.verticalNormalizedPosition = 0f;
         }
 
-        private string BuildLog()
+        private void AddLogBubble(string line)
         {
-            StringBuilder text = new StringBuilder();
+            RectTransform content = logScroll.content;
 
-            int count = battle.LogLines.Count;
+            int side = 0;
+            string body = line;
 
-            for (int i = 0; i < count; i++)
+            string mine = Human.Name;
+            string theirs = Ai.Name;
+
+            if (!string.IsNullOrEmpty(mine) && line.StartsWith(mine) &&
+                line.Length > mine.Length && line[mine.Length] == ' ')
             {
-                if (i > 0)
-                    text.Append('\n');
-
-                bool newest = i == count - 1;
-
-                text.Append(newest ? "<color=#F2D27A>" : "<color=#BDB4A2>");
-                text.Append("\u203A ").Append(battle.LogLines[i]);
-                text.Append("</color>");
+                side = 1;
+                body = line.Substring(mine.Length + 1);
+            }
+            else if (!string.IsNullOrEmpty(theirs) && line.StartsWith(theirs) &&
+                line.Length > theirs.Length && line[theirs.Length] == ' ')
+            {
+                side = -1;
+                body = line.Substring(theirs.Length + 1);
             }
 
-            return text.ToString();
+            TextAnchor align = side > 0
+                ? TextAnchor.UpperRight
+                : (side < 0 ? TextAnchor.UpperLeft : TextAnchor.UpperCenter);
+
+            // ชื่อผู้พูดเหนือบับเบิล เมื่อเปลี่ยนคน
+            if (side != 0 && side != lastLogSide)
+            {
+                RectTransform nameRow = UIFactory.CreateRect("LogName", content);
+
+                Text who = UIFactory.CreateText(
+                    nameRow, side > 0 ? "You" : theirs, 13,
+                    side > 0
+                        ? new Color(0.95f, 0.8f, 0.45f, 1f)
+                        : new Color(0.62f, 0.72f, 0.95f, 1f),
+                    side > 0 ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft,
+                    FontStyle.Bold);
+
+                UIFactory.Stretch(who.rectTransform);
+
+                LayoutElement nameLayout =
+                    nameRow.gameObject.AddComponent<LayoutElement>();
+
+                nameLayout.preferredHeight = 18f;
+                nameLayout.minHeight = 18f;
+            }
+
+            lastLogSide = side;
+
+            RectTransform row = UIFactory.CreateRect("LogRow", content);
+
+            HorizontalLayoutGroup rowLayout =
+                row.gameObject.AddComponent<HorizontalLayoutGroup>();
+
+            rowLayout.childAlignment = align;
+            rowLayout.childControlWidth = true;
+            rowLayout.childControlHeight = true;
+            rowLayout.childForceExpandWidth = false;
+            rowLayout.childForceExpandHeight = false;
+
+            Color bubbleColor = side > 0
+                ? new Color(0.42f, 0.30f, 0.10f, 0.96f)
+                : (side < 0
+                    ? new Color(0.20f, 0.22f, 0.32f, 0.96f)
+                    : new Color(0f, 0f, 0f, 0.38f));
+
+            Image bubble = UIFactory.CreateRoundedPanel(
+                row, "Bubble", bubbleColor, side == 0 ? 10f : 14f);
+
+            bubble.raycastTarget = false;
+
+            LayoutElement bubbleLayout =
+                bubble.gameObject.AddComponent<LayoutElement>();
+
+            bubbleLayout.preferredWidth = side == 0 ? 262f : 222f;
+
+            VerticalLayoutGroup inner =
+                bubble.gameObject.AddComponent<VerticalLayoutGroup>();
+
+            inner.padding = new RectOffset(10, 10, 6, 6);
+            inner.childControlWidth = true;
+            inner.childControlHeight = true;
+            inner.childForceExpandWidth = true;
+            inner.childForceExpandHeight = false;
+
+            Text message = UIFactory.CreateText(
+                bubble.transform, body, side == 0 ? 13 : 15,
+                side == 0
+                    ? new Color(0.78f, 0.74f, 0.66f, 1f)
+                    : UIFactory.TextColor,
+                side == 0 ? TextAnchor.UpperCenter : TextAnchor.UpperLeft,
+                side == 0 ? FontStyle.Italic : FontStyle.Normal);
+
+            message.verticalOverflow = VerticalWrapMode.Overflow;
         }
 
         private void RefreshLeader(LeaderWidget widget, BattlePlayer player)

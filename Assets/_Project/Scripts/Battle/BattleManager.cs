@@ -413,9 +413,13 @@ namespace MultiverseCardBattle.Battle
             Touch();
         }
 
+        // จำนวนบรรทัดที่เคยบันทึกทั้งหมด (ไม่ลดเมื่อตัดบรรทัดเก่า) ใช้ให้ UI เติมเฉพาะบรรทัดใหม่
+        public int LogTotal { get; private set; }
+
         public void Log(string message)
         {
             LogLines.Add(message);
+            LogTotal++;
 
             if (LogLines.Count > MaxLogLines)
                 LogLines.RemoveAt(0);
