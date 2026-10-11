@@ -29,6 +29,7 @@ namespace MultiverseCardBattle.Screens
         private CardView modalView;
         private Text modalInfo;
         private Text modalHints;
+        private Text modalAbilities;
         private Text modalMessage;
         private Button craftButton;
         private Button disenchantButton;
@@ -248,19 +249,28 @@ namespace MultiverseCardBattle.Screens
 
             modalInfo = ScreenKit.AddLabel(
                 modal, "", 28, TextAnchor.UpperLeft,
-                0.52f, 0.6f, 0.91f, 0.84f, FontStyle.Bold);
+                0.52f, 0.68f, 0.91f, 0.85f, FontStyle.Bold);
+
+            // ความสามารถของการ์ด (ข้อความเดียวกับบนการ์ด แต่ตัวใหญ่อ่านง่าย)
+            modalAbilities = ScreenKit.AddLabel(
+                modal, "", 22, TextAnchor.UpperLeft,
+                0.52f, 0.455f, 0.91f, 0.68f);
+
+            modalAbilities.resizeTextForBestFit = true;
+            modalAbilities.resizeTextMinSize = 12;
+            modalAbilities.resizeTextMaxSize = 22;
 
             modalHints = ScreenKit.AddLabel(
-                modal, "", 20, TextAnchor.UpperLeft,
-                0.52f, 0.33f, 0.91f, 0.6f);
+                modal, "", 18, TextAnchor.UpperLeft,
+                0.52f, 0.31f, 0.91f, 0.455f);
 
             modalHints.resizeTextForBestFit = true;
-            modalHints.resizeTextMinSize = 12;
-            modalHints.resizeTextMaxSize = 20;
+            modalHints.resizeTextMinSize = 10;
+            modalHints.resizeTextMaxSize = 18;
 
             modalMessage = ScreenKit.AddLabel(
                 modal, "", 22, TextAnchor.MiddleCenter,
-                0.52f, 0.25f, 0.91f, 0.33f);
+                0.52f, 0.25f, 0.91f, 0.31f);
 
             craftButton = ScreenKit.AddButton(
                 modal, "Craft", OnCraftClicked, UIFactory.Success,
@@ -297,6 +307,12 @@ namespace MultiverseCardBattle.Screens
                 "Craft: " + CardEconomy.CraftCost(card.Rarity) +
                 " Dust      Disenchant: +" + CardEconomy.DisenchantValue(card.Rarity) +
                 " Dust" + MasteryLine(profile, card) + "</size>";
+
+            string abilities = CardTextGenerator.Describe(card);
+
+            modalAbilities.text = abilities.Length > 0
+                ? "<b>Abilities</b>\n" + abilities
+                : "";
 
             modalHints.text = GameGlossary.HintsFor(card, null);
 
