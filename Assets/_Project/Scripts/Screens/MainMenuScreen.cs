@@ -824,13 +824,19 @@ namespace MultiverseCardBattle.Screens
 
         // ---------- Dev (เฉพาะ Editor / Development Build) ----------
 
+        private readonly List<Button> devButtons = new List<Button>();
+
         private void BuildDev()
         {
             if (!DevCheats.Enabled)
                 return;
 
             ScreenKit.AddButton(mainPanel, "DEV",
-                () => Show(devPanel),
+                () =>
+                {
+                    Show(devPanel);
+                    SelectFirstDevButton();
+                },
                 new Color(0.5f, 0.15f, 0.55f, 1f), 0.9f, 0.02f, 0.98f, 0.07f, 22);
 
             UIFactory.CreateTitle(devPanel, "DEV CHEATS");
@@ -839,7 +845,7 @@ namespace MultiverseCardBattle.Screens
                 devPanel, "Editor / Development Build only.", 26,
                 TextAnchor.MiddleCenter, 0.1f, 0.12f, 0.9f, 0.22f);
 
-            ScreenKit.AddButton(devPanel, "Unlock ALL cards (max copies, incl. secrets)",
+            devButtons.Add(ScreenKit.AddButton(devPanel, "Unlock ALL cards (max copies, incl. secrets)",
                 () =>
                 {
                     int added = DevCheats.UnlockAllCards(SaveManager.Profile);
@@ -849,9 +855,9 @@ namespace MultiverseCardBattle.Screens
 
                     devMessage.text = "Added " + added + " cards to your collection.";
                 },
-                UIFactory.Accent, 0.25f, 0.72f, 0.75f, 0.82f);
+                UIFactory.Accent, 0.25f, 0.72f, 0.75f, 0.82f));
 
-            ScreenKit.AddButton(devPanel, "+10,000 Gold  /  +5,000 Dust",
+            devButtons.Add(ScreenKit.AddButton(devPanel, "+10,000 Gold  /  +5,000 Dust",
                 () =>
                 {
                     DevCheats.AddCurrency(SaveManager.Profile, 10000, 5000);
@@ -861,9 +867,9 @@ namespace MultiverseCardBattle.Screens
 
                     devMessage.text = "Added 10,000 Gold and 5,000 Dust.";
                 },
-                UIFactory.Accent, 0.25f, 0.59f, 0.75f, 0.69f);
+                UIFactory.Accent, 0.25f, 0.59f, 0.75f, 0.69f));
 
-            ScreenKit.AddButton(devPanel, "Clear all Story stages",
+            devButtons.Add(ScreenKit.AddButton(devPanel, "Clear all Story stages",
                 () =>
                 {
                     DevCheats.ClearAllStages(SaveManager.Profile);
@@ -872,7 +878,7 @@ namespace MultiverseCardBattle.Screens
 
                     devMessage.text = "All Story stages marked as cleared.";
                 },
-                UIFactory.Accent, 0.25f, 0.46f, 0.75f, 0.56f);
+                UIFactory.Accent, 0.25f, 0.46f, 0.75f, 0.56f));
 
             ScreenKit.AddLabel(
                 devPanel,
@@ -880,9 +886,22 @@ namespace MultiverseCardBattle.Screens
                 "4 = deal 10 to enemy Leader   5 = next card   - = previous card   6 = add selected card to hand",
                 22, TextAnchor.MiddleCenter, 0.05f, 0.3f, 0.95f, 0.44f);
 
-            ScreenKit.AddButton(devPanel, "Back",
+            devButtons.Add(ScreenKit.AddButton(devPanel, "Back",
                 () => Show(mainPanel),
-                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f));
+
+            foreach (Button button in devButtons)
+                ButtonSelectGlow.Add(button);
+        }
+
+        // เลือกปุ่มแรกของแผง Dev เพื่อให้กดลูกศร ↑ ↓ ← → เลื่อนปุ่ม และ Enter/Space กดได้
+        private void SelectFirstDevButton()
+        {
+            if (devButtons.Count == 0 || UnityEngine.EventSystems.EventSystem.current == null)
+                return;
+
+            UnityEngine.EventSystems.EventSystem.current
+                .SetSelectedGameObject(devButtons[0].gameObject);
         }
 
         private void BuildMilestones()
