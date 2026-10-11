@@ -196,6 +196,20 @@
       "desc": "a calm young spearman with messy black hair, a teal-and-white coat and a long jade spear, sitting mid-air with arms crossed"
     },
     {
+      "id": "SUP_028",
+      "name": "Kiana Kaslana",
+      "kind": "unit",
+      "ref": "Kiana Kaslana (Honkai Impact 3rd)",
+      "desc": "a white-haired swordswoman wielding a giant flame-red greatsword, wreathed in fire and ember petals"
+    },
+    {
+      "id": "SUP_029",
+      "name": "Raiden Mei",
+      "kind": "unit",
+      "ref": "Raiden Mei (Honkai Impact 3rd)",
+      "desc": "a long purple-haired swordswoman with a huge red demon-mask blade, standing under a full moon in the rain over a night city"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",

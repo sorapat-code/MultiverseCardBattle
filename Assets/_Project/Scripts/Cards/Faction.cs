@@ -82,6 +82,9 @@ namespace MultiverseCardBattle.Cards
         PublicSafety,
 
         // One Piece (เพิ่ม)
-        WhitebeardPirates
+        WhitebeardPirates,
+
+        // Honkai Impact 3rd
+        Schicksal
     }
 }

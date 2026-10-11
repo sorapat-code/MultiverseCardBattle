@@ -67,6 +67,9 @@ namespace MultiverseCardBattle.Battle
             Attacker.AttacksThisTurn++;
             Attacker.TotalAttacks++;
 
+            if (targetUnit != null && targetUnit.OwnerID != Player.PlayerID)
+                Attacker.UnitAttacksThisTurn++;
+
             // ซุ่มโจมตี: ตีจาก Stealth ครั้งแรกจะไม่โดนสวนกลับ
             bool ambush = Attacker.HasKeyword(Keyword.Stealth);
 

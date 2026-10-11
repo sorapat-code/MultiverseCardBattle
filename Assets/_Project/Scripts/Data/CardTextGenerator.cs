@@ -236,6 +236,7 @@ namespace MultiverseCardBattle.Data
                 case TriggerType.OnTarget: return "When targeted:";
                 case TriggerType.Graveyard: return "When sent to the Graveyard:";
                 case TriggerType.AfterAttack: return "After attacking:";
+                case TriggerType.AllySummoned: return "When an ally is summoned:";
                 case TriggerType.Spellburst: return "Spellburst:";
                 default: return "";
             }
@@ -271,6 +272,30 @@ namespace MultiverseCardBattle.Data
 
                     case ConditionType.FirstAttackThisTurn:
                         phrases.Add("this is its first attack this turn");
+                        break;
+
+                    case ConditionType.TargetIsEnemyUnit:
+                        phrases.Add("the target is an enemy unit");
+                        break;
+
+                    case ConditionType.TargetIsCard:
+                        CardData named = CardRegistry.Get(condition.CardID);
+
+                        phrases.Add(
+                            "the target is " +
+                            (named != null ? named.CardName : condition.CardID));
+                        break;
+
+                    case ConditionType.FirstUnitAttackThisTurn:
+                        phrases.Add("this is its first attack on an enemy unit this turn");
+                        break;
+
+                    case ConditionType.AllyCardNotUnitAttackedYet:
+                        CardData mate = CardRegistry.Get(condition.CardID);
+
+                        phrases.Add(
+                            (mate != null ? mate.CardName : condition.CardID) +
+                            " has not attacked an enemy unit this turn");
                         break;
                 }
             }
@@ -320,6 +345,11 @@ namespace MultiverseCardBattle.Data
 
                 case TargetRule.AllUnits:
                     return "all units";
+
+                case TargetRule.AllyByCardID:
+                    CardData partner = CardRegistry.Get(action.TargetCardID);
+
+                    return partner != null ? partner.CardName : "its partner";
 
                 case TargetRule.EventSource:
                     // Attack / AfterAttack: ต้นเหตุของเหตุการณ์คือเป้าหมายที่ถูกโจมตี
@@ -398,6 +428,9 @@ namespace MultiverseCardBattle.Data
 
                 case EffectType.SetCost:
                     return "set " + target + " cost to " + value;
+
+                case EffectType.TriggerBurn:
+                    return "trigger Burn on " + target + " now (its duration is unchanged)";
 
                 case EffectType.DrawCard:
                     if (effect.DrawnSpellDiscount > 0)

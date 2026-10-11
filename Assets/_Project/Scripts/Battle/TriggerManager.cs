@@ -29,9 +29,13 @@ namespace MultiverseCardBattle.Battle
         {
             switch (e.Trigger)
             {
+                case TriggerType.Summon:
+                    Fire(e.Card, e);
+                    FireAllySummoned(e);
+                    break;
+
                 case TriggerType.Draw:
                 case TriggerType.Play:
-                case TriggerType.Summon:
                 case TriggerType.Discard:
                 case TriggerType.Death:
                 case TriggerType.Attack:
@@ -70,6 +74,29 @@ namespace MultiverseCardBattle.Battle
                     FireForPlayer(battle.Player1, e);
                     FireForPlayer(battle.Player2, e);
                     break;
+            }
+        }
+
+        // ยูนิตอื่นฝั่งเดียวกันที่อยู่บนสนามอยู่แล้ว ได้ยินว่ามีเพื่อนลงสนาม
+        private void FireAllySummoned(GameEvent e)
+        {
+            if (e.Card == null || e.Player == null)
+                return;
+
+            foreach (CardInstance listener in
+                new List<CardInstance>(e.Player.Field))
+            {
+                if (listener == e.Card)
+                    continue;
+
+                GameEvent heard = new GameEvent();
+
+                heard.Trigger = TriggerType.AllySummoned;
+                heard.Card = listener;
+                heard.Player = e.Player;
+                heard.Target = e.Card;
+
+                Fire(listener, heard);
             }
         }
 

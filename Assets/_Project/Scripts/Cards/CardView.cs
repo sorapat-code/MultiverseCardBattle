@@ -638,6 +638,7 @@ namespace MultiverseCardBattle.Screens
                 case Universe.DemonSlayer: return new Color(0.5f, 0.12f, 0.2f, 1f);
                 case Universe.AttackOnTitan: return new Color(0.28f, 0.34f, 0.2f, 1f);
                 case Universe.ChainsawMan: return new Color(0.6f, 0.2f, 0.1f, 1f);
+                case Universe.HonkaiImpact: return new Color(0.55f, 0.2f, 0.35f, 1f);
                 default: return new Color(0.25f, 0.3f, 0.35f, 1f);
             }
         }

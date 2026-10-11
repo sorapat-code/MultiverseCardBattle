@@ -26,6 +26,8 @@ namespace MultiverseCardBattle.Cards
 
         DemonSlayer,
         AttackOnTitan,
-        ChainsawMan
+        ChainsawMan,
+
+        HonkaiImpact
     }
 }

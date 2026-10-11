@@ -26,6 +26,9 @@ namespace MultiverseCardBattle.Effects
         // วิธีเลือกเป้าหมาย (ค่าเริ่มต้น All = พฤติกรรมเดิม)
         public TargetSelection Selection;
 
+        // ใช้กับ Target = AllyByCardID
+        public string TargetCardID;
+
         [Header("Effects")]
         public List<EffectData> Effects = new();
     }

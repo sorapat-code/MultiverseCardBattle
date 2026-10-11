@@ -73,6 +73,9 @@ namespace MultiverseCardBattle.Effects
         Negate,
 
         // ดูหัวกอง Value ใบ แล้วเลือก 1 ใบเข้ามือ (กรองด้วย PickType / PickMaxCost) ที่เหลือไปอยู่ล่างกอง
-        LookTop
+        LookTop,
+
+        // สั่งให้ Burn บนเป้าหมายทำงานทันที 1 ครั้ง โดยไม่ลดจำนวนเทิร์นของ Burn (Kiana)
+        TriggerBurn
     }
 }

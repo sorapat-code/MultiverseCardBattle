@@ -187,6 +187,69 @@ namespace MultiverseCardBattle.Data
                     },
                     FxKeyword(EffectType.AddKeyword, Keyword.Shield))));
 
+            // คู่หู Honkai Impact: Kiana (SUP_028) + Mei (SUP_029) — ทำงานเมื่ออยู่บนสนามคู่กัน
+            CardData kiana = Unit("SUP_028", "Kiana Kaslana",
+                Universe.HonkaiImpact, Faction.Schicksal, CardRarity.Epic,
+                6, 6, 6, Keyword.Charge,
+                CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Fire,
+                // Battlecry: 3 ดาเมจ + ใส่ Burn (2 x 2 เทิร์น) แล้วสั่งให้ Burn ทำงานทันที (ไม่ลดเทิร์น)
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3),
+                    FxStatus(EffectType.Burn, 2, 2),
+                    Fx(EffectType.TriggerBurn)),
+                // Bond of Thunder: มี Mei บนสนาม = Kiana ได้ Shield (Mei ได้ Attack Up จากสกิลของ Mei เอง)
+                ActWhen(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    new[] { Cond(ConditionType.AllyCardOnField, "SUP_029") },
+                    FxKeyword(EffectType.AddKeyword, Keyword.Shield)),
+                // Together Again: ครั้งแรกของเทิร์นที่ Kiana หรือ Mei โจมตียูนิตศัตรู อีกคนได้ Shield
+                TargetCard(
+                    ActWhen(TriggerType.AfterAttack, TargetRule.AllyByCardID, TargetSelection.All,
+                        new[]
+                        {
+                            Cond(ConditionType.TargetIsEnemyUnit),
+                            Cond(ConditionType.FirstUnitAttackThisTurn),
+                            Cond(ConditionType.AllyCardNotUnitAttackedYet, "SUP_029")
+                        },
+                        FxKeyword(EffectType.AddKeyword, Keyword.Shield)),
+                    "SUP_029"));
+
+            kiana.Description =
+                "Battlecry: Deal 3 damage to an enemy unit, apply Burn (2 damage, 2 turns), " +
+                "then trigger its Burn immediately without reducing its duration.\n" +
+                "Bond of Thunder: If you control Raiden Mei, Kiana gains Shield and Mei gains +2 Attack until end of turn.\n" +
+                "Together Again: The first time each turn Kiana or Mei attacks an enemy unit, the other gains Shield if it is still on the field.";
+
+            Add(kiana);
+
+            CardData mei = Unit("SUP_029", "Raiden Mei",
+                Universe.HonkaiImpact, Faction.Schicksal, CardRarity.Epic,
+                5, 4, 6, Keyword.QuickAttack,
+                CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Lightning,
+                // Kiana ลงสนามฝั่งเรา: Mei ได้ Attack Up +2 จนจบเทิร์น และฟื้นฟู Leader 2
+                ActWhen(TriggerType.AllySummoned, TargetRule.Self, TargetSelection.All,
+                    new[] { Cond(ConditionType.TargetIsCard, "SUP_028") },
+                    FxApply(StatusType.AttackUp, 2, 1)),
+                ActWhen(TriggerType.AllySummoned, TargetRule.AllyLeader, TargetSelection.All,
+                    new[] { Cond(ConditionType.TargetIsCard, "SUP_028") },
+                    Fx(EffectType.Heal, 2)),
+                TargetCard(
+                    ActWhen(TriggerType.AfterAttack, TargetRule.AllyByCardID, TargetSelection.All,
+                        new[]
+                        {
+                            Cond(ConditionType.TargetIsEnemyUnit),
+                            Cond(ConditionType.FirstUnitAttackThisTurn),
+                            Cond(ConditionType.AllyCardNotUnitAttackedYet, "SUP_028")
+                        },
+                        FxKeyword(EffectType.AddKeyword, Keyword.Shield)),
+                    "SUP_028"));
+
+            mei.Description =
+                "When Kiana Kaslana is summoned to your side while Mei is on the field, " +
+                "Mei gains +2 Attack until end of turn and your leader heals 2.\n" +
+                "Together Again: The first time each turn Kiana or Mei attacks an enemy unit, the other gains Shield if it is still on the field.";
+
+            Add(mei);
+
             // ================= เวทมนตร์ =================
 
             ElemSpell("MAG_001", "Spark", CardRarity.Common, 1, CardTag.Lightning,

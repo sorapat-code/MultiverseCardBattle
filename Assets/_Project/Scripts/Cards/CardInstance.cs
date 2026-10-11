@@ -35,6 +35,9 @@ namespace MultiverseCardBattle.Cards
 
         public int AttacksThisTurn;
 
+        // จำนวนครั้งที่โจมตี "ยูนิตศัตรู" ในเทิร์นนี้ (ใช้กับ Together Again ของ Kiana / Mei)
+        public int UnitAttacksThisTurn;
+
         // จำนวนเทิร์นของเจ้าของที่ยูนิตนี้อยู่บนสนามจนจบเทิร์น (ใช้กับ Evolve)
         public int TurnsOnField;
 
@@ -73,6 +76,7 @@ namespace MultiverseCardBattle.Cards
             Statuses.Clear();
 
             AttacksThisTurn = 0;
+            UnitAttacksThisTurn = 0;
             TurnsOnField = 0;
 
             AppliedAttackMod = 0;
@@ -100,6 +104,7 @@ namespace MultiverseCardBattle.Cards
 
             int damage = MaxHealth - CurrentHealth;
             int attacks = AttacksThisTurn;
+            int unitAttacks = UnitAttacksThisTurn;
             int turns = TurnsOnField;
 
             List<StatusEffect> kept = new List<StatusEffect>(Statuses);
@@ -111,6 +116,7 @@ namespace MultiverseCardBattle.Cards
             Statuses.AddRange(kept);
 
             AttacksThisTurn = attacks;
+            UnitAttacksThisTurn = unitAttacks;
             TurnsOnField = turns;
 
             if (IsSilenced)

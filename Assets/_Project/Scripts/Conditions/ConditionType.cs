@@ -46,6 +46,18 @@ namespace MultiverseCardBattle.Conditions
         AllyCardOnField,
 
         // ยูนิตต้นเหตุกำลังโจมตีครั้งแรกของเทิร์นนี้ (ใช้กับ Trigger Attack / AfterAttack)
-        FirstAttackThisTurn
+        FirstAttackThisTurn,
+
+        // เป้าหมาย (ของ Trigger) เป็นยูนิตของฝ่ายตรงข้ามเจ้าของการ์ด
+        TargetIsEnemyUnit,
+
+        // เป้าหมาย (ของ Trigger) คือการ์ดที่มี CardID ตาม ConditionData.CardID
+        TargetIsCard,
+
+        // ยูนิตต้นเหตุกำลังโจมตียูนิตศัตรูครั้งแรกของเทิร์นนี้
+        FirstUnitAttackThisTurn,
+
+        // เจ้าของมียูนิต CardID นี้บนสนาม และมันยังไม่ได้โจมตียูนิตศัตรูในเทิร์นนี้
+        AllyCardNotUnitAttackedYet
     }
 }

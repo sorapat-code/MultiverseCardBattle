@@ -636,6 +636,14 @@ namespace MultiverseCardBattle.Data
             return action;
         }
 
+        // กำหนด CardID ของเป้าหมายให้ Action ที่ใช้ TargetRule.AllyByCardID
+        private static CardActionData TargetCard(CardActionData action, string cardId)
+        {
+            action.TargetCardID = cardId;
+
+            return action;
+        }
+
         // DealDamage ที่ได้ความเสียหายเพิ่มเมื่อเป้าหมายมี HP ไม่เกิน maxHealth (ก่อนโดนโจมตี)
         private static EffectData FxDamageBonus(int value, int bonus, int maxHealth)
         {

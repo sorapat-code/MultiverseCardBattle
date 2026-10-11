@@ -111,6 +111,35 @@ namespace MultiverseCardBattle.Conditions
                     return context.SourceCard != null &&
                            context.SourceCard.AttacksThisTurn == 1;
 
+                case ConditionType.TargetIsEnemyUnit:
+                    return context.TargetCard != null &&
+                           context.TargetCard.OwnerID != player.PlayerID;
+
+                case ConditionType.TargetIsCard:
+                    return !string.IsNullOrEmpty(condition.CardID) &&
+                           context.TargetCard != null &&
+                           context.TargetCard.Data != null &&
+                           context.TargetCard.Data.CardID == condition.CardID;
+
+                case ConditionType.FirstUnitAttackThisTurn:
+                    return context.SourceCard != null &&
+                           context.SourceCard.UnitAttacksThisTurn == 1;
+
+                case ConditionType.AllyCardNotUnitAttackedYet:
+                    if (string.IsNullOrEmpty(condition.CardID))
+                        return false;
+
+                    foreach (CardInstance partner in player.Field)
+                    {
+                        if (partner != context.SourceCard &&
+                            partner.CurrentHealth > 0 &&
+                            partner.Data != null &&
+                            partner.Data.CardID == condition.CardID)
+                            return partner.UnitAttacksThisTurn == 0;
+                    }
+
+                    return false;
+
                 //Chance
                 case ConditionType.Chance:
                      return Random.Range(0, 100) < condition.Value;

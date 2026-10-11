@@ -35,5 +35,8 @@ public enum TriggerType
     Graveyard,
 
     // หลังยูนิตโจมตีเสร็จ (หลังสู้/ตี Leader แล้ว และยังอยู่บนสนาม)
-    AfterAttack
+    AfterAttack,
+
+    // ยูนิตอื่นฝั่งเดียวกันถูก Summon ลงสนาม (Card = ยูนิตที่คอยฟัง, Target = ยูนิตที่เพิ่งลงสนาม)
+    AllySummoned
 }

@@ -756,6 +756,7 @@ namespace MultiverseCardBattle.Battle
 
             card.SummonedOnTurn = TurnManager.TotalTurns;
             card.AttacksThisTurn = 0;
+            card.UnitAttacksThisTurn = 0;
             card.TurnsOnField = 0;
 
             // สถานะ Cost ใช้กับการ์ดในมือเท่านั้น
@@ -813,6 +814,7 @@ namespace MultiverseCardBattle.Battle
                     card.MaxHealth = 1;
 
                 card.AttacksThisTurn = 0;
+                card.UnitAttacksThisTurn = 0;
                 card.SummonedOnTurn = TurnManager.TotalTurns;
 
                 Log(card.Data.CardName + " is reborn with 1 HP");

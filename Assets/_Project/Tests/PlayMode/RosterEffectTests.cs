@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost) และ Dan Heng</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng และคู่ Kiana / Mei</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -265,6 +265,94 @@ namespace MultiverseCardBattle.Tests
             Assert.IsTrue(battle.Submit(new AttackCommand(P1, danHeng, enemy, null)).Success);
 
             Assert.IsFalse(danHeng.HasKeyword(Keyword.Shield));
+        }
+
+        private CardInstance PlayKiana(CardInstance target)
+        {
+            CardInstance kiana = InHand("SUP_028");
+
+            List<TargetCandidate> options = BattleRules.GetPlayTargets(battle, P1, kiana);
+
+            TargetCandidate chosen = null;
+
+            foreach (TargetCandidate option in options)
+            {
+                if (option.TargetObject == target)
+                    chosen = option;
+            }
+
+            Assert.IsNotNull(chosen);
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, kiana, chosen)).Success);
+
+            return kiana;
+        }
+
+        [Test]
+        public void Kiana_Battlecry_DamagesBurnsAndTriggersBurnImmediately()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+
+            CardInstance kiana = PlayKiana(enemy);
+
+            // 3 (Battlecry) + 2 (Burn ทำงานทันที) = 5
+            Assert.AreEqual(4, enemy.CurrentHealth);
+
+            // Burn ยังอยู่ครบ 2 เทิร์น (ไม่ลดจากการสั่งให้ทำงานทันที)
+            Assert.IsTrue(enemy.HasStatus(StatusType.Burn));
+            Assert.AreEqual(2, enemy.Statuses.Find(x => x.Type == StatusType.Burn).Duration);
+
+            Assert.IsFalse(kiana.HasKeyword(Keyword.Shield));
+        }
+
+        [Test]
+        public void Kiana_WithMeiOnField_GainsShieldAndMeiGetsAttackUpAndHeal()
+        {
+            CardInstance mei = Place(P1, "SUP_029");
+            int attackBefore = mei.CurrentAttack;
+
+            P1.LeaderHealth = 20;
+
+            CardInstance kiana = PlayKiana(EnemyWithHealth(9));
+
+            battle.RefreshModifiers();
+
+            Assert.IsTrue(kiana.HasKeyword(Keyword.Shield));
+            Assert.AreEqual(attackBefore + 2, mei.CurrentAttack);
+            Assert.AreEqual(22, P1.LeaderHealth);
+        }
+
+        [Test]
+        public void TogetherAgain_FirstUnitAttackOfTheTurnShieldsThePartnerOnce()
+        {
+            CardInstance kiana = Place(P1, "SUP_028");
+            CardInstance mei = Place(P1, "SUP_029");
+
+            CardInstance enemy1 = EnemyWithHealth(9);
+            CardInstance enemy2 = EnemyWithHealth(9);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, kiana, enemy1, null)).Success);
+
+            Assert.IsTrue(mei.HasKeyword(Keyword.Shield));
+            Assert.IsFalse(kiana.HasKeyword(Keyword.Shield));
+
+            mei.RemoveKeyword(Keyword.Shield);
+
+            // Mei โจมตีทีหลัง: ไม่ได้ครั้งแรกของคู่แล้ว Kiana ไม่ได้ Shield
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, mei, enemy2, null)).Success);
+
+            Assert.IsFalse(kiana.HasKeyword(Keyword.Shield));
+        }
+
+        [Test]
+        public void TogetherAgain_AttackingTheLeaderDoesNotCount()
+        {
+            CardInstance kiana = Place(P1, "SUP_028");
+            CardInstance mei = Place(P1, "SUP_029");
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, kiana, null, P2)).Success);
+
+            Assert.IsFalse(mei.HasKeyword(Keyword.Shield));
         }
     }
 }

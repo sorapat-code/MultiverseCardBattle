@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MultiverseCardBattle.Battle;
 using MultiverseCardBattle.Cards;
 
@@ -131,6 +132,10 @@ namespace MultiverseCardBattle.Effects
                     ApplyStatus(context, StatusType.Burn,
                         effect.Value,
                         PositiveOr(effect.Duration, DefaultStatusDuration));
+                    break;
+
+                case EffectType.TriggerBurn:
+                    TriggerBurn(context);
                     break;
 
                 case EffectType.Regen:
@@ -888,6 +893,31 @@ namespace MultiverseCardBattle.Effects
                 return;
 
             context.TargetCard.RemoveKeyword(effect.Keyword);
+        }
+
+        // Burn ทำงานทันที: ความเสียหายเท่าตอนต้นเทิร์น (StatusProcessor) แต่ไม่ลดอายุ Burn
+        private static void TriggerBurn(EffectContext context)
+        {
+            CardInstance target = context.TargetCard;
+
+            if (target == null || context.Battle == null || target.Zone != CardZone.Field)
+                return;
+
+            foreach (StatusEffect status in new List<StatusEffect>(target.Statuses))
+            {
+                if (status.Type != StatusType.Burn)
+                    continue;
+
+                context.Battle.Log(target.Data.CardName + " burns");
+
+                context.Battle.DamageUnit(null, target, status.Value, false);
+
+                // ไฟทำให้น้ำแข็งละลาย
+                if (target.Zone == CardZone.Field)
+                    target.RemoveStatus(StatusType.Freeze);
+
+                break;
+            }
         }
 
         private static void ApplyStatus(
