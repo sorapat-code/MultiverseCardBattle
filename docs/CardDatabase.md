@@ -220,11 +220,20 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 **ขอบเขตของเอฟเฟกต์การ์ดลับ:** ใช้กับการ์ดที่ `Rarity = Secret`, การ์ดที่มี Keyword `Unique` ทุกใบ และร่าง Devil Trigger ทั้งหมดนี้อัตโนมัติ รวมการ์ดที่เพิ่มในอนาคต (เช็คที่ `SecretFx.IsSecret`) การ์ดที่ไม่มีสีประจำตัวจะได้สีคงที่จากรหัสการ์ด
 
-## Per-character cutscenes (VergilScene)
+## Per-character cutscenes (CharacterScene)
 
-`SecretCinematic` normally plays one shared timeline (only tint/epithet differ). Characters can now get
-their own choreography: `SecretCinematic.Play` checks `data.CardID` and hands the backdrop/beats to a
-dedicated scene class. First one: **Vergil** (`VergilScene.cs`, Unlock + Arrival modes; Devil Trigger
-transform still uses the shared timeline) - "Judgment Cut": moon -> eye slit (card art zoomed, red/cyan
-split) -> sheathe click -> accelerating slash cage -> freeze -> shatter + X -> card flips in.
-All timings are constants/`Plan()` entries in `VergilScene.cs`. Not yet compiled/run in Unity.
+`SecretCinematic` normally plays one shared timeline (only tint/epithet differ). Characters with their own
+choreography derive from `CharacterScene` (black screen, letterbox, subtitle, timed `At(time, action)` steps;
+`SecretCinematic` still owns the card flip, title typing and fly-to-slot). `CharacterScene.Create` picks the
+scene by card ID and mode; returns null -> shared timeline is used.
+
+| Card | Scene | Idea |
+|---|---|---|
+| Vergil `EVT_004` | `VergilScene` | Judgment Cut: moon, eye slit (card art, red/cyan split), sheathe click, accelerating slash cage, freeze, shatter + X |
+| Sung Jin-Woo `EVT_001` | `JinWooScene` | Shadow army eyes open faster and faster, ARISE slam, eyes flare, ground rings + smoke, soldiers bow, violet pillar |
+| Artorias `EVT_002` | `ArtoriasScene` | Fog + embers, greatsword drops and plants, golden shaft, single wide sweep, sword dissolves |
+| Ainz `EVT_003` | `AinzScene` | Counter-rotating red magic circles with orbiting lights, red eyes, three domination pulses, collapse, explosion + red pillars |
+| Devil Trigger `TKN_006` (Transform mode) | `DevilTriggerScene` | Accelerating heartbeat + lightning, freeze, radial speed-line explosion, title |
+
+Shared parts: `RingAnim`, `SlamText`, `EyePair`, `VergilCut` (slash line, optional palette), `SwordDrop`.
+Not yet compiled/run in Unity.

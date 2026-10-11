@@ -33,8 +33,7 @@ namespace MultiverseCardBattle.Screens
         private const float LetterSeconds = 0.07f;
 
         private Mode mode;
-        private VergilScene vergil;
-        private bool useVergil;
+        private CharacterScene scene;
         private float heroAt = HeroAt;
         private float titleAt = TitleAt;
         private RectTransform layer;
@@ -130,25 +129,24 @@ namespace MultiverseCardBattle.Screens
             cinematic.finalAt = mode == Mode.Unlock ? 5.2f : 0f;
             cinematic.endAt = mode == Mode.Arrival ? 5.2f : (mode == Mode.Transform ? 4.4f : float.MaxValue);
 
-            // ตัวละครที่มีคัตซีนเฉพาะตัว (ตอนนี้: Vergil, เฉพาะโหมด Unlock/Arrival)
-            if (data != null && data.CardID == StarterCardLibrary.VergilId && mode != Mode.Transform)
-            {
-                cinematic.heroAt = VergilScene.HeroTime;
-                cinematic.titleAt = VergilScene.TitleTime;
-
-                if (mode == Mode.Arrival)
-                    cinematic.endAt = 7.6f;
-                else
-                    cinematic.finalAt = 7.0f;
-
-                cinematic.vergil = null;
-                cinematic.useVergil = true;
-            }
-
             cinematic.Build();
 
-            if (cinematic.useVergil)
-                cinematic.vergil = VergilScene.Create(layer, data, shakeTarget);
+            // ตัวละครที่มีคัตซีนเฉพาะตัว (Vergil, Jin-Woo, Artorias, Ainz, Devil Trigger)
+            // ใช้ฉากของตัวเองแทนไทม์ไลน์กลาง
+            cinematic.scene = CharacterScene.Create(layer, data, mode, shakeTarget);
+
+            if (cinematic.scene != null)
+            {
+                cinematic.heroAt = cinematic.scene.HeroTime;
+                cinematic.titleAt = cinematic.scene.TitleTime;
+
+                if (mode == Mode.Arrival)
+                    cinematic.endAt = cinematic.scene.ArrivalEnd;
+                else if (mode == Mode.Transform)
+                    cinematic.endAt = cinematic.scene.TransformEnd;
+                else
+                    cinematic.finalAt = cinematic.scene.UnlockFinal;
+            }
 
             return cinematic;
         }
@@ -311,9 +309,9 @@ namespace MultiverseCardBattle.Screens
         {
             age += Time.unscaledDeltaTime;
 
-            if (vergil != null)
+            if (scene != null)
             {
-                vergil.Tick(age, endAt);
+                scene.Tick(age, endAt);
             }
             else
             {
@@ -323,7 +321,7 @@ namespace MultiverseCardBattle.Screens
             UpdateHero();
             UpdateTexts();
 
-            if (vergil == null)
+            if (scene == null)
             {
                 UpdateBeats();
                 UpdateRain();

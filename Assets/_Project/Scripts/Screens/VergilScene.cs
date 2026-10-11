@@ -8,7 +8,7 @@ using MultiverseCardBattle.Core;
 namespace MultiverseCardBattle.Screens
 {
     /// <summary>
-    /// คัตซีนเฉพาะตัวของ Vergil ("Judgment Cut") ใช้แทนไทม์ไลน์กลางของ SecretCinematic
+    /// คัตซีนเฉพาะตัวของ Vergil ("Judgment Cut")
     ///
     ///  0.0  จอดำ พระจันทร์ซีด ละอองน้ำเงินลอยขึ้น แถบจอกว้างเลื่อนเข้า
     ///  1.2  ช่องแคบกลางจอเปิดออก เห็นแค่ "ดวงตา" (ซูมใกล้จากภาพการ์ด) ภาพแยกสีแดง/ฟ้า พร้อมบทพูด
@@ -16,113 +16,39 @@ namespace MultiverseCardBattle.Screens
     ///  2.5  Judgment Cut: เส้นฟันถี่ขึ้นเรื่อยๆ เกิดทีละเส้นจนเป็นกรงรอบจุดกลาง
     ///  3.75 แช่ภาพ แล้ว 3.95 กรงแตกกระจาย แสงขาววาบ เส้นฟันไขว้เป็น X ใหญ่ คลื่นกระแทก
     ///  4.2  การ์ดพลิกลงมา (SecretCinematic เป็นคนจัดการ) ชื่อพิมพ์ทีละตัวอักษร
-    ///
-    /// ทุกอย่างสร้างจากโค้ดและขับด้วยเวลา (age) ที่ SecretCinematic ส่งมา
     /// </summary>
-    public class VergilScene : MonoBehaviour
+    public class VergilScene : CharacterScene
     {
-        public const float HeroTime = 4.2f;
-        public const float TitleTime = 4.95f;
-
         private static readonly Color Blue = new Color(0.27f, 0.62f, 1f, 1f);
         private static readonly Color Pale = new Color(0.9f, 0.97f, 1f, 1f);
 
-        private struct Step
-        {
-            public float Time;
-            public Action Action;
-            public bool Done;
-        }
-
-        private RectTransform layer;
-        private RectTransform root;
-        private RectTransform shakeTarget;
-        private CanvasGroup group;
-        private CardData data;
-
-        private Image black;
-        private Image barTop;
-        private Image barBottom;
         private Image moon;
         private Image moonHalo;
 
         private RectTransform slit;
         private RectTransform slitArt;
-        private Image[] slitImages;
-        private Image slitTint;
         private Image slitLine;
 
-        private Text subtitle;
-
-        private readonly List<Step> steps = new List<Step>();
         private readonly List<VergilCut> cuts = new List<VergilCut>();
 
         private float moteTimer;
 
-        public static VergilScene Create(RectTransform layer, CardData data, RectTransform shakeTarget)
+        protected override float BlackAlpha(float age)
         {
-            RectTransform root = UIFactory.CreateRect("VergilScene", layer);
-
-            UIFactory.Stretch(root);
-
-            root.SetAsFirstSibling();
-
-            VergilScene scene = root.gameObject.AddComponent<VergilScene>();
-
-            scene.layer = layer;
-            scene.root = root;
-            scene.data = data;
-            scene.shakeTarget = shakeTarget != null ? shakeTarget : layer;
-            scene.group = root.gameObject.AddComponent<CanvasGroup>();
-            scene.group.blocksRaycasts = false;
-            scene.group.interactable = false;
-
-            scene.Build();
-            scene.Plan();
-
-            return scene;
+            return Mathf.Lerp(1f, 0.86f, Mathf.Clamp01((age - 3.95f) / 0.6f));
         }
 
-        // ---------- สร้างองค์ประกอบ ----------
-
-        private void Build()
+        protected override void Build()
         {
-            black = UIFactory.CreatePanel(root, "Black", Color.black);
-
-            UIFactory.Stretch(black.rectTransform);
-
-            black.rectTransform.offsetMin = new Vector2(-90f, -90f);
-            black.rectTransform.offsetMax = new Vector2(90f, 90f);
-            black.raycastTarget = false;
-
             // พระจันทร์ซีดมุมขวาบน + รัศมี
-            moonHalo = MakeGlow("MoonHalo", new Vector2(430f, 210f), 620f, new Color(Blue.r, Blue.g, Blue.b, 0f));
+            moonHalo = MakeGlow("MoonHalo", new Vector2(430f, 210f), Vector2.one * 620f, new Color(Blue.r, Blue.g, Blue.b, 0f));
 
-            moon = UIFactory.CreatePanel(root, "Moon", new Color(Pale.r, Pale.g, Pale.b, 0f));
+            moon = MakeSolid("Moon", new Vector2(430f, 210f), Vector2.one * 120f, new Color(Pale.r, Pale.g, Pale.b, 0f));
 
             moon.sprite = UIShapes.Circle;
             moon.type = Image.Type.Simple;
-            moon.raycastTarget = false;
-
-            CenterRect(moon.rectTransform, new Vector2(430f, 210f), new Vector2(120f, 120f));
 
             BuildSlit();
-
-            barTop = MakeBar(true);
-            barBottom = MakeBar(false);
-
-            subtitle = ScreenKit.AddLabel(
-                root, "", 40, TextAnchor.MiddleCenter, 0.1f, 0.15f, 0.9f, 0.23f, FontStyle.Italic);
-
-            subtitle.color = new Color(Pale.r, Pale.g, Pale.b, 0f);
-            subtitle.raycastTarget = false;
-            subtitle.horizontalOverflow = HorizontalWrapMode.Overflow;
-            subtitle.verticalOverflow = VerticalWrapMode.Overflow;
-
-            Outline outline = subtitle.gameObject.AddComponent<Outline>();
-
-            outline.effectColor = new Color(0f, 0f, 0f, 0.95f);
-            outline.effectDistance = new Vector2(3f, -3f);
         }
 
         // ช่องแคบกลางจอ: ครอบด้วย RectMask2D แล้วซูมภาพการ์ดให้เห็นแค่แถบดวงตา
@@ -130,10 +56,7 @@ namespace MultiverseCardBattle.Screens
         {
             slit = UIFactory.CreateRect("Slit", root);
 
-            slit.anchorMin = new Vector2(0.5f, 0.5f);
-            slit.anchorMax = new Vector2(0.5f, 0.5f);
-            slit.sizeDelta = new Vector2(2100f, 0f);
-            slit.anchoredPosition = new Vector2(0f, 20f);
+            CenterRect(slit, new Vector2(0f, 20f), new Vector2(2100f, 0f));
 
             slit.gameObject.AddComponent<RectMask2D>();
 
@@ -151,8 +74,6 @@ namespace MultiverseCardBattle.Screens
 
             // เลื่อนภาพให้ช่วงใบหน้า (ค่อนไปทางบน) มาอยู่กลางช่องแคบ
             slitArt.anchoredPosition = new Vector2(0f, -height * 0.2f);
-
-            slitImages = new Image[3];
 
             Color[] colors =
             {
@@ -175,86 +96,34 @@ namespace MultiverseCardBattle.Screens
                     img.type = Image.Type.Simple;
                     img.preserveAspect = true;
                 }
+                else
+                {
+                    // ไม่มีภาพการ์ด: ใช้แสงน้ำเงินแทน
+                    img.sprite = UIShapes.Glow;
+
+                    if (i == 2)
+                        img.color = new Color(Blue.r, Blue.g, Blue.b, 0.9f);
+                }
 
                 UIFactory.Stretch(img.rectTransform);
 
                 img.rectTransform.anchoredPosition = offsets[i];
-
-                slitImages[i] = img;
             }
 
-            // ไม่มีภาพการ์ด: ใช้แสงน้ำเงินเต็มช่องแทน
-            if (art == null)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    slitImages[i].sprite = UIShapes.Glow;
-                    slitImages[i].color = i == 2 ? new Color(Blue.r, Blue.g, Blue.b, 0.9f) : slitImages[i].color;
-                }
-            }
+            Image tint = UIFactory.CreatePanel(slit, "SlitTint", new Color(0.05f, 0.15f, 0.4f, 0.35f));
 
-            slitTint = UIFactory.CreatePanel(slit, "SlitTint", new Color(0.05f, 0.15f, 0.4f, 0.35f));
+            tint.raycastTarget = false;
 
-            slitTint.raycastTarget = false;
+            UIFactory.Stretch(tint.rectTransform);
 
-            UIFactory.Stretch(slitTint.rectTransform);
-
-            slitLine = UIFactory.CreatePanel(root, "SlitLine", new Color(Pale.r, Pale.g, Pale.b, 0f));
-
-            slitLine.raycastTarget = false;
-
-            CenterRect(slitLine.rectTransform, new Vector2(0f, 20f), new Vector2(2100f, 4f));
+            slitLine = MakeSolid("SlitLine", new Vector2(0f, 20f), new Vector2(2100f, 4f), new Color(Pale.r, Pale.g, Pale.b, 0f));
 
             slit.gameObject.SetActive(false);
         }
 
-        private Image MakeGlow(string name, Vector2 pos, float size, Color color)
-        {
-            Image img = UIFactory.CreatePanel(root, name, color);
-
-            img.sprite = UIShapes.Glow;
-            img.type = Image.Type.Simple;
-            img.raycastTarget = false;
-
-            CenterRect(img.rectTransform, pos, new Vector2(size, size));
-
-            return img;
-        }
-
-        private static void CenterRect(RectTransform rect, Vector2 pos, Vector2 size)
-        {
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = pos;
-            rect.sizeDelta = size;
-        }
-
-        private Image MakeBar(bool top)
-        {
-            Image bar = UIFactory.CreatePanel(root, top ? "BarTop" : "BarBottom", Color.black);
-
-            bar.raycastTarget = false;
-
-            RectTransform rect = bar.rectTransform;
-
-            rect.anchorMin = new Vector2(0f, top ? 1f : 0f);
-            rect.anchorMax = new Vector2(1f, top ? 1f : 0f);
-            rect.pivot = new Vector2(0.5f, top ? 1f : 0f);
-            rect.offsetMin = new Vector2(-90f, 0f);
-            rect.offsetMax = new Vector2(90f, 0f);
-            rect.sizeDelta = new Vector2(rect.sizeDelta.x, 0f);
-
-            return bar;
-        }
-
         // ---------- ไทม์ไลน์ ----------
 
-        private void At(float time, Action action)
-        {
-            steps.Add(new Step { Time = time, Action = action });
-        }
-
-        private void Plan()
+        protected override void Plan()
         {
             At(1.15f, OpenSlit);
             At(1.3f, () => SetSubtitle("I need more power."));
@@ -280,39 +149,8 @@ namespace MultiverseCardBattle.Screens
             At(HeroTime, HeroBeam);
         }
 
-        /// <summary>ส่งเวลาปัจจุบันของฉาก (SecretCinematic เรียกทุกเฟรม)</summary>
-        public void Tick(float age, float endAt)
+        protected override void OnTick(float age)
         {
-            // ข้ามฉาก (เวลากระโดด): ไม่ยิงเอฟเฟกต์ที่ผ่านไปแล้วรวดเดียว
-            for (int i = 0; i < steps.Count; i++)
-            {
-                Step step = steps[i];
-
-                if (step.Done || age < step.Time)
-                    continue;
-
-                step.Done = true;
-                steps[i] = step;
-
-                if (age - step.Time < 0.4f)
-                    step.Action();
-            }
-
-            float open = Mathf.Clamp01(age / 0.6f);
-            float leave = Mathf.Clamp01((age - endAt) / 0.6f);
-
-            group.alpha = 1f - leave;
-
-            // จอดำ: ทึบก่อนกรงแตก แล้วค่อยโปร่งให้เห็นสนามเลือนๆ ตอนการ์ดลง
-            float fade = Mathf.Clamp01((age - 3.95f) / 0.6f);
-
-            black.color = new Color(0f, 0f, 0f, Mathf.Lerp(1f, 0.86f, fade));
-
-            float barHeight = 130f * open;
-
-            barTop.rectTransform.sizeDelta = new Vector2(barTop.rectTransform.sizeDelta.x, barHeight);
-            barBottom.rectTransform.sizeDelta = new Vector2(barBottom.rectTransform.sizeDelta.x, barHeight);
-
             // พระจันทร์
             float moonIn = Mathf.Clamp01((age - 0.2f) / 1.0f);
             float moonOut = 1f - Mathf.Clamp01((age - 2.05f) / 0.2f);
@@ -330,7 +168,7 @@ namespace MultiverseCardBattle.Screens
                 {
                     moteTimer = 0.1f;
 
-                    Rect rect = layer.rect;
+                    Rect rect = Stage;
 
                     Vector3 local = new Vector3(
                         UnityEngine.Random.Range(rect.xMin, rect.xMax),
@@ -342,35 +180,10 @@ namespace MultiverseCardBattle.Screens
 
             // ช่องดวงตาค่อยๆ ซูมเข้า
             if (slit.gameObject.activeSelf)
-            {
-                float zoom = 1f + 0.18f * Mathf.Clamp01((age - 1.15f) / 1.1f);
-
-                slitArt.localScale = Vector3.one * zoom;
-            }
-
-            // ข้อความบทพูด
-            if (subtitle != null)
-            {
-                Color c = subtitle.color;
-
-                float target = string.IsNullOrEmpty(subtitle.text) ? 0f : 1f;
-
-                c.a = Mathf.MoveTowards(c.a, target, Time.unscaledDeltaTime * 4f);
-
-                subtitle.color = c;
-            }
+                slitArt.localScale = Vector3.one * (1f + 0.18f * Mathf.Clamp01((age - 1.15f) / 1.1f));
         }
 
         // ---------- จังหวะต่างๆ ----------
-
-        private void SetSubtitle(string text)
-        {
-            if (subtitle != null && !string.IsNullOrEmpty(text))
-                subtitle.text = text;
-
-            if (subtitle != null && string.IsNullOrEmpty(text))
-                subtitle.text = "";
-        }
 
         private void OpenSlit()
         {
@@ -402,7 +215,7 @@ namespace MultiverseCardBattle.Screens
 
         private void JudgmentCut(int index)
         {
-            Rect rect = layer.rect;
+            Rect rect = Stage;
 
             float angle = UnityEngine.Random.Range(8f, 85f) * (UnityEngine.Random.value < 0.5f ? 1f : -1f);
 
@@ -425,7 +238,7 @@ namespace MultiverseCardBattle.Screens
             if (index % 3 == 0)
                 SecretFx.Flash(layer, Pale, 0.22f, 0.09f);
 
-            UiFx.Burst(root, root.TransformPoint(pos), Pale, 3, 260f, 14f, 0.4f);
+            UiFx.Burst(root, World(pos), Pale, 3, 260f, 14f, 0.4f);
         }
 
         // กรงเสร็จสมบูรณ์: แช่ภาพเงียบๆ ก่อนแตก
@@ -464,7 +277,7 @@ namespace MultiverseCardBattle.Screens
 
         private void HeroBeam()
         {
-            UiFx.Beam(root, root.TransformPoint(new Vector3(0f, layer.rect.height * 0.06f, 0f)),
+            UiFx.Beam(root, World(new Vector2(0f, Stage.height * 0.06f)),
                 new Color(Blue.r, Blue.g, Blue.b, 0.8f), 360f, 1800f, 1.1f);
         }
     }
@@ -544,6 +357,14 @@ namespace MultiverseCardBattle.Screens
             Transform parent, Vector2 anchoredPosition, float angle,
             float length, float thickness, float life)
         {
+            return Make(parent, anchoredPosition, angle, length, thickness, life, null, null);
+        }
+
+        /// <summary>glow/core ที่ระบุ = จานสีของตัวละครอื่น (ไม่มีภาพแยกสีแดง/ฟ้า)</summary>
+        public static VergilCut Make(
+            Transform parent, Vector2 anchoredPosition, float angle,
+            float length, float thickness, float life, Color? glowColor, Color? coreColor)
+        {
             RectTransform rect = UIFactory.CreateRect("Cut", parent);
 
             rect.anchorMin = new Vector2(0.5f, 0.5f);
@@ -556,10 +377,12 @@ namespace MultiverseCardBattle.Screens
 
             cut.life = Mathf.Max(0.1f, life);
 
-            Color blue = new Color(0.27f, 0.62f, 1f, 0.55f);
-            Color red = new Color(1f, 0.2f, 0.25f, 0.7f);
-            Color cyan = new Color(0.2f, 0.9f, 1f, 0.7f);
-            Color core = new Color(0.95f, 0.98f, 1f, 1f);
+            bool custom = glowColor.HasValue;
+
+            Color blue = custom ? new Color(glowColor.Value.r, glowColor.Value.g, glowColor.Value.b, 0.55f) : new Color(0.27f, 0.62f, 1f, 0.55f);
+            Color red = custom ? new Color(0f, 0f, 0f, 0f) : new Color(1f, 0.2f, 0.25f, 0.7f);
+            Color cyan = custom ? new Color(0f, 0f, 0f, 0f) : new Color(0.2f, 0.9f, 1f, 0.7f);
+            Color core = coreColor.HasValue ? coreColor.Value : new Color(0.95f, 0.98f, 1f, 1f);
 
             cut.images = new Image[4];
             cut.colors = new[] { blue, red, cyan, core };
