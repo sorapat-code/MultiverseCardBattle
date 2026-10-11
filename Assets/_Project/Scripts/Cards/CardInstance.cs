@@ -30,6 +30,16 @@ namespace MultiverseCardBattle.Cards
         // อุปกรณ์ที่สวมอยู่ (ชื่อ) ใช้แสดงผลเท่านั้น โบนัสถูกบวกเข้า ATK/HP/Keyword โดยตรง
         public List<string> GearNames = new List<string>();
 
+        // อุปกรณ์ที่ต้องกลับขึ้นมือพร้อมยูนิตนี้หลังโจมตี (Trident)
+        public List<CardInstance> ReturnGears = new List<CardInstance>();
+
+        // Cost / ATK รวมของการ์ดที่ยูนิตนี้ทำลาย (ใช้กับ Transform เมื่อสังหารของ Kurosaki Ichigo)
+        public int KillCostTotal;
+        public int KillAttackTotal;
+
+        // Keyword ที่ได้ชั่วคราวจนจบเทิร์น (ล้างตอนเปลี่ยนเทิร์น)
+        public Keyword TurnKeywords;
+
         // เทิร์นรวม (TurnManager.TotalTurns) ที่ลงสนาม ใช้ตรวจ Summoning Sickness
         public int SummonedOnTurn = -1;
 
@@ -74,6 +84,12 @@ namespace MultiverseCardBattle.Cards
             Keywords = data.Keywords;
 
             Statuses.Clear();
+
+            GearNames.Clear();
+            ReturnGears.Clear();
+            KillCostTotal = 0;
+            KillAttackTotal = 0;
+            TurnKeywords = Keyword.None;
 
             AttacksThisTurn = 0;
             UnitAttacksThisTurn = 0;
@@ -158,6 +174,24 @@ namespace MultiverseCardBattle.Cards
         public void RemoveKeyword(Keyword keyword)
         {
             Keywords &= ~keyword;
+        }
+
+        /// <summary>ได้ Keyword ชั่วคราวจนจบเทิร์น (เฉพาะที่ยังไม่มี)</summary>
+        public void AddTurnKeyword(Keyword keyword)
+        {
+            Keyword added = keyword & ~Keywords;
+
+            Keywords |= keyword;
+            TurnKeywords |= added;
+        }
+
+        public void ClearTurnKeywords()
+        {
+            if (TurnKeywords == Keyword.None)
+                return;
+
+            Keywords &= ~TurnKeywords;
+            TurnKeywords = Keyword.None;
         }
 
         // ---------- Status ----------

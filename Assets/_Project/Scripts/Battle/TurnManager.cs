@@ -149,6 +149,7 @@ namespace MultiverseCardBattle.Battle
                 {
                     card.TurnAttackBonus = 0;
                     card.ExtraAttacks = 0;
+                    card.ClearTurnKeywords();
 
                     if (card.TempUnstoppableUntil >= 0 && TotalTurns >= card.TempUnstoppableUntil)
                     {

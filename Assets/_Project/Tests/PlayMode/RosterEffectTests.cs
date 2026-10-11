@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei, Lelouch, Guts, Raiden Shogun, Zhongli, Shinobu (Poison), The Herta / Mini Herta และ Ruan Mei</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei, Lelouch, Guts, Raiden Shogun, Zhongli, Shinobu (Poison), The Herta / Mini Herta, Ruan Mei, Kurosaki Ichigo / Bankai, Getsuga Tenshō และ Trident</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -793,6 +793,278 @@ namespace MultiverseCardBattle.Tests
             Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, zhongli, chosen)).Success);
 
             Assert.IsTrue(ally.HasKeyword(Keyword.Shield));
+        }
+
+        // ---------- Kurosaki Ichigo / Bankai / Getsuga Tenshō / Trident ----------
+
+        private CardInstance EnemyUnit(int cost, int attack, int health)
+        {
+            CardData data = ScriptableObject.CreateInstance<CardData>();
+
+            data.CardID = "T_ENEMY_X";
+            data.CardName = "T_ENEMY_X";
+            data.Type = CardType.Unit;
+            data.Cost = cost;
+            data.Attack = attack;
+            data.Health = health;
+            data.Actions = new List<Effects.CardActionData>();
+
+            CardInstance card = new CardInstance(data);
+
+            card.OwnerID = P2.PlayerID;
+
+            battle.SummonUnit(card, P2);
+
+            card.SummonedOnTurn = -100;
+
+            return card;
+        }
+
+        private TargetCandidate Choose(CardInstance card, object target)
+        {
+            foreach (TargetCandidate option in BattleRules.GetPlayTargets(battle, P1, card))
+            {
+                if (option.TargetObject == target)
+                    return option;
+            }
+
+            Assert.Fail("target not offered for " + card.Data.CardID);
+
+            return null;
+        }
+
+        private CardInstance BankaiIchigo()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+
+            Assert.IsTrue(Effects.EffectExecutor.TransformCard(
+                ichigo, CardRegistry.Get("TKN_ICHIGO_BANKAI"), 0, battle));
+
+            return ichigo;
+        }
+
+        [Test]
+        public void Ichigo_Battlecry_DealsThreeDamageToChosenEnemyUnit()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance ichigo = InHand("SUP_038");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, ichigo, Choose(ichigo, enemy))).Success);
+
+            Assert.AreEqual(6, enemy.CurrentHealth);
+        }
+
+        [Test]
+        public void Ichigo_DestroyingCostOverFive_TransformsIntoBankai()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+            CardInstance enemy = EnemyUnit(6, 1, 3);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, ichigo, enemy, null)).Success);
+
+            Assert.AreEqual("TKN_ICHIGO_BANKAI", ichigo.Data.CardID);
+            Assert.AreEqual(CardZone.Field, ichigo.Zone);
+            Assert.AreEqual(6, ichigo.CurrentAttack);
+            Assert.AreEqual(7, ichigo.CurrentHealth);
+            Assert.IsTrue(ichigo.HasKeyword(Keyword.QuickAttack));
+            Assert.IsTrue(ichigo.HasKeyword(Keyword.Unstoppable));
+        }
+
+        [Test]
+        public void Ichigo_DestroyingAttackOverSix_TransformsIntoBankai()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+            CardInstance enemy = EnemyUnit(1, 7, 3);
+
+            // สตันไว้ ไม่ให้สวนกลับจนอิจิโกะตายก่อน
+            enemy.AddStatus(StatusType.Stun, 0, 1);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, ichigo, enemy, null)).Success);
+
+            Assert.AreEqual("TKN_ICHIGO_BANKAI", ichigo.Data.CardID);
+        }
+
+        [Test]
+        public void Ichigo_KillsAddUp_UntilTheTotalPassesTheLimit()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+
+            // Cost 3 + ATK 1 ยังไม่ถึงเกณฑ์
+            CardInstance first = EnemyUnit(3, 1, 3);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, ichigo, first, null)).Success);
+
+            Assert.AreEqual("SUP_038", ichigo.Data.CardID);
+            Assert.AreEqual(3, ichigo.KillCostTotal);
+
+            // Cost รวมเป็น 6 > 5 แล้วแปลงร่าง
+            ichigo.AttacksThisTurn = 0;
+
+            CardInstance second = EnemyUnit(3, 1, 3);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, ichigo, second, null)).Success);
+
+            Assert.AreEqual("TKN_ICHIGO_BANKAI", ichigo.Data.CardID);
+        }
+
+        [Test]
+        public void Ichigo_SurvivingEnemy_DoesNotCountAsAKill()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+            CardInstance enemy = EnemyUnit(9, 9, 20);
+
+            enemy.AddStatus(StatusType.Stun, 0, 1);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, ichigo, enemy, null)).Success);
+
+            Assert.AreEqual("SUP_038", ichigo.Data.CardID);
+            Assert.AreEqual(0, ichigo.KillCostTotal);
+        }
+
+        [Test]
+        public void Bankai_WhenItDies_GoesToGraveyardAsIchigo()
+        {
+            CardInstance ichigo = BankaiIchigo();
+
+            ichigo.CurrentHealth = 0;
+            battle.Resolve();
+
+            Assert.AreEqual(CardZone.Graveyard, ichigo.Zone);
+            Assert.AreEqual("SUP_038", ichigo.Data.CardID);
+            Assert.IsNull(ichigo.OriginalData);
+        }
+
+        [Test]
+        public void Bankai_WhenBanished_BecomesIchigoAgain()
+        {
+            CardInstance ichigo = BankaiIchigo();
+
+            Assert.IsTrue(battle.KillUnit(ichigo, true));
+
+            Assert.AreEqual(CardZone.Removed, ichigo.Zone);
+            Assert.AreEqual("SUP_038", ichigo.Data.CardID);
+        }
+
+        [Test]
+        public void Trident_GivesTwoAttack_AndReturnsUnitAndGearAfterItAttacksAndSurvives()
+        {
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyUnit(1, 1, 20);
+            CardInstance trident = InHand("EQP_009");
+
+            // สตันไว้ ไม่ให้สวนกลับ (Rock Lee มี HP แค่ 1)
+            enemy.AddStatus(StatusType.Stun, 0, 1);
+
+            int baseAttack = lee.CurrentAttack;
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, trident, Choose(trident, lee))).Success);
+
+            Assert.AreEqual(baseAttack + 2, lee.CurrentAttack);
+            Assert.AreEqual(CardZone.Graveyard, trident.Zone);
+            Assert.AreEqual(CardZone.Field, lee.Zone);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(18 - baseAttack, enemy.CurrentHealth);
+            Assert.AreEqual(CardZone.Hand, lee.Zone);
+            Assert.AreEqual(CardZone.Hand, trident.Zone);
+            Assert.AreEqual(baseAttack, lee.CurrentAttack);
+            Assert.AreEqual(0, lee.GearNames.Count);
+        }
+
+        [Test]
+        public void Trident_AlsoReturnsAfterAttackingTheLeader()
+        {
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance trident = InHand("EQP_009");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, trident, Choose(trident, lee))).Success);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, null, P2)).Success);
+
+            Assert.AreEqual(CardZone.Hand, lee.Zone);
+            Assert.AreEqual(CardZone.Hand, trident.Zone);
+        }
+
+        [Test]
+        public void Trident_IfTheEquippedUnitDiesInCombat_NeitherReturns()
+        {
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyUnit(1, 99, 30);
+            CardInstance trident = InHand("EQP_009");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, trident, Choose(trident, lee))).Success);
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, lee, enemy, null)).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, lee.Zone);
+            Assert.AreEqual(CardZone.Graveyard, trident.Zone);
+        }
+
+        [Test]
+        public void Trident_UnitThatDoesNotAttack_StaysOnField()
+        {
+            CardInstance lee = Place(P1, "SUP_002");
+            CardInstance trident = InHand("EQP_009");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, trident, Choose(trident, lee))).Success);
+
+            Assert.AreEqual(CardZone.Field, lee.Zone);
+            Assert.AreEqual(CardZone.Graveyard, trident.Zone);
+        }
+
+        [Test]
+        public void Getsuga_DestroysTheChosenEnemyUnit_AndGivesIchigoPlusTwoAttack()
+        {
+            CardInstance ichigo = Place(P1, "SUP_038");
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance spell = InHand("MAG_016");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, spell, Choose(spell, enemy))).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, enemy.Zone);
+            Assert.AreEqual(2, ichigo.StatusValue(StatusType.AttackUp));
+            Assert.IsFalse(ichigo.HasKeyword(Keyword.DoubleStrike));
+        }
+
+        [Test]
+        public void Getsuga_BankaiIchigo_AlsoGainsDoubleStrike_OnlyUntilEndOfTurn()
+        {
+            CardInstance ichigo = BankaiIchigo();
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance spell = InHand("MAG_016");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, spell, Choose(spell, enemy))).Success);
+
+            Assert.AreEqual(2, ichigo.StatusValue(StatusType.AttackUp));
+            Assert.IsTrue(ichigo.HasKeyword(Keyword.DoubleStrike));
+
+            ichigo.ClearTurnKeywords();
+
+            Assert.IsFalse(ichigo.HasKeyword(Keyword.DoubleStrike));
+            Assert.IsTrue(ichigo.HasKeyword(Keyword.QuickAttack));
+            Assert.IsTrue(ichigo.HasKeyword(Keyword.Unstoppable));
+        }
+
+        [Test]
+        public void Getsuga_WithoutIchigo_JustDestroysTheUnit()
+        {
+            CardInstance other = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance spell = InHand("MAG_016");
+
+            Assert.IsTrue(battle.Submit(
+                new PlayCardCommand(P1, spell, Choose(spell, enemy))).Success);
+
+            Assert.AreEqual(CardZone.Graveyard, enemy.Zone);
+            Assert.AreEqual(0, other.StatusValue(StatusType.AttackUp));
         }
     }
 }

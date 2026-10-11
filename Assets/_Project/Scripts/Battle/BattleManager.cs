@@ -864,6 +864,13 @@ namespace MultiverseCardBattle.Battle
                 }
             }
 
+            // ร่างที่อยู่ได้เฉพาะบนสนาม (Bankai) กลับเป็นร่างเดิมเมื่อออกจากสนาม
+            if (wasOnField && card.Data != null && card.Data.RevertsOnLeaveField &&
+                card.RestoreOriginalForm())
+            {
+                card.ApplyBaseStats(card.Data);
+            }
+
             return true;
         }
 
@@ -931,9 +938,87 @@ namespace MultiverseCardBattle.Battle
                 killerCard.OwnerID == killerId)
             {
                 Publish(TriggerType.Kill, card: killerCard, player: killer, target: dead);
+
+                NoteKillForTransform(killerCard, dead);
             }
 
             Publish(TriggerType.AllyKill, card: killerCard, player: killer, target: dead);
+        }
+
+        // Kurosaki Ichigo: สะสม Cost / ATK ของการ์ดที่ทำลาย เกินเกณฑ์แล้วแปลงเป็น Bankai
+        private void NoteKillForTransform(CardInstance killer, CardInstance dead)
+        {
+            if (killer == null || killer.Data == null || dead == null || dead.Data == null)
+                return;
+
+            CardData data = killer.Data;
+
+            if (data.KillTransformForm == null || killer.IsSilenced)
+                return;
+
+            if (killer.Zone != CardZone.Field || killer.CurrentHealth <= 0)
+                return;
+
+            killer.KillCostTotal += dead.Data.Cost;
+            killer.KillAttackTotal += dead.CurrentAttack;
+
+            bool reached =
+                killer.KillCostTotal > data.KillTransformCost ||
+                killer.KillAttackTotal > data.KillTransformAttack;
+
+            if (!reached)
+                return;
+
+            Log(data.CardName + " has destroyed enough power (Cost " +
+                killer.KillCostTotal + ", ATK " + killer.KillAttackTotal + ")");
+
+            EffectExecutor.TransformCard(killer, data.KillTransformForm, 0, this);
+        }
+
+        /// <summary>
+        /// Trident: หลังยูนิตที่สวมอุปกรณ์โจมตีเสร็จ ถ้ายังรอดอยู่บนสนาม
+        /// ยูนิตและอุปกรณ์ที่สวมอยู่กลับขึ้นมือ (ถ้าตายระหว่างต่อสู้ จะไม่กลับ)
+        /// </summary>
+        public void ReturnGearedUnit(CardInstance unit)
+        {
+            if (unit == null ||
+                unit.ReturnGears.Count == 0 ||
+                unit.Zone != CardZone.Field ||
+                unit.CurrentHealth <= 0)
+                return;
+
+            BattlePlayer owner = GetPlayer(unit.OwnerID);
+
+            if (owner == null)
+                return;
+
+            List<CardInstance> gears = new List<CardInstance>(unit.ReturnGears);
+
+            if (!owner.RemoveCard(unit))
+                return;
+
+            string unitName = unit.Data.CardName;
+
+            // กลับเป็นค่าเริ่มต้น (บัฟ/สถานะ/อุปกรณ์หาย) และกลับร่างเดิมเหมือนกลับเข้ามือปกติ
+            unit.RestoreOriginalForm();
+            unit.ApplyBaseStats(unit.Data);
+
+            owner.AddToZone(unit, CardZone.Hand);
+
+            Log(unitName + " returns to hand with its equipment");
+
+            foreach (CardInstance gear in gears)
+            {
+                if (gear == null || gear.Zone != CardZone.Graveyard)
+                    continue;
+
+                if (!owner.RemoveCard(gear))
+                    continue;
+
+                owner.AddToZone(gear, CardZone.Hand);
+            }
+
+            Touch();
         }
 
         public const int PoisonKeywordValue = 1;

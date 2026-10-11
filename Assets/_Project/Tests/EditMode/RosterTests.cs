@@ -28,12 +28,12 @@ namespace MultiverseCardBattle.Tests
                 }
             }
 
-            Assert.AreEqual(37, units);
-            Assert.AreEqual(15, spells);
+            Assert.AreEqual(38, units);
+            Assert.AreEqual(16, spells);
         }
 
         [Test]
-        public void Equipment_HasFiveUnitGearAndThreeLeaderGear_NeverAboveEpic()
+        public void Equipment_HasSixUnitGearAndThreeLeaderGear_NeverAboveEpic()
         {
             int unitGear = 0;
             int leaderGear = 0;
@@ -53,7 +53,7 @@ namespace MultiverseCardBattle.Tests
                     unitGear++;
             }
 
-            Assert.AreEqual(5, unitGear);
+            Assert.AreEqual(6, unitGear);
             Assert.AreEqual(3, leaderGear);
         }
 

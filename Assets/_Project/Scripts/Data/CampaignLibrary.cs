@@ -165,7 +165,7 @@ namespace MultiverseCardBattle.Data
                     ("SUP_005", 2), ("SUP_002", 2), ("SUP_017", 3),
                     ("SUP_016", 3), ("SUP_020", 2), ("MAG_001", 3),
                     ("MAG_007", 3), ("MAG_011", 1)),
-                RewardCardIds = new List<string> { "SUP_024", "SUP_023", "SUP_028", "SUP_031", "MAG_013" }
+                RewardCardIds = new List<string> { "SUP_024", "SUP_023", "SUP_028", "SUP_031", "MAG_013", "EQP_009" }
             });
 
             stages.Add(new CampaignStage
@@ -181,7 +181,7 @@ namespace MultiverseCardBattle.Data
                     ("SUP_021", 3), ("SUP_014", 3), ("SUP_022", 2),
                     ("SUP_025", 2), ("SUP_018", 2), ("MAG_002", 3),
                     ("MAG_008", 3), ("MAG_010", 2)),
-                RewardCardIds = new List<string> { "MAG_014", "SUP_026", "SUP_033", "EQP_005" }
+                RewardCardIds = new List<string> { "MAG_014", "SUP_026", "SUP_033", "SUP_038", "MAG_016", "EQP_005" }
             });
 
             stages.Add(new CampaignStage

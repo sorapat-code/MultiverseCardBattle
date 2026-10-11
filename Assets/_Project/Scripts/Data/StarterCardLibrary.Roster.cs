@@ -375,6 +375,42 @@ namespace MultiverseCardBattle.Data
 
             Add(ruanMei);
 
+            // ---- Bleach ----
+
+            // Kurosaki Ichigo Bankai: ร่าง Transform ของ Ichigo อยู่ได้เฉพาะบนสนาม (ออกสนามแล้วกลับเป็น Ichigo)
+            CardData ichigoBankai = Unit("TKN_ICHIGO_BANKAI", "Kurosaki Ichigo Bankai",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
+                0, 6, 7, Keyword.QuickAttack | Keyword.Unstoppable,
+                CardTag.Human | CardTag.Melee | CardTag.Elite | CardTag.Dark | CardTag.Token,
+                CardSource.Token);
+
+            ichigoBankai.RevertsOnLeaveField = true;
+
+            ichigoBankai.Description =
+                "Quick Attack, Unstoppable.\n" +
+                "While on the field this card is in Bankai state. " +
+                "When it leaves the field it returns to Kurosaki Ichigo.";
+
+            Add(ichigoBankai);
+
+            CardData ichigo = Unit("SUP_038", "Kurosaki Ichigo",
+                Universe.Bleach, Faction.SoulSociety, CardRarity.Epic,
+                5, 4, 6, Keyword.None,
+                CardTag.Human | CardTag.Melee | CardTag.Elite | CardTag.Dark,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3)));
+
+            ichigo.KillTransformForm = ichigoBankai;
+            ichigo.KillTransformCost = 5;
+            ichigo.KillTransformAttack = 6;
+
+            ichigo.Description =
+                "Battlecry: Deal 3 damage to an enemy unit.\n" +
+                "Transform | Bankai: When this unit has destroyed cards with a total Cost over 5 " +
+                "or a total Attack over 6, it transforms into Kurosaki Ichigo Bankai.";
+
+            Add(ichigo);
+
             // ================= เวทมนตร์ =================
 
             ElemSpell("MAG_001", "Spark", CardRarity.Common, 1, CardTag.Lightning,
@@ -449,10 +485,32 @@ namespace MultiverseCardBattle.Data
                 Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
                     Fx(EffectType.DealDamage, 4)));
 
+            // Getsuga Tenshō: ทำลายยูนิตศัตรู 1 ตัว Ichigo ฝ่ายเราได้ ATK +2 (ร่าง Bankai ได้ Double Strike ด้วย) จนจบเทิร์น
+            EffectData getsugaDouble = FxKeyword(EffectType.AddKeyword, Keyword.DoubleStrike);
+            getsugaDouble.Duration = 1;
+
+            CardData getsuga = ElemSpell("MAG_016", "Getsuga Tenshō", CardRarity.Epic, 7, CardTag.Dark,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DestroyCard)),
+                TargetCard(
+                    Act(TriggerType.Play, TargetRule.AllyByCardID, TargetSelection.All,
+                        FxApply(StatusType.AttackUp, 2, 1)),
+                    "SUP_038"),
+                TargetCard(
+                    Act(TriggerType.Play, TargetRule.AllyByCardID, TargetSelection.All,
+                        FxApply(StatusType.AttackUp, 2, 1),
+                        getsugaDouble),
+                    "TKN_ICHIGO_BANKAI"));
+
+            getsuga.Description =
+                "Destroy an enemy unit.\n" +
+                "If you control Kurosaki Ichigo, he gets +2 Attack until end of turn. " +
+                "If he is in Bankai state he also gains Double Strike until end of turn.";
+
             BuildEquipment();
         }
 
-        // ---------- การ์ดสวมใส่ (Equipment): ยูนิต 5 ใบ + Leader 3 ใบ (ไม่เกิน Epic) ----------
+        // ---------- การ์ดสวมใส่ (Equipment): ยูนิต 6 ใบ + Leader 3 ใบ (ไม่เกิน Epic) ----------
 
         private static void BuildEquipment()
         {
@@ -470,6 +528,13 @@ namespace MultiverseCardBattle.Data
 
             UnitGear("EQP_005", "Moonlit Blade", CardRarity.Epic, 4,
                 3, 3, Keyword.Pierce | Keyword.Shield, "Equip: Choose a friendly unit. It gets +3/+3, Pierce and Shield.");
+
+            CardData trident = UnitGear("EQP_009", "Trident", CardRarity.Epic, 2,
+                2, 0, Keyword.None,
+                "Equip: Choose a friendly unit. It gets +2 ATK.\n" +
+                "After the equipped unit attacks, if it survives, return it and this card to your hand.");
+
+            trident.GearReturnsOnAttack = true;
 
             LeaderGear("EQP_006", "Healer's Charm", CardRarity.Common, 2, 3,
                 "Equip to your Leader for 3 turns.\nAt the start of your turn, restore 2 HP to your Leader.",

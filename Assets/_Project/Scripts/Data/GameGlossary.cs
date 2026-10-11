@@ -326,6 +326,12 @@ namespace MultiverseCardBattle.Data
             if (data.EvolvesInto != null)
                 AddTerm(terms, "Evolve", AbilityText("Evolve"));
 
+            if (data.KillTransformForm != null)
+                AddTerm(terms, "Transformation", AbilityText("Transformation"));
+
+            if (data.RevertsOnLeaveField)
+                AddTerm(terms, "Bankai", "A form that exists only while the card is on the field. When it leaves the field (dies, returns to hand or is banished) it returns to its base form.");
+
             if (data.Actions != null)
             {
                 foreach (CardActionData action in data.Actions)

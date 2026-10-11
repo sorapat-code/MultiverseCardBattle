@@ -225,6 +225,9 @@ namespace MultiverseCardBattle.Effects
 
             target.GearNames.Add(data.CardName);
 
+            if (data.GearReturnsOnAttack)
+                target.ReturnGears.Add(gear);
+
             if (context.Battle != null)
             {
                 context.Battle.Log(
@@ -823,17 +826,31 @@ namespace MultiverseCardBattle.Effects
             if (context.TargetCard == null)
                 return;
 
-            CardInstance target = context.TargetCard;
+            TransformCard(context.TargetCard, effect.Card, effect.Duration, context.Battle);
+        }
+
+        /// <summary>
+        /// แปลงร่างการ์ด (จำร่างแรกไว้ใช้กลับร่าง) คืน true ถ้าแปลงสำเร็จ
+        /// duration > 0 = แปลงชั่วคราวตามจำนวนเทิร์น
+        /// </summary>
+        public static bool TransformCard(
+            CardInstance target,
+            CardData form,
+            int duration,
+            BattleManager battle)
+        {
+            if (target == null || form == null || target.Data == null)
+                return false;
 
             if (target.HasStatus(StatusType.TransformationLock))
             {
-                if (context.Battle != null)
+                if (battle != null)
                 {
-                    context.Battle.Log(
+                    battle.Log(
                         target.Data.CardName + " cannot transform right now");
                 }
 
-                return;
+                return false;
             }
 
             // จำร่างแรกไว้ เพื่อกลับร่างเดิมเมื่อหมดเวลา / กลับเข้ามือ
@@ -843,22 +860,22 @@ namespace MultiverseCardBattle.Effects
             string from = target.Data.CardName;
             int attacks = target.AttacksThisTurn;
 
-            target.TransformTo(effect.Card);
+            target.TransformTo(form);
 
             // แปลงร่างไม่ทำให้ได้โจมตีเพิ่ม
             target.AttacksThisTurn = attacks;
 
-            if (original != effect.Card)
+            if (original != form)
             {
                 target.OriginalData = original;
 
                 target.AddStatus(
                     StatusType.Transformed, 0, StatusEffect.Permanent);
 
-                if (effect.Duration > 0)
+                if (duration > 0)
                 {
                     target.AddStatus(
-                        StatusType.TemporaryTransformation, 0, effect.Duration);
+                        StatusType.TemporaryTransformation, 0, duration);
                 }
             }
             else
@@ -866,11 +883,13 @@ namespace MultiverseCardBattle.Effects
                 target.OriginalData = null;
             }
 
-            if (context.Battle != null)
+            if (battle != null)
             {
-                context.Battle.Log(
-                    from + " transforms into " + effect.Card.CardName);
+                battle.Log(from + " transforms into " + form.CardName);
+                battle.Touch();
             }
+
+            return true;
         }
 
         // ---------- Keyword / Status ----------
@@ -882,7 +901,11 @@ namespace MultiverseCardBattle.Effects
             if (context.TargetCard == null)
                 return;
 
-            context.TargetCard.AddKeyword(effect.Keyword);
+            // Duration > 0 = ได้ Keyword ชั่วคราวจนจบเทิร์นนี้ (เช่น Double Strike จาก Getsuga Tenshō)
+            if (effect.Duration > 0)
+                context.TargetCard.AddTurnKeyword(effect.Keyword);
+            else
+                context.TargetCard.AddKeyword(effect.Keyword);
         }
 
         private static void RemoveKeyword(

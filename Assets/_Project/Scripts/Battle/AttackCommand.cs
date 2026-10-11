@@ -117,6 +117,9 @@ namespace MultiverseCardBattle.Battle
                     targetPlayer: targetLeader);
             }
 
+            // Trident: ยูนิตที่สวมโจมตีเสร็จแล้วกลับขึ้นมือพร้อมอุปกรณ์ (ถ้ายังรอดอยู่)
+            battle.ReturnGearedUnit(Attacker);
+
             // ยูนิตเดียวกันโจมตีครบ 3 ครั้งโดยไม่ตาย (ปลดล็อก Vergil)
             if (Attacker.Zone == CardZone.Field && Attacker.CurrentHealth > 0)
                 battle.Stats.NoteSurvivingAttacks(Player.PlayerID, Attacker.TotalAttacks);

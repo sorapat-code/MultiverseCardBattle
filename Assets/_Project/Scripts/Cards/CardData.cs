@@ -49,6 +49,9 @@ namespace MultiverseCardBattle.Cards
         // Leader gear: จำนวนเทิร์นของเจ้าของที่อุปกรณ์อยู่ได้ (0 = ไม่ใช่ Leader gear)
         public int GearDurability;
 
+        // Trident: เมื่อจบการต่อสู้ที่ยูนิตที่สวมโจมตี (ถ้ายังรอด) อุปกรณ์นี้และยูนิตนั้นกลับขึ้นมือ
+        public bool GearReturnsOnAttack;
+
         [Header("Stats")]
 
         public int Cost;
@@ -87,6 +90,16 @@ namespace MultiverseCardBattle.Cards
 
         // ใช้กับ AssistStrike: CardID ของยูนิตฝ่ายเราที่ต้องเป็นผู้โจมตี
         public string AssistTargetCardID;
+
+        [Header("Transform on Kill (Kurosaki Ichigo)")]
+
+        // ร่างที่แปลงเมื่อยูนิตนี้ทำลายการ์ดที่ Cost รวม > KillTransformCost หรือ ATK รวม > KillTransformAttack
+        public CardData KillTransformForm;
+        public int KillTransformCost;
+        public int KillTransformAttack;
+
+        // ร่างนี้อยู่ได้เฉพาะบนสนาม: เมื่อออกจากสนามจะกลับเป็นร่างเดิม (Bankai)
+        public bool RevertsOnLeaveField;
 
         [Header("Evolve")]
 

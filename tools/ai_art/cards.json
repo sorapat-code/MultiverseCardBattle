@@ -266,6 +266,12 @@
       "desc": "a calm dark-haired scholar with pale blue eyes in a teal-and-white qipao dress with long white sleeves, holding a red book"
     },
     {
+      "id": "SUP_038",
+      "name": "Kurosaki Ichigo",
+      "kind": "unit",
+      "desc": "a spiky orange-haired young swordsman in a black shihakusho holding a huge white-wrapped cleaver sword, intense determined stare"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",
@@ -402,6 +408,18 @@
       "name": "Arcane Brazier",
       "kind": "equipment",
       "desc": "a metal brazier burning with purple-orange arcane fire on a tripod, magic embers and swirling energy"
+    },
+    {
+      "id": "MAG_016",
+      "name": "Getsuga Tensho",
+      "kind": "spell",
+      "desc": "a huge crescent wave of black and blue spiritual energy slashing across the sky, crackling dark red edges and shockwaves"
+    },
+    {
+      "id": "EQP_009",
+      "name": "Trident",
+      "kind": "equipment",
+      "desc": "a golden three-pronged trident glowing with sea-blue energy, water swirling around the prongs"
     }
   ]
 }
