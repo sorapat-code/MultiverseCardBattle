@@ -661,6 +661,7 @@ namespace MultiverseCardBattle.Data
 
             BuildRiftSet();
             BuildChainSet();
+            BuildTriggerSet();
         }
 
         // ---------- Rift Pack (50 ใบ: ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ----------
@@ -1188,6 +1189,152 @@ namespace MultiverseCardBattle.Data
             Add(Spell("CHN_027", "War Chant", CardRarity.Common, 3,
                 Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
                     FxApply(StatusType.AttackUp, 2, 2))));
+        }
+
+        // ---------- ถูกเล็งเป้า / ลงสุสาน / ดูหัวกอง ----------
+
+        private static CardActionData ActTargeted(
+            TargetedSource by, TargetedSide from,
+            TargetRule rule, TargetSelection selection,
+            params EffectData[] effects)
+        {
+            CardActionData action = Act(TriggerType.OnTarget, rule, selection, effects);
+
+            action.TargetedBy = by;
+            action.TargetedFrom = from;
+
+            return action;
+        }
+
+        // LookTop: ดูหัวกอง count ใบ หยิบ 1 ใบเข้ามือ (กรองประเภท / ค่าใช้จ่ายได้)
+        private static EffectData FxLook(
+            int count, PickFilter pick = PickFilter.Any, int maxCost = 0)
+        {
+            EffectData effect = Fx(EffectType.LookTop, count);
+
+            effect.PickType = pick;
+            effect.PickMaxCost = maxCost;
+
+            return effect;
+        }
+
+        private static void BuildTriggerSet()
+        {
+            // ----- When targeted (ถูกเล็งเป้า) -----
+
+            OriginalUnit("TGT_001", "Mirror Guardian", CardRarity.Rare,
+                3, 2, 5, Keyword.Taunt, CardTag.Spirit | CardTag.Tank,
+                ActTargeted(TargetedSource.Attack, TargetedSide.Enemy,
+                    TargetRule.EventSource, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 2)));
+
+            OriginalUnit("TGT_002", "Spellward Monk", CardRarity.Common,
+                3, 2, 4, Keyword.None, CardTag.Human | CardTag.Support,
+                ActTargeted(TargetedSource.SpellOrAbility, TargetedSide.Enemy,
+                    TargetRule.Self, TargetSelection.All,
+                    Fx(EffectType.GainAttack, 2)));
+
+            OriginalUnit("TGT_003", "Spiteful Wraith", CardRarity.Rare,
+                4, 3, 4, Keyword.None, CardTag.Spirit | CardTag.Magic,
+                ActTargeted(TargetedSource.Any, TargetedSide.Enemy,
+                    TargetRule.EventSource, TargetSelection.All,
+                    FxStatus(EffectType.Stun, 0, 1)));
+
+            OriginalUnit("TGT_004", "Thornhide Boar", CardRarity.Common,
+                2, 2, 3, Keyword.None, CardTag.Beast | CardTag.Melee,
+                ActTargeted(TargetedSource.Attack, TargetedSide.Any,
+                    TargetRule.Self, TargetSelection.All,
+                    FxKeyword(EffectType.AddKeyword, Keyword.Shield)));
+
+            OriginalUnit("TGT_005", "Phantom Duelist", CardRarity.Epic,
+                5, 4, 4, Keyword.Retaliate, CardTag.Spirit | CardTag.Elite,
+                ActTargeted(TargetedSource.Attack, TargetedSide.Enemy,
+                    TargetRule.EnemyLeader, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 3)));
+
+            OriginalUnit("TGT_006", "Guardian Spirit", CardRarity.Rare,
+                3, 2, 4, Keyword.None, CardTag.Spirit | CardTag.Support,
+                ActTargeted(TargetedSource.SpellOrAbility, TargetedSide.Ally,
+                    TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1)));
+
+            OriginalUnit("TGT_007", "Decoy Totem", CardRarity.Common,
+                1, 0, 3, Keyword.Taunt, CardTag.Machine | CardTag.Tank,
+                ActTargeted(TargetedSource.Any, TargetedSide.Any,
+                    TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 2)));
+
+            // ----- When sent to the Graveyard (ลงสุสานจากทางใดก็ได้) -----
+
+            OriginalUnit("GRV_001", "Ashen Martyr", CardRarity.Common,
+                2, 2, 2, Keyword.None, CardTag.Human | CardTag.Melee,
+                Act(TriggerType.Graveyard, TargetRule.EnemyLeader, TargetSelection.All,
+                    Fx(EffectType.DealDamage, 2)));
+
+            OriginalUnit("GRV_002", "Gravebound Scholar", CardRarity.Rare,
+                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Graveyard, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1)));
+
+            OriginalUnit("GRV_003", "Soulfire Imp", CardRarity.Common,
+                1, 1, 1, Keyword.None, CardTag.Demon | CardTag.Magic,
+                Act(TriggerType.Graveyard, TargetRule.EnemyUnit, TargetSelection.Random,
+                    Fx(EffectType.DealDamage, 1)));
+
+            OriginalUnit("GRV_004", "Reaping Phantom", CardRarity.Epic,
+                5, 4, 4, Keyword.None, CardTag.Undead | CardTag.Elite,
+                Act(TriggerType.Graveyard, TargetRule.AllAllies, TargetSelection.All,
+                    Fx(EffectType.GainAttack, 1)));
+
+            OriginalUnit("GRV_005", "Relic Hoarder", CardRarity.Rare,
+                2, 3, 2, Keyword.None, CardTag.Human | CardTag.Support,
+                Act(TriggerType.Graveyard, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 4)));
+
+            OriginalUnit("GRV_006", "Lich Archivist", CardRarity.Epic,
+                6, 5, 6, Keyword.None, CardTag.Undead | CardTag.Magic | CardTag.Elite,
+                Act(TriggerType.Graveyard, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(3, PickFilter.Spell)));
+
+            // Spell ก็ยิง Trigger Graveyard ตอนใช้เสร็จ
+            Add(Spell("GRV_007", "Final Gift", CardRarity.Common, 3,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3)),
+                Act(TriggerType.Graveyard, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.Heal, 3))));
+
+            // ----- Look at the top (ดูหัวกอง เลือกหยิบ) -----
+
+            OriginalUnit("LKT_001", "Fortune Seer", CardRarity.Common,
+                2, 1, 3, Keyword.None, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(3)));
+
+            Add(Spell("LKT_002", "Arcane Index", CardRarity.Common, 2,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(4, PickFilter.Spell))));
+
+            OriginalUnit("LKT_003", "Scout Captain", CardRarity.Rare,
+                3, 3, 3, Keyword.None, CardTag.Human | CardTag.Ranged,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(3, PickFilter.Unit)));
+
+            Add(Spell("LKT_004", "Quick Dig", CardRarity.Common, 1,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(2))));
+
+            OriginalUnit("LKT_005", "Oracle of Echoes", CardRarity.Epic,
+                5, 4, 5, Keyword.None, CardTag.Spirit | CardTag.Magic | CardTag.Elite,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(5)));
+
+            Add(Spell("LKT_006", "Hand-Picked", CardRarity.Rare, 3,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(6, PickFilter.Any, 3))));
+
+            Add(Spell("LKT_007", "Armory Call", CardRarity.Rare, 2,
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    FxLook(5, PickFilter.Equipment))));
         }
 
         // ---------- ตัวช่วยสร้างการ์ด ----------

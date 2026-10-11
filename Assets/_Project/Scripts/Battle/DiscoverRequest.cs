@@ -9,5 +9,11 @@ namespace MultiverseCardBattle.Battle
     {
         public BattlePlayer Player;
         public DiscoverResult Result;
+
+        // LookTop: การ์ดจริงในกองที่เลือกได้ + การ์ดทั้งหมดที่เปิดดู (null = Discover ปกติ)
+        public System.Collections.Generic.List<CardInstance> DeckCards;
+        public System.Collections.Generic.List<CardInstance> DeckTop;
+
+        public string Title;
     }
 }

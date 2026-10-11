@@ -165,6 +165,17 @@ namespace MultiverseCardBattle.Effects
                         context.Battle.NegateChainTop(context.SourceCard);
                     break;
 
+                case EffectType.LookTop:
+                    if (context.Battle != null && context.SourcePlayer != null)
+                    {
+                        context.Battle.RequestLookTop(
+                            context.SourcePlayer,
+                            effect.Value,
+                            effect.PickType,
+                            effect.PickMaxCost);
+                    }
+                    break;
+
                 case EffectType.GrantExtraAttack:
                     if (context.TargetCard != null)
                         context.TargetCard.ExtraAttacks += PositiveOr(effect.Value, 1);

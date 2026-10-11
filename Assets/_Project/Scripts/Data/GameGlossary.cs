@@ -79,6 +79,8 @@ namespace MultiverseCardBattle.Data
         {
             new[] { "Battlecry", "Triggers when the card is played from hand and enters the field." },
             new[] { "Deathrattle", "Triggers when the card dies." },
+            new[] { "Sent to Graveyard", "Triggers when the card is sent to the Graveyard from anywhere: dying, being discarded or destroyed, or a spell finishing." },
+            new[] { "Targeted", "Triggers when this card is chosen as a target by an attack, spell or ability. Some cards only react to enemy attacks or enemy spells." },
             new[] { "Aura", "Gives other allied units a bonus while this unit is on the field." },
             new[] { "Combo", "Gains an extra effect if another card was played earlier this turn." },
             new[] { "Transformation", "Turns the card into another form (for example Goku into Super Saiyan). May be temporary." },
@@ -237,6 +239,10 @@ namespace MultiverseCardBattle.Data
                         AddTerm(terms, "Deathrattle", AbilityText("Deathrattle"));
                     else if (action.Trigger == TriggerType.Spellburst)
                         AddTerm(terms, "Spellburst", KeywordDescription(Keyword.Spellburst));
+                    else if (action.Trigger == TriggerType.Graveyard)
+                        AddTerm(terms, "Sent to Graveyard", AbilityText("Sent to Graveyard"));
+                    else if (action.Trigger == TriggerType.OnTarget)
+                        AddTerm(terms, "Targeted", AbilityText("Targeted"));
 
                     if (action.Conditions != null)
                     {
@@ -276,6 +282,10 @@ namespace MultiverseCardBattle.Data
             {
                 case EffectType.Negate:
                     AddTerm(terms, "Negate", "Cancels the action this card responds to. A negated card goes to the Graveyard without effect; a negated attack does nothing.");
+                    break;
+
+                case EffectType.LookTop:
+                    AddTerm(terms, "Look at the top", "Look at the top cards of your deck and take one into your hand. The rest go to the bottom of the deck.");
                     break;
 
                 case EffectType.Discover:

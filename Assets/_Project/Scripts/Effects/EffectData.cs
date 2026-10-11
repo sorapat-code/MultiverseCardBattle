@@ -25,5 +25,10 @@ namespace MultiverseCardBattle.Effects
 
         // ใช้กับ DealDamage: ฟื้น HP ให้ Leader เจ้าของการ์ด ต่อเป้าหมายแต่ละตัวที่ได้รับความเสียหายจริง
         public int HealOwnerPerHit;
+
+        // ใช้กับ LookTop: Value = จำนวนใบที่ดูจากหัวกอง
+        // PickType = ประเภทที่หยิบได้ (Any = ทุกประเภท) / PickMaxCost = ค่าใช้จ่ายสูงสุด (0 = ไม่จำกัด)
+        public PickFilter PickType;
+        public int PickMaxCost;
     }
 }

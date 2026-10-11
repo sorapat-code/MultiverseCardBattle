@@ -47,6 +47,24 @@ namespace MultiverseCardBattle.Effects
                 return results;
             }
 
+            // EventSource = การ์ดต้นเหตุของ Trigger (เช่น ผู้ที่เล็งเป้าใส่เรา) ต้องยังอยู่บนสนาม
+            if (action.Target == TargetRule.EventSource)
+            {
+                CardInstance source = context.TargetCard;
+
+                if (source != null && source.Zone == CardZone.Field)
+                {
+                    results.Add(
+                        new TargetCandidate(
+                            source.OwnerID,
+                            false,
+                            true,
+                            source));
+                }
+
+                return results;
+            }
+
             // Resolve Target
             results = TargetResolver.Resolve(
                 action.Target,
@@ -142,6 +160,8 @@ namespace MultiverseCardBattle.Effects
                 if (IsWardBlocked(action, sourceContext, target))
                     continue;
 
+                NotifyTargeted(action, sourceContext, target);
+
                 EffectContext effectContext =
                     CreateTargetContext(
                         sourceContext,
@@ -169,6 +189,37 @@ namespace MultiverseCardBattle.Effects
                 battle.ActiveEffectSource = previousSource;
                 battle.ActiveEffectPlayer = previousPlayer;
             }
+        }
+
+        // เอฟเฟกต์ที่ "เลือก" เป้าหมาย (Chosen / Random) แจ้งยูนิตเป้าหมายว่าถูกเล็ง (OnTarget)
+        private static void NotifyTargeted(
+            CardActionData action,
+            EffectContext sourceContext,
+            TargetCandidate target)
+        {
+            if (action.Selection == TargetSelection.All ||
+                sourceContext.Battle == null ||
+                sourceContext.SourceCard == null)
+                return;
+
+            CardInstance card = target.TargetObject as CardInstance;
+
+            if (card == null || card == sourceContext.SourceCard ||
+                card.Zone != CardZone.Field)
+                return;
+
+            // เป้าหมายที่ผู้เล่นเลือกตอนลงการ์ด PlayCardCommand แจ้งไปแล้ว
+            if (action.Trigger == TriggerType.Play &&
+                sourceContext.ChosenTarget != null &&
+                sourceContext.ChosenTarget.TargetObject == target.TargetObject)
+                return;
+
+            sourceContext.Battle.Publish(
+                TriggerType.OnTarget,
+                card: card,
+                player: sourceContext.Battle.GetPlayer(card.OwnerID),
+                target: sourceContext.SourceCard,
+                targetPlayer: sourceContext.SourcePlayer);
         }
 
         private static bool IsWardBlocked(

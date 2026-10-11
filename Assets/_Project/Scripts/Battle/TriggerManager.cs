@@ -40,6 +40,7 @@ namespace MultiverseCardBattle.Battle
                 case TriggerType.Heal:
                 case TriggerType.LeaderAttack:
                 case TriggerType.OnTarget:
+                case TriggerType.Graveyard:
                     Fire(e.Card, e);
                     break;
 
@@ -117,6 +118,30 @@ namespace MultiverseCardBattle.Battle
             }
         }
 
+        // OnTarget: ตรวจว่าถูกเล็งด้วยอะไร (โจมตี / Spell-ความสามารถ) และโดยฝ่ายไหน
+        private static bool MatchesTargeted(
+            CardActionData action,
+            CardInstance card,
+            GameEvent e)
+        {
+            if (action.TargetedBy == TargetedSource.Attack && !e.ByAttack)
+                return false;
+
+            if (action.TargetedBy == TargetedSource.SpellOrAbility && e.ByAttack)
+                return false;
+
+            if (action.TargetedFrom == TargetedSide.Any)
+                return true;
+
+            int sourceOwner =
+                e.TargetPlayer != null ? e.TargetPlayer.PlayerID
+                : (e.Target != null ? e.Target.OwnerID : card.OwnerID);
+
+            bool enemy = sourceOwner != card.OwnerID;
+
+            return action.TargetedFrom == TargetedSide.Enemy ? enemy : !enemy;
+        }
+
         private void Fire(CardInstance card, GameEvent e)
         {
             if (card == null || card.Data == null)
@@ -144,6 +169,9 @@ namespace MultiverseCardBattle.Battle
                 CardActionData action = actions[i];
 
                 if (action == null || action.Trigger != e.Trigger)
+                    continue;
+
+                if (e.Trigger == TriggerType.OnTarget && !MatchesTargeted(action, card, e))
                     continue;
 
                 EffectContext context = new EffectContext();

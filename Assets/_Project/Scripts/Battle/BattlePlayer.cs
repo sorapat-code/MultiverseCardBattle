@@ -36,6 +36,9 @@ namespace MultiverseCardBattle.Battle
         // Energy ที่ถูก Overload ล็อกไว้ในเทิร์นหน้าของผู้เล่นนี้
         public int OverloadedEnergy;
 
+        // ถูกเรียกทุกครั้งที่การ์ดเข้าสุสาน (BattleManager ใช้ยิง Trigger Graveyard)
+        public System.Action<CardInstance> SentToGraveyard;
+
         public Deck Deck;
         public Hand Hand;
 
@@ -130,6 +133,15 @@ namespace MultiverseCardBattle.Battle
             return false;
         }
 
+        private void PutInGraveyard(CardInstance card)
+        {
+            card.Zone = CardZone.Graveyard;
+            Graveyard.Add(card);
+
+            if (SentToGraveyard != null)
+                SentToGraveyard(card);
+        }
+
         public void AddToZone(CardInstance card, CardZone zone)
         {
             if (card == null)
@@ -147,8 +159,7 @@ namespace MultiverseCardBattle.Battle
                     // มือเต็ม: การ์ดถูกเผาทิ้งลงสุสาน
                     if (!Hand.Add(card))
                     {
-                        card.Zone = CardZone.Graveyard;
-                        Graveyard.Add(card);
+                        PutInGraveyard(card);
                     }
                     break;
 
@@ -158,8 +169,7 @@ namespace MultiverseCardBattle.Battle
                     break;
 
                 case CardZone.Graveyard:
-                    card.Zone = CardZone.Graveyard;
-                    Graveyard.Add(card);
+                    PutInGraveyard(card);
                     break;
 
                 case CardZone.Removed:

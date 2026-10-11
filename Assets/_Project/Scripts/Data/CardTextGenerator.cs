@@ -176,7 +176,38 @@ namespace MultiverseCardBattle.Data
             if (action.Trigger == TriggerType.Spellburst)
                 return "Spellburst:";
 
+            if (action.Trigger == TriggerType.OnTarget)
+                return TargetedPrefix(action);
+
             return TriggerPrefix(action.Trigger);
+        }
+
+        // "When targeted by an enemy attack:" ฯลฯ ตามตัวกรองของ Action
+        private static string TargetedPrefix(CardActionData action)
+        {
+            bool enemy = action.TargetedFrom == TargetedSide.Enemy;
+            bool ally = action.TargetedFrom == TargetedSide.Ally;
+
+            if (action.TargetedBy == TargetedSource.Attack)
+            {
+                return "When targeted by " +
+                    (enemy ? "an enemy attack:" : (ally ? "an allied attack:" : "an attack:"));
+            }
+
+            if (action.TargetedBy == TargetedSource.SpellOrAbility)
+            {
+                return "When targeted by " +
+                    (enemy ? "an enemy spell or ability:"
+                        : (ally ? "an allied spell or ability:" : "a spell or ability:"));
+            }
+
+            if (enemy)
+                return "When targeted by an enemy:";
+
+            if (ally)
+                return "When targeted by an ally:";
+
+            return "When targeted:";
         }
 
         private static string TriggerPrefix(TriggerType trigger)
@@ -198,6 +229,7 @@ namespace MultiverseCardBattle.Data
                 case TriggerType.Heal: return "When healed:";
                 case TriggerType.LeaderAttack: return "On leader attack:";
                 case TriggerType.OnTarget: return "When targeted:";
+                case TriggerType.Graveyard: return "When sent to the Graveyard:";
                 case TriggerType.Spellburst: return "Spellburst:";
                 default: return "";
             }
@@ -246,9 +278,31 @@ namespace MultiverseCardBattle.Data
                 case TargetRule.AllUnits:
                     return "all units";
 
+                case TargetRule.EventSource:
+                    return "the source";
+
                 default:
                     return "the target";
             }
+        }
+
+        private static string PickText(EffectData effect)
+        {
+            string type =
+                effect.PickType == PickFilter.Unit ? "unit"
+                : (effect.PickType == PickFilter.Spell ? "spell"
+                : (effect.PickType == PickFilter.Equipment ? "equipment" : ""));
+
+            if (type == "" && effect.PickMaxCost <= 0)
+                return "";
+
+            if (effect.PickMaxCost <= 0)
+                return " (a " + type + ")";
+
+            if (type == "")
+                return " (costing " + effect.PickMaxCost + " or less)";
+
+            return " (a " + type + " costing " + effect.PickMaxCost + " or less)";
         }
 
         private static string EffectText(EffectData effect, CardActionData action)
@@ -343,6 +397,10 @@ namespace MultiverseCardBattle.Data
 
                 case EffectType.Discover:
                     return "discover a card";
+
+                case EffectType.LookTop:
+                    return "look at the top " + value + (value == 1 ? " card" : " cards") +
+                        " of your deck and take one" + PickText(effect);
 
                 case EffectType.Transform:
                     return "transform " + target + " into " + CardName(effect.Card) +

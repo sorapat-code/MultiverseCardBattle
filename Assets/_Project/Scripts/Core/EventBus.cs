@@ -33,6 +33,9 @@ namespace MultiverseCardBattle.Core
 
         public int Amount;
 
+        // OnTarget: ถูกเล็งโดยการโจมตี (true) หรือโดย Spell/ความสามารถ (false)
+        public bool ByAttack;
+
         // เป้าหมายที่ผู้เล่นเลือกตอนลงการ์ด (ใช้กับ Action ที่เป็น Chosen)
         public TargetCandidate ChosenTarget;
     }

@@ -46,6 +46,18 @@ namespace MultiverseCardBattle.Battle
             return card;
         }
 
+        public bool Remove(CardInstance card)
+        {
+            return cards.Remove(card);
+        }
+
+        /// <summary>ย้ายการ์ดในกองไปไว้ล่างสุด</summary>
+        public void MoveToBottom(CardInstance card)
+        {
+            if (cards.Remove(card))
+                cards.Add(card);
+        }
+
         public void Clear()
         {
             cards.Clear();

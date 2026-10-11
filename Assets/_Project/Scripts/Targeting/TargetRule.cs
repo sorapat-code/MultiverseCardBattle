@@ -18,6 +18,9 @@ namespace MultiverseCardBattle.Targeting
         AllAllies,
         AllEnemies,
 
-        AllUnits
+        AllUnits,
+
+        // การ์ดต้นเหตุของเหตุการณ์ (ใช้กับ OnTarget: ผู้โจมตี / การ์ดที่เล็งเป้ามา)
+        EventSource
     }
 }

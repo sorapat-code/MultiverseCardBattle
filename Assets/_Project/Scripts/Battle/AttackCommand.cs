@@ -73,6 +73,22 @@ namespace MultiverseCardBattle.Battle
             // โจมตีแล้วหลุด Stealth
             Attacker.RemoveKeyword(Keyword.Stealth);
 
+            // ยูนิตที่ถูกเล็งโดยการโจมตี (OnTarget) อาจตอบสนองก่อนการต่อสู้
+            if (targetUnit != null)
+            {
+                battle.Publish(
+                    TriggerType.OnTarget,
+                    card: targetUnit,
+                    player: battle.GetPlayer(targetUnit.OwnerID),
+                    target: Attacker,
+                    targetPlayer: Player,
+                    byAttack: true);
+
+                if (Attacker.Zone != CardZone.Field ||
+                    targetUnit.Zone != CardZone.Field)
+                    return;
+            }
+
             int attackerHealthBefore = Attacker.CurrentHealth;
             int targetHealthBefore = targetUnit != null ? targetUnit.CurrentHealth : 0;
 

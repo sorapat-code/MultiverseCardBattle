@@ -100,6 +100,10 @@ namespace MultiverseCardBattle.Battle
             Player1 = new BattlePlayer(1, startingHealth);
             Player2 = new BattlePlayer(2, startingHealth);
 
+            // การ์ดลงสุสานทางใดก็ได้ -> ยิง Trigger Graveyard
+            Player1.SentToGraveyard = c => Publish(TriggerType.Graveyard, card: c, player: Player1);
+            Player2.SentToGraveyard = c => Publish(TriggerType.Graveyard, card: c, player: Player2);
+
             LogLines = new List<string>();
 
             Events = new EventBus();
@@ -598,7 +602,8 @@ namespace MultiverseCardBattle.Battle
             CardInstance target = null,
             BattlePlayer targetPlayer = null,
             int amount = 0,
-            TargetCandidate chosen = null)
+            TargetCandidate chosen = null,
+            bool byAttack = false)
         {
             GameEvent gameEvent = new GameEvent();
 
@@ -609,6 +614,7 @@ namespace MultiverseCardBattle.Battle
             gameEvent.TargetPlayer = targetPlayer;
             gameEvent.Amount = amount;
             gameEvent.ChosenTarget = chosen;
+            gameEvent.ByAttack = byAttack;
 
             Events.Publish(gameEvent);
 
@@ -671,8 +677,7 @@ namespace MultiverseCardBattle.Battle
             if (!player.Hand.Add(card))
             {
                 // มือเต็ม การ์ดที่จั่วถูกเผาทิ้ง
-                card.Zone = CardZone.Graveyard;
-                player.Graveyard.Add(card);
+                player.AddToZone(card, CardZone.Graveyard);
 
                 Log(player.Name + "'s hand is full, " +
                     card.Data.CardName + " is burned");
@@ -1683,6 +1688,29 @@ namespace MultiverseCardBattle.Battle
             if (PendingDiscover == null || chosen == null)
                 return false;
 
+            // LookTop: หยิบการ์ดจริงจากหัวกอง
+            if (PendingDiscover.DeckCards != null)
+            {
+                CardInstance pick =
+                    PendingDiscover.DeckCards.Find(c => c.Data == chosen);
+
+                if (pick == null)
+                    return false;
+
+                BattlePlayer picker = PendingDiscover.Player;
+                List<CardInstance> top = PendingDiscover.DeckTop;
+
+                PendingDiscover = null;
+
+                TakeFromDeckTop(picker, top, pick);
+
+                Resolve();
+
+                ContinueChain();
+
+                return true;
+            }
+
             PendingDiscover.Result.Select(chosen);
 
             bool added =
@@ -1699,6 +1727,135 @@ namespace MultiverseCardBattle.Battle
             ContinueChain();
 
             return added;
+        }
+
+        // ---------- ดูหัวกอง (LookTop) ----------
+
+        private static bool MatchesPick(CardInstance card, PickFilter filter, int maxCost)
+        {
+            if (card == null || card.Data == null)
+                return false;
+
+            switch (filter)
+            {
+                case PickFilter.Unit:
+                    if (card.Data.Type != CardType.Unit) return false;
+                    break;
+
+                case PickFilter.Spell:
+                    if (card.Data.Type != CardType.Spell) return false;
+                    break;
+
+                case PickFilter.Equipment:
+                    if (card.Data.Type != CardType.Equipment) return false;
+                    break;
+            }
+
+            return maxCost <= 0 || card.CurrentCost <= maxCost;
+        }
+
+        /// <summary>
+        /// ดูหัวกอง count ใบ แล้วเลือกหยิบ 1 ใบที่เข้าเงื่อนไขเข้ามือ ที่เหลือไปอยู่ล่างกอง
+        /// มนุษย์เลือกเองผ่านหน้าต่างเดียวกับ Discover / AI เลือกใบที่แพงที่สุด
+        /// </summary>
+        public void RequestLookTop(
+            BattlePlayer player,
+            int count,
+            PickFilter filter,
+            int maxCost)
+        {
+            if (player == null || count <= 0)
+                return;
+
+            int n = System.Math.Min(count, player.Deck.Count);
+
+            if (n == 0)
+            {
+                Log(player.Name + " has no cards to look at");
+                return;
+            }
+
+            List<CardInstance> top = new List<CardInstance>();
+
+            for (int i = 0; i < n; i++)
+                top.Add(player.Deck.Cards[i]);
+
+            List<CardInstance> options = new List<CardInstance>();
+
+            foreach (CardInstance card in top)
+            {
+                if (MatchesPick(card, filter, maxCost))
+                    options.Add(card);
+            }
+
+            Log(player.Name + " looks at the top " + n +
+                (n == 1 ? " card" : " cards") + " of the deck");
+
+            if (options.Count == 0)
+            {
+                Log("...and finds nothing to take");
+
+                Touch();
+
+                return;
+            }
+
+            if (IsAI(player))
+            {
+                CardInstance best = options[0];
+
+                foreach (CardInstance card in options)
+                {
+                    if (card.CurrentCost > best.CurrentCost)
+                        best = card;
+                }
+
+                TakeFromDeckTop(player, top, best);
+
+                return;
+            }
+
+            DiscoverResult result = new DiscoverResult();
+
+            foreach (CardInstance card in options)
+                result.Options.Add(card.Data);
+
+            PendingDiscover = new DiscoverRequest
+            {
+                Player = player,
+                Result = result,
+                DeckCards = options,
+                DeckTop = top,
+                Title = "TOP " + n + " OF YOUR DECK - take one"
+            };
+
+            Touch();
+        }
+
+        private void TakeFromDeckTop(
+            BattlePlayer player,
+            List<CardInstance> top,
+            CardInstance pick)
+        {
+            if (player == null || pick == null)
+                return;
+
+            player.Deck.Remove(pick);
+
+            // ใบที่ดูแล้วแต่ไม่ได้เลือก ไปอยู่ล่างกอง
+            foreach (CardInstance card in top)
+            {
+                if (card != pick)
+                    player.Deck.MoveToBottom(card);
+            }
+
+            pick.Zone = CardZone.Hand;
+
+            player.AddToZone(pick, CardZone.Hand);
+
+            Log(player.Name + " takes " + pick.Data.CardName + " from the deck");
+
+            Touch();
         }
 
         // ---------- ตรวจผล ----------

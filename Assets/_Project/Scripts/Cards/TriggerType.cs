@@ -29,5 +29,8 @@ public enum TriggerType
 
     // เจ้าของยูนิตใช้การ์ด Spell (ใช้กับ Keyword Spellburst)
     // เพิ่มต่อท้ายเพื่อไม่ให้ค่า Enum ของการ์ดเดิมเลื่อน
-    Spellburst
+    Spellburst,
+
+    // การ์ดถูกส่งลงสุสานจากทางใดก็ได้ (ตาย / ทิ้ง / ใช้ Spell เสร็จ / ถูกทำลายจากมือหรือกอง)
+    Graveyard
 }

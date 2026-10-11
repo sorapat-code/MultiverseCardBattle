@@ -350,6 +350,8 @@ namespace MultiverseCardBattle.Tests
                 Assert.AreEqual(x.Trigger, y.Trigger, id);
                 Assert.AreEqual(x.Target, y.Target, id);
                 Assert.AreEqual(x.Selection, y.Selection, id);
+                Assert.AreEqual(x.TargetedBy, y.TargetedBy, id);
+                Assert.AreEqual(x.TargetedFrom, y.TargetedFrom, id);
 
                 Assert.AreEqual(x.Conditions.Count, y.Conditions.Count, id);
 
@@ -371,6 +373,8 @@ namespace MultiverseCardBattle.Tests
                     Assert.AreEqual(p.Duration, q.Duration, id + " " + p.Type);
                     Assert.AreEqual(p.Status, q.Status, id);
                     Assert.AreEqual(p.Keyword, q.Keyword, id);
+                    Assert.AreEqual(p.PickType, q.PickType, id);
+                    Assert.AreEqual(p.PickMaxCost, q.PickMaxCost, id);
                     Assert.AreEqual(
                         p.Card == null ? null : p.Card.CardID,
                         q.Card == null ? null : q.Card.CardID, id);

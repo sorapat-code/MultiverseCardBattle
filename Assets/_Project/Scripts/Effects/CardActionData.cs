@@ -13,6 +13,10 @@ namespace MultiverseCardBattle.Effects
         [Header("Trigger")]
         public TriggerType Trigger;
 
+        [Header("When targeted (Trigger = OnTarget)")]
+        public TargetedSource TargetedBy;
+        public TargetedSide TargetedFrom;
+
         [Header("Conditions")]
         public List<ConditionData> Conditions = new();
 

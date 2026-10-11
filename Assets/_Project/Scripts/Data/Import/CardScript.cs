@@ -104,6 +104,26 @@ namespace MultiverseCardBattle.Data.Import
             int open = left.IndexOf('[');
             string triggerText = open >= 0 ? left.Substring(0, open).Trim() : left;
 
+            // OnTarget(Source,Side): ตัวกรองว่าถูกเล็งด้วยอะไร / โดยฝ่ายไหน เช่น OnTarget(Attack,Enemy)
+            string triggerArgs = null;
+            int triggerOpen = triggerText.IndexOf('(');
+
+            if (triggerOpen >= 0)
+            {
+                int triggerClose = triggerText.LastIndexOf(')');
+
+                if (triggerClose < triggerOpen)
+                {
+                    errors.Add("missing ')' in trigger \"" + triggerText + "\"");
+                    return null;
+                }
+
+                triggerArgs = triggerText.Substring(
+                    triggerOpen + 1, triggerClose - triggerOpen - 1);
+
+                triggerText = triggerText.Substring(0, triggerOpen).Trim();
+            }
+
             if (!TryEnum(triggerText, out action.Trigger))
             {
                 errors.Add("unknown trigger \"" + triggerText + "\" in \"" + source + "\"");
@@ -111,6 +131,21 @@ namespace MultiverseCardBattle.Data.Import
             }
 
             bool ok = true;
+
+            if (triggerArgs != null)
+            {
+                string[] filter = triggerArgs.Split(',');
+
+                if (action.Trigger != TriggerType.OnTarget ||
+                    filter.Length != 2 ||
+                    !TryEnum(filter[0], out action.TargetedBy) ||
+                    !TryEnum(filter[1], out action.TargetedFrom))
+                {
+                    errors.Add("trigger filter in \"" + source +
+                        "\" must look like OnTarget(Attack,Enemy)");
+                    ok = false;
+                }
+            }
 
             if (open >= 0)
             {
@@ -284,6 +319,21 @@ namespace MultiverseCardBattle.Data.Import
                 return effect;
             }
 
+            // LookTop(จำนวน[, ประเภท[, ค่าใช้จ่ายสูงสุด]])
+            if (effect.Type == EffectType.LookTop)
+            {
+                if (args.Length < 1 || !TryInt(args[0], out effect.Value) ||
+                    (args.Length > 1 && !TryEnum(args[1], out effect.PickType)) ||
+                    (args.Length > 2 && !TryInt(args[2], out effect.PickMaxCost)))
+                {
+                    errors.Add("effect \"" + text +
+                        "\" must look like LookTop(3), LookTop(3,Spell) or LookTop(4,Any,3)");
+                    return null;
+                }
+
+                return effect;
+            }
+
             // (value) หรือ (value, duration)
             if (args.Length > 0 && !TryInt(args[0], out effect.Value))
             {
@@ -378,6 +428,14 @@ namespace MultiverseCardBattle.Data.Import
 
             text.Append(action.Trigger);
 
+            if (action.Trigger == TriggerType.OnTarget &&
+                (action.TargetedBy != TargetedSource.Any ||
+                 action.TargetedFrom != TargetedSide.Any))
+            {
+                text.Append('(').Append(action.TargetedBy).Append(',')
+                    .Append(action.TargetedFrom).Append(')');
+            }
+
             if (action.Conditions != null && action.Conditions.Count > 0)
             {
                 List<string> conds = new List<string>();
@@ -446,6 +504,16 @@ namespace MultiverseCardBattle.Data.Import
             else if (KeywordArg.Contains(effect.Type))
             {
                 args.Add(KeywordList(effect.Keyword, "+"));
+            }
+            else if (effect.Type == EffectType.LookTop)
+            {
+                args.Add(Number(effect.Value));
+
+                if (effect.PickType != PickFilter.Any || effect.PickMaxCost > 0)
+                    args.Add(effect.PickType.ToString());
+
+                if (effect.PickMaxCost > 0)
+                    args.Add(Number(effect.PickMaxCost));
             }
             else
             {

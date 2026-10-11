@@ -1738,7 +1738,11 @@ namespace MultiverseCardBattle.Screens
             UIFactory.Stretch(dim.rectTransform);
 
             ScreenKit.AddLabel(
-                overlay, "DISCOVER - choose a card", 44,
+                overlay,
+                string.IsNullOrEmpty(battle.PendingDiscover.Title)
+                    ? "DISCOVER - choose a card"
+                    : battle.PendingDiscover.Title,
+                44,
                 TextAnchor.MiddleCenter, 0.2f, 0.75f, 0.8f, 0.9f,
                 FontStyle.Bold);
 
