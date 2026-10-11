@@ -680,9 +680,12 @@ namespace MultiverseCardBattle.Screens
             playerLeader = playerWidget.Button;
 
             // ----- คอลัมน์ขวา: กองการ์ด / จบเทิร์น -----
+            // จำนวนการ์ดในมือคู่ต่อสู้ (แสดงเฉพาะตัวเลข ดูการ์ดในมือไม่ได้แล้ว คลิกไม่ได้)
             enemyHandButton = ScreenKit.AddButton(
-                root, "Opp. Hand", () => TogglePile(PileKind.EnemyHand),
+                root, "Opp. Hand", () => { },
                 UIFactory.Muted, 0.875f, 0.87f, 0.995f, 0.93f, 20);
+
+            enemyHandButton.targetGraphic.raycastTarget = false;
 
             enemyGraveButton = ScreenKit.AddButton(
                 root, "Graveyard", () => TogglePile(PileKind.EnemyGraveyard),
@@ -1986,6 +1989,10 @@ namespace MultiverseCardBattle.Screens
 
         private void TogglePile(PileKind kind)
         {
+            // ดูมือคู่ต่อสู้ไม่ได้
+            if (kind == PileKind.EnemyHand)
+                return;
+
             openPile = openPile == kind ? PileKind.None : kind;
 
             dirty = true;
@@ -2005,7 +2012,6 @@ namespace MultiverseCardBattle.Screens
             playerDeckLabel.text = "Deck " + Human.Deck.Count;
             enemyDeckLabel.text = "Deck " + Ai.Deck.Count;
 
-            Tint(enemyHandButton, openPile == PileKind.EnemyHand);
             Tint(enemyGraveButton, openPile == PileKind.EnemyGraveyard);
             Tint(playerGraveButton, openPile == PileKind.PlayerGraveyard);
         }

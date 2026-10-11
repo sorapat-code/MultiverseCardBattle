@@ -62,7 +62,7 @@ namespace MultiverseCardBattle.Data
             new[] { "Deck", "Cards you draw from at turn start. If your deck ever reaches 0 cards, you lose the battle immediately." },
             new[] { "Field", "Where units fight. Holds up to 7 units per player." },
             new[] { "Graveyard", "Where destroyed units and used spells go. Click Graveyard in battle to look inside." },
-            new[] { "Opp. Hand", "A button in battle that shows the cards in the opponent's hand." },
+            new[] { "Opp. Hand", "Shows how many cards the opponent holds. You cannot see which cards they are." },
             new[] { "Summon", "Puts a unit directly onto the field (if there is room)." },
             new[] { "Draw", "Take the top card of your deck into your hand." },
             new[] { "Discover", "Shows 3 random cards. Choose 1 and it is added to your hand." },

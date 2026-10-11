@@ -29,7 +29,7 @@ namespace MultiverseCardBattle.Screens
             "<b>Status</b>: Stun, Silence, Freeze, Burn, Poison, Barrier, Regeneration and more.\n" +
             "See <b>Keywords & Status</b> in the main menu for every keyword, status and game term (Discover, Energy, Graveyard...).\n" +
             "While battling, hover a card to see it larger with an explanation of its keywords underneath.\n\n" +
-            "<b>Battle tools</b>: the Graveyard buttons show destroyed cards, and Opp. Hand shows the cards in your opponent's hand.\n" +
+            "<b>Battle tools</b>: the Graveyard buttons show destroyed cards, and Opp. Hand only shows how many cards your opponent holds.\n" +
             "<b>Keys</b>: Space - end turn.  Esc - cancel the current selection or close a window.  Hover a card to see it larger.\n\n" +
             "<b>Deck-out</b>: if your deck ever reaches 0 cards you lose immediately - watch your draws!\n\n" +
             "<b>Progress</b>: win battles to earn Gold and campaign reward cards. " +
