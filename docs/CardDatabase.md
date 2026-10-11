@@ -245,3 +245,10 @@ The result is already decided by `BattleManager`; the overlay only shows it: the
 gold, back = opponent in silver), lands with a bounce, then both name plates show 1ST / 2ND (second player: +1 card and
 The Coin) with a slam banner. AI, input and mulligan wait until it ends; click skips to the result, click again (or
 ~8 s) continues. Not yet compiled/run in Unity.
+
+## In-battle Settings (BattleSettingsPanel)
+
+The battle screen's top-right button is now **Settings** (was Concede). It opens `BattleSettingsPanel`: Master/Music/Effects
+sliders, Mute All, Animation Speed, Opponent Speed and **Surrender** (needs a second confirm, then counts as a defeat).
+Esc also opens it when nothing is selected/dragged/open (Esc closes it too). The game (AI + input) is paused while it is
+open. Values are the same `GameSettings` as the main-menu Options and are saved. Not yet compiled/run in Unity.

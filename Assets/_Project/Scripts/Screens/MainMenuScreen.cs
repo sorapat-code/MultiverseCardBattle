@@ -609,7 +609,7 @@ namespace MultiverseCardBattle.Screens
             creditsPanel.gameObject.SetActive(false);
         }
 
-        private static Slider CreateSlider(
+        internal static Slider CreateSlider(
             Transform parent, float x0, float y0, float x1, float y1)
         {
             RectTransform root = UIFactory.CreateRect("Slider", parent);

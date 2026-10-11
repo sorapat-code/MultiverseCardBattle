@@ -194,6 +194,7 @@ namespace MultiverseCardBattle.Screens
         // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
         private SecretCinematic cinematic;
         private CoinToss coinToss;
+        private BattleSettingsPanel settings;
         private bool coinTossStarted;
         private SecretCinematic unlockCinematic;
         private int unlockCinematicIndex = -1;
@@ -314,6 +315,15 @@ namespace MultiverseCardBattle.Screens
             if (coinToss != null)
                 return;
 
+            // หน้าตั้งค่าเปิดอยู่: หยุดเกมทั้งหมด (AI / อินพุต)
+            if (settings != null && settings.IsOpen)
+            {
+                if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+                    settings.Close();
+
+                return;
+            }
+
             // Mulligan: รอผู้เล่นเลือกเปลี่ยนการ์ดก่อน ยังไม่เริ่มเทิร์นแรก
             if (battle.MulliganPending)
             {
@@ -421,8 +431,10 @@ namespace MultiverseCardBattle.Screens
             {
                 if (openPile != PileKind.None)
                     TogglePile(openPile);
-                else
+                else if (selectedHand != null || selectedAttacker != null || dragCard != null)
                     ClearSelectionAndRefresh();
+                else if (settings != null)
+                    settings.Open();
             }
         }
 
@@ -627,8 +639,11 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.AddTextShadow(hintText);
 
-            ScreenKit.AddButton(root, "Concede", Concede,
-                UIFactory.Danger, 0.90f, 0.95f, 0.99f, 0.993f, 22);
+            // ปุ่มยอมแพ้ย้ายเข้าไปอยู่ในหน้าตั้งค่า (Settings -> Surrender)
+            settings = BattleSettingsPanel.Create(root, Concede);
+
+            ScreenKit.AddButton(root, "Settings", () => settings.Open(),
+                UIFactory.Muted, 0.90f, 0.95f, 0.99f, 0.993f, 22);
 
             // ----- สนาม: พื้นหลังโซน + เส้นกลาง -----
             ScreenKit.AddPanel(
@@ -2262,7 +2277,7 @@ namespace MultiverseCardBattle.Screens
 
         private bool CanAct()
         {
-            if (cinematic != null)
+            if (cinematic != null || (settings != null && settings.IsOpen))
                 return false;
 
             if (battle == null || battle.IsOver || battle.HasPendingChoice)
