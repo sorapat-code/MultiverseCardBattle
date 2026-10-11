@@ -29,10 +29,16 @@ namespace MultiverseCardBattle.Data
         public const int ArtoriasWins = 8;
         public const int ArtoriasDeaths = 5;
         public const int ArtoriasMinHealth = 15;
+        public const int ArtoriasLeaderDamage = 15;
+        public const int ArtoriasMaxTurns = 18;
 
         public const int AinzSpells = 10;
         public const int AinzEffectKills = 8;
         public const int AinzMinHealth = 25;
+        public const int AinzUnitsKilled = 12;
+        public const int AinzMaxUnitDeaths = 2;
+        public const int AinzDistinctSpells = 6;
+        public const int AinzMaxTurns = 20;
 
         public static List<SecretUnlock> Evaluate(
             BattleManager battle, int humanId, bool won, PlayerProfile profile)
@@ -42,7 +48,7 @@ namespace MultiverseCardBattle.Data
             if (battle == null || profile == null || !won)
                 return list;
 
-            if (IsArtoriasEarned(battle.Stats, humanId) &&
+            if (IsArtoriasEarned(battle.Stats, humanId, battle.TurnManager.TotalTurns) &&
                 profile.GetOwnedCount(StarterCardLibrary.ArtoriasId) == 0)
             {
                 SecretUnlock unlock = new SecretUnlock();
@@ -55,7 +61,8 @@ namespace MultiverseCardBattle.Data
                 list.Add(unlock);
             }
 
-            if (IsAinzEarned(battle.Stats, humanId, battle.GetPlayer(humanId)) &&
+            if (IsAinzEarned(
+                    battle.Stats, humanId, battle.GetPlayer(humanId), battle.TurnManager.TotalTurns) &&
                 profile.GetOwnedCount(StarterCardLibrary.AinzId) == 0)
             {
                 SecretUnlock unlock = new SecretUnlock();
@@ -96,18 +103,23 @@ namespace MultiverseCardBattle.Data
                    stats.SpellsPlayed[humanId] == 0;
         }
 
+        // totalTurns = จำนวนเทิร์นรวมทั้งสองฝ่าย (TurnManager.TotalTurns) ตอนแมตช์จบ
         public static bool IsAinzEarned(
-            BattleStats stats, int humanId, BattlePlayer human)
+            BattleStats stats, int humanId, BattlePlayer human, int totalTurns)
         {
             if (stats == null || human == null)
                 return false;
 
             return stats.SpellsPlayed[humanId] >= AinzSpells &&
+                   stats.DistinctSpells(humanId) >= AinzDistinctSpells &&
                    stats.EffectKills[humanId] >= AinzEffectKills &&
-                   human.LeaderHealth >= AinzMinHealth;
+                   stats.UnitsKilled[humanId] >= AinzUnitsKilled &&
+                   stats.UnitDeaths[humanId] <= AinzMaxUnitDeaths &&
+                   human.LeaderHealth >= AinzMinHealth &&
+                   totalTurns <= AinzMaxTurns;
         }
 
-        public static bool IsArtoriasEarned(BattleStats stats, int humanId)
+        public static bool IsArtoriasEarned(BattleStats stats, int humanId, int totalTurns)
         {
             if (stats == null)
                 return false;
@@ -115,7 +127,10 @@ namespace MultiverseCardBattle.Data
             return stats.CombatWins[humanId] >= ArtoriasWins &&
                    stats.UnitDeaths[humanId] >= ArtoriasDeaths &&
                    stats.LowestLeaderHealth[humanId] >= ArtoriasMinHealth &&
-                   stats.InstantDestroys[humanId] == 0;
+                   stats.InstantDestroys[humanId] == 0 &&
+                   stats.SpellsPlayed[humanId] == 0 &&
+                   stats.LeaderDamage[humanId] >= ArtoriasLeaderDamage &&
+                   totalTurns <= ArtoriasMaxTurns;
         }
     }
 }

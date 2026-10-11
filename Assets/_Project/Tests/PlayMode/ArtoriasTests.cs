@@ -130,21 +130,30 @@ namespace MultiverseCardBattle.Tests
             Assert.AreEqual(7, artorias.CurrentAttack);
         }
 
+        // เติมสถิติให้ครบทุกเงื่อนไขของ Artorias
+        private void FillArtoriasStats(BattleStats stats, int h)
+        {
+            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
+            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
+
+            stats.AddLeaderDamage(h, SecretCardService.ArtoriasLeaderDamage);
+        }
+
         [Test]
         public void Unlock_NeedsAllConditionsAndAWin()
         {
             BattleStats stats = battle.Stats;
             int h = P1.PlayerID;
+            int turns = SecretCardService.ArtoriasMaxTurns;
 
-            Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h));
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h, turns));
 
-            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
-            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
+            FillArtoriasStats(stats, h);
 
-            Assert.IsTrue(SecretCardService.IsArtoriasEarned(stats, h));
+            Assert.IsTrue(SecretCardService.IsArtoriasEarned(stats, h, turns));
 
             stats.AddInstantDestroy(h);
-            Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h));
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h, turns));
         }
 
         [Test]
@@ -153,13 +162,53 @@ namespace MultiverseCardBattle.Tests
             BattleStats stats = battle.Stats;
             int h = P1.PlayerID;
 
-            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
-            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
+            FillArtoriasStats(stats, h);
 
             P1.LeaderHealth = SecretCardService.ArtoriasMinHealth - 1;
             stats.NoteLeaderHealth(P1);
 
-            Assert.IsFalse(SecretCardService.IsArtoriasEarned(stats, h));
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(
+                stats, h, SecretCardService.ArtoriasMaxTurns));
+        }
+
+        [Test]
+        public void Unlock_FailsIfAnySpellWasPlayed()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            FillArtoriasStats(stats, h);
+            stats.AddSpellPlayed(h, "MAG_001");
+
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(
+                stats, h, SecretCardService.ArtoriasMaxTurns));
+        }
+
+        [Test]
+        public void Unlock_FailsIfTheEnemyLeaderTookTooLittleDamage()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            for (int i = 0; i < SecretCardService.ArtoriasWins; i++) stats.AddCombatWin(h);
+            for (int i = 0; i < SecretCardService.ArtoriasDeaths; i++) stats.AddUnitDeath(h);
+
+            stats.AddLeaderDamage(h, SecretCardService.ArtoriasLeaderDamage - 1);
+
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(
+                stats, h, SecretCardService.ArtoriasMaxTurns));
+        }
+
+        [Test]
+        public void Unlock_FailsIfTheMatchRanTooLong()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            FillArtoriasStats(stats, h);
+
+            Assert.IsFalse(SecretCardService.IsArtoriasEarned(
+                stats, h, SecretCardService.ArtoriasMaxTurns + 1));
         }
     }
 }

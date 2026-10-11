@@ -107,11 +107,13 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   `EffectExecutor.SecretCardChance`).
 - `Artorias the Abysswalker` (`EVT_002`) is a Secret/Unique card unlocked by the "A Knight's Duty"
   condition (`Data/SecretCardService.cs`): win a match in which you win 8+ unit combats as the attacker,
-  lose 5+ units, never drop below 15 Leader HP and never use an instant-destroy effect. Match stats are
+  lose 5+ units, never drop below 15 Leader HP, never use an instant-destroy effect, never play a Spell, deal 15+ damage
+  to the enemy Leader and finish within 18 turns (both players' turns counted, `TurnManager.TotalTurns`). Match stats are
   tracked by `Battle/BattleStats.cs`. Unlocking shows a banner before the result summary, adds 1 copy to the
   Collection and grants the hidden achievement (500 Gold + 300 Dust). Card-specific passives use `CardPassive`.
-- `Ainz Ooal Gown, The Supreme Overlord` (`EVT_003`) is unlocked by "The Throne of Nazarick": in one match play 10+ Spells,
-  kill 8+ enemy units with Spells/card abilities (not combat) and win with Leader HP >= 25. Mechanics: the `Doom` status
+- `Ainz Ooal Gown, The Supreme Overlord` (`EVT_003`) is unlocked by "The Throne of Nazarick": in one match play 10+ Spells (at least 6 different ones,
+  `BattleStats.SpellIds`), kill 8+ enemy units with Spells/card abilities (not combat), kill 12+ enemy units in total, lose at most
+  2 of your own units, finish within 20 turns (both players' turns counted) and win with Leader HP >= 25. Mechanics: the `Doom` status
   (destroys at the start of the caster's next turn), `CardPassive` flags (Grasp Heart / Dark Wisdom / Supreme Magic Caster /
   Undead Overlord) and `BattleManager.PendingTarget` (the player clicks the Grasp Heart target at turn start). Kill causes are
   tracked via `BattleManager.ActiveEffectSource` and `CardInstance.LastEffectSource`.

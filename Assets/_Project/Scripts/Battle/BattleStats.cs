@@ -29,6 +29,17 @@ namespace MultiverseCardBattle.Battle
         public readonly int[] UnitsKilled = new int[3];
         public readonly int[] LeaderDamage = new int[3];
 
+        // ID ของ Spell ที่ใช้ในแมตช์นี้ (ไม่ซ้ำ) ของแต่ละฝั่ง: นับ "Spell คนละชื่อ" ของ Ainz
+        public readonly List<string>[] SpellIds =
+        {
+            new List<string>(), new List<string>(), new List<string>()
+        };
+
+        public int DistinctSpells(int playerId)
+        {
+            return Valid(playerId) ? SpellIds[playerId].Count : 0;
+        }
+
         // ID การ์ดที่ใช้ในแมตช์นี้ (ไม่ซ้ำ) ของแต่ละฝั่ง ใช้คิด Mastery
         public readonly List<string>[] PlayedCardIds =
         {
@@ -103,10 +114,16 @@ namespace MultiverseCardBattle.Battle
                 LeaderDamage[attackerId] += amount;
         }
 
-        public void AddSpellPlayed(int playerId)
+        public void AddSpellPlayed(int playerId, string cardId = null)
         {
-            if (Valid(playerId))
-                SpellsPlayed[playerId]++;
+            if (!Valid(playerId))
+                return;
+
+            SpellsPlayed[playerId]++;
+
+            if (!string.IsNullOrEmpty(cardId) &&
+                !SpellIds[playerId].Contains(cardId))
+                SpellIds[playerId].Add(cardId);
         }
 
         public void AddEffectKill(int playerId)

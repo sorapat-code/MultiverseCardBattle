@@ -253,24 +253,99 @@ namespace MultiverseCardBattle.Tests
             Assert.AreEqual(7, other.CurrentHealth);
         }
 
+        // เติมสถิติให้ครบทุกเงื่อนไขของ Ainz (Leader HP ตั้งให้พอดีเกณฑ์)
+        private void FillAinzStats(BattleStats stats, int h)
+        {
+            for (int i = 0; i < SecretCardService.AinzSpells; i++)
+                stats.AddSpellPlayed(h, "SPELL_" + i);
+
+            for (int i = 0; i < SecretCardService.AinzEffectKills; i++) stats.AddEffectKill(h);
+            for (int i = 0; i < SecretCardService.AinzUnitsKilled; i++) stats.AddUnitKilled(h);
+            for (int i = 0; i < SecretCardService.AinzMaxUnitDeaths; i++) stats.AddUnitDeath(h);
+
+            P1.LeaderHealth = SecretCardService.AinzMinHealth;
+        }
+
         [Test]
-        public void Unlock_NeedsSpellsKillsAndHealthAndWin()
+        public void Unlock_NeedsAllConditionsAndAWin()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+            int turns = SecretCardService.AinzMaxTurns;
+
+            P1.LeaderHealth = SecretCardService.AinzMinHealth;
+
+            Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1, turns));
+
+            FillAinzStats(stats, h);
+
+            Assert.IsTrue(SecretCardService.IsAinzEarned(stats, h, P1, turns));
+
+            P1.LeaderHealth = SecretCardService.AinzMinHealth - 1;
+
+            Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1, turns));
+        }
+
+        [Test]
+        public void Unlock_FailsWithTooFewDistinctSpells()
         {
             BattleStats stats = battle.Stats;
             int h = P1.PlayerID;
 
+            // ใช้ Spell ครบจำนวนแต่ซ้ำชื่อเดิมตลอด
+            for (int i = 0; i < SecretCardService.AinzSpells; i++)
+                stats.AddSpellPlayed(h, "MAG_001");
+
+            for (int i = 0; i < SecretCardService.AinzEffectKills; i++) stats.AddEffectKill(h);
+            for (int i = 0; i < SecretCardService.AinzUnitsKilled; i++) stats.AddUnitKilled(h);
+
             P1.LeaderHealth = SecretCardService.AinzMinHealth;
 
-            Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1));
+            Assert.IsFalse(SecretCardService.IsAinzEarned(
+                stats, h, P1, SecretCardService.AinzMaxTurns));
+        }
 
-            for (int i = 0; i < SecretCardService.AinzSpells; i++) stats.AddSpellPlayed(h);
+        [Test]
+        public void Unlock_FailsIfTooManyOfYourUnitsDied()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            FillAinzStats(stats, h);
+            stats.AddUnitDeath(h);
+
+            Assert.IsFalse(SecretCardService.IsAinzEarned(
+                stats, h, P1, SecretCardService.AinzMaxTurns));
+        }
+
+        [Test]
+        public void Unlock_FailsWithTooFewEnemyUnitsKilled()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            for (int i = 0; i < SecretCardService.AinzSpells; i++)
+                stats.AddSpellPlayed(h, "SPELL_" + i);
+
             for (int i = 0; i < SecretCardService.AinzEffectKills; i++) stats.AddEffectKill(h);
+            for (int i = 0; i < SecretCardService.AinzUnitsKilled - 1; i++) stats.AddUnitKilled(h);
 
-            Assert.IsTrue(SecretCardService.IsAinzEarned(stats, h, P1));
+            P1.LeaderHealth = SecretCardService.AinzMinHealth;
 
-            P1.LeaderHealth = SecretCardService.AinzMinHealth - 1;
+            Assert.IsFalse(SecretCardService.IsAinzEarned(
+                stats, h, P1, SecretCardService.AinzMaxTurns));
+        }
 
-            Assert.IsFalse(SecretCardService.IsAinzEarned(stats, h, P1));
+        [Test]
+        public void Unlock_FailsIfTheMatchRanTooLong()
+        {
+            BattleStats stats = battle.Stats;
+            int h = P1.PlayerID;
+
+            FillAinzStats(stats, h);
+
+            Assert.IsFalse(SecretCardService.IsAinzEarned(
+                stats, h, P1, SecretCardService.AinzMaxTurns + 1));
         }
     }
 }
