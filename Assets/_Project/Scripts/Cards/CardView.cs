@@ -421,6 +421,9 @@ namespace MultiverseCardBattle.Screens
 
             artFrame.color = UniverseColor(data.Universe, data.Type);
 
+            // การ์ดลับ: ออร่าเรืองแสง แสงสะท้อน และประกาย
+            SecretAura.Ensure(this, data);
+
             nameText.text = data.CardName;
             nameText.color = Color.white;
 

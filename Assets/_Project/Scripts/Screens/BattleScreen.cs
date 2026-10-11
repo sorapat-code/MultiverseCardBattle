@@ -180,7 +180,78 @@ namespace MultiverseCardBattle.Screens
                 battle = go.AddComponent<BattleManager>();
             }
 
+            battle.Events.Raised += OnBattleEvent;
+
             BuildUI();
+        }
+
+        private void OnDestroy()
+        {
+            if (battle != null && battle.Events != null)
+                battle.Events.Raised -= OnBattleEvent;
+        }
+
+        // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
+        private readonly List<GameEvent> pendingSecretEvents = new List<GameEvent>();
+
+        private void OnBattleEvent(GameEvent e)
+        {
+            if (e == null || e.Card == null || !SecretFx.IsSecret(e.Card.Data))
+                return;
+
+            if (e.Trigger != TriggerType.Attack &&
+                e.Trigger != TriggerType.LeaderAttack &&
+                e.Trigger != TriggerType.Death)
+                return;
+
+            pendingSecretEvents.Add(e);
+
+            if (pendingSecretEvents.Count > 6)
+                pendingSecretEvents.RemoveAt(0);
+        }
+
+        private void PlaySecretEvents()
+        {
+            if (pendingSecretEvents.Count == 0)
+                return;
+
+            foreach (GameEvent e in pendingSecretEvents)
+            {
+                Vector3 from = Vector3.zero;
+                Vector3 to = Vector3.zero;
+
+                CardView view;
+
+                if (viewsByInstance.TryGetValue(e.Card.InstanceID, out view) && view != null)
+                    from = view.transform.position;
+                else if (!lastPositions.TryGetValue(e.Card.InstanceID, out from))
+                    continue;
+
+                to = from;
+
+                if (e.Trigger != TriggerType.Death)
+                {
+                    CardView targetView;
+
+                    if (e.Target != null &&
+                        viewsByInstance.TryGetValue(e.Target.InstanceID, out targetView) &&
+                        targetView != null)
+                    {
+                        to = targetView.transform.position;
+                    }
+                    else if (e.TargetPlayer != null)
+                    {
+                        Button leader = e.TargetPlayer == Human ? playerLeader : enemyLeader;
+
+                        if (leader != null)
+                            to = leader.transform.position;
+                    }
+                }
+
+                SecretFx.Skill(fxLayer, root, from, to, e.Card.Data, e.Trigger);
+            }
+
+            pendingSecretEvents.Clear();
         }
 
         private void Update()
@@ -1433,7 +1504,15 @@ namespace MultiverseCardBattle.Screens
                                         hidden.alpha = 1f;
 
                                     if (landing != null)
+                                    {
                                         CardFx.Pop(landing);
+
+                                        if (SecretFx.IsSecret(card.Data))
+                                        {
+                                            SecretFx.Arrive(
+                                                fxLayer, root, landing.transform.position, card.Data);
+                                        }
+                                    }
                                 });
 
                             aiPlayedFromHand = false;
@@ -1441,6 +1520,12 @@ namespace MultiverseCardBattle.Screens
                         else
                         {
                             CardFx.Pop(entered);
+
+                            if (SecretFx.IsSecret(card.Data))
+                            {
+                                SecretFx.Arrive(
+                                    fxLayer, root, entered.transform.position, card.Data);
+                            }
                         }
 
                         UiFx.Ring(
@@ -1522,6 +1607,8 @@ namespace MultiverseCardBattle.Screens
                     }
                 }
             }
+
+            PlaySecretEvents();
 
             lastHealth = now;
             lastAttacks = nowAttacks;
@@ -1997,10 +2084,14 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(dim.rectTransform);
 
-            if (nazarick)
-                BannerMagic.Create(overlay, unlock.Tint);
-            else if (yamato)
+            if (yamato)
                 BannerMagic.Create(overlay, unlock.Tint, true);
+            else
+                BannerMagic.Create(overlay, unlock.Tint);
+
+            // เปิดฉากด้วยแสงวาบเต็มจอ
+            SecretFx.Flash(overlay, unlock.Tint, 0.85f, 1.0f);
+            Sfx.Play(SoundId.Pack);
 
             Button next = dim.gameObject.AddComponent<Button>();
 
@@ -2012,16 +2103,16 @@ namespace MultiverseCardBattle.Screens
             });
 
             Text title = ScreenKit.AddLabel(
-                overlay, unlock.Title, 64, TextAnchor.MiddleCenter,
-                0.05f, 0.52f, 0.95f, 0.72f, FontStyle.Bold);
+                overlay, unlock.Title, 58, TextAnchor.MiddleCenter,
+                0.03f, 0.8f, 0.97f, 0.95f, FontStyle.Bold);
 
             title.color = unlock.Tint;
             title.raycastTarget = false;
             UIFactory.AddTextShadow(title);
 
             Text sub = ScreenKit.AddLabel(
-                overlay, unlock.Subtitle, 34, TextAnchor.MiddleCenter,
-                0.2f, 0.42f, 0.8f, 0.52f);
+                overlay, unlock.Subtitle, 32, TextAnchor.MiddleCenter,
+                0.2f, 0.73f, 0.8f, 0.8f);
 
             sub.raycastTarget = false;
 
@@ -2029,9 +2120,25 @@ namespace MultiverseCardBattle.Screens
 
             string name = card != null ? card.CardName : unlock.CardId;
 
+            // ตัวการ์ดลับพลิกหมุนเข้ามากระแทกกลางจอ
+            if (card != null)
+            {
+                CardView reveal = CardView.Create(overlay, new Vector2(300f, 420f));
+
+                reveal.ShowData(card);
+
+                RectTransform revealRect = (RectTransform)reveal.transform;
+
+                revealRect.anchorMin = new Vector2(0.5f, 0.47f);
+                revealRect.anchorMax = new Vector2(0.5f, 0.47f);
+                revealRect.anchoredPosition = Vector2.zero;
+
+                CardReveal.Attach(reveal, overlay, unlock.Tint);
+            }
+
             Text unlocked = ScreenKit.AddLabel(
                 overlay, "Secret card unlocked: " + name, 36,
-                TextAnchor.MiddleCenter, 0.2f, 0.3f, 0.8f, 0.4f,
+                TextAnchor.MiddleCenter, 0.2f, 0.14f, 0.8f, 0.22f,
                 FontStyle.Bold);
 
             unlocked.color = UIFactory.Gold;
@@ -2039,7 +2146,7 @@ namespace MultiverseCardBattle.Screens
 
             Text hint = ScreenKit.AddLabel(
                 overlay, "Click to continue", 24, TextAnchor.MiddleCenter,
-                0.3f, 0.12f, 0.7f, 0.2f);
+                0.3f, 0.05f, 0.7f, 0.11f);
 
             hint.raycastTarget = false;
         }
@@ -2696,11 +2803,7 @@ namespace MultiverseCardBattle.Screens
                 {
                     Vector3 position = view.transform.position;
 
-                    UiFx.Ring(fxLayer, position,
-                        new Color(0.3f, 0.65f, 1f, 0.9f), 80f, 520f, 0.7f);
-
-                    UiFx.Burst(fxLayer, position,
-                        new Color(0.25f, 0.55f, 1f, 1f), 46, 340f, 40f, 1.1f, -140f);
+                    SecretFx.DevilTrigger(fxLayer, root, position);
 
                     CardFx.Flash(view, new Color(0.4f, 0.7f, 1f, 1f));
                 }

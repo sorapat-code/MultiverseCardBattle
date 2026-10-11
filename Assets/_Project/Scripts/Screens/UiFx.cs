@@ -13,7 +13,8 @@ namespace MultiverseCardBattle.Screens
         {
             Particle,
             Ring,
-            Slash
+            Slash,
+            Beam
         }
 
         private Kind kind;
@@ -112,6 +113,25 @@ namespace MultiverseCardBattle.Screens
             fx.rect.sizeDelta = new Vector2(fx.startSize, thick);
         }
 
+        /// <summary>เสาแสงพุ่งขึ้นจากจุดที่กำหนดแล้วแคบลงและจาง (ฐานอยู่ที่จุดนั้น)</summary>
+        public static void Beam(
+            Transform parent, Vector3 world, Color color,
+            float width, float height, float life)
+        {
+            if (parent == null)
+                return;
+
+            UiFx fx = Make(parent, world, color, UIShapes.Glow, Kind.Beam, life);
+
+            fx.startSize = width;
+            fx.endSize = height;
+
+            // ฐานของเสาอยู่ที่จุดเกิดเหตุ
+            fx.rect.pivot = new Vector2(0.5f, 0.35f);
+            fx.rect.position = world;
+            fx.rect.sizeDelta = new Vector2(width, 10f);
+        }
+
         private void Update()
         {
             float dt = Time.unscaledDeltaTime;
@@ -141,6 +161,19 @@ namespace MultiverseCardBattle.Screens
                     rect.sizeDelta = Vector2.one * Mathf.Lerp(startSize, endSize, ease);
 
                     c.a = color.a * (1f - t);
+                    break;
+                }
+
+                case Kind.Beam:
+                {
+                    // พุ่งขึ้นเร็ว แล้วค่อยแคบลงพร้อมจาง
+                    float rise = 1f - Mathf.Pow(1f - Mathf.Clamp01(t / 0.25f), 3f);
+
+                    rect.sizeDelta = new Vector2(
+                        startSize * Mathf.Lerp(1f, 0.15f, t),
+                        Mathf.Lerp(10f, endSize, rise));
+
+                    c.a = color.a * (1f - t * t);
                     break;
                 }
 
