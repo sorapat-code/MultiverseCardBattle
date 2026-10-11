@@ -6,13 +6,19 @@ using MultiverseCardBattle.Decks;
 namespace MultiverseCardBattle.Data
 {
     /// <summary>
-    /// สูตรโกงสำหรับ Dev ใช้เทสการ์ดทุกใบ เปิดได้เฉพาะ Editor / Development Build
+    /// สูตรโกงสำหรับ Dev ใช้เทสการ์ดทุกใบ ปลดล็อกโดยกดลูกศรในเมนูหลัก ↑ ↑ ↓ ↓ ← →
+    /// (ปลดล็อกแล้วอยู่จนปิดเกม ถ้ายังไม่ปลดล็อก ปุ่ม Numpad ในการต่อสู้จะไม่ทำอะไร)
     /// </summary>
     public static class DevCheats
     {
+        // ลำดับปุ่มลับ: ↑ ↑ ↓ ↓ ← →
+        public static readonly string Sequence = "UUDDLR";
+
+        public static bool Unlocked;
+
         public static bool Enabled
         {
-            get { return Application.isEditor || Debug.isDebugBuild; }
+            get { return Unlocked; }
         }
 
         /// <summary>การ์ดทั้งหมดที่เล่นได้ (รวมการ์ดลับ ไม่รวม Token) เรียงตาม ID</summary>

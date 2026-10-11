@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Core;
@@ -828,21 +829,10 @@ namespace MultiverseCardBattle.Screens
 
         private void BuildDev()
         {
-            if (!DevCheats.Enabled)
-                return;
-
-            ScreenKit.AddButton(mainPanel, "DEV",
-                () =>
-                {
-                    Show(devPanel);
-                    SelectFirstDevButton();
-                },
-                new Color(0.5f, 0.15f, 0.55f, 1f), 0.9f, 0.02f, 0.98f, 0.07f, 22);
-
             UIFactory.CreateTitle(devPanel, "DEV CHEATS");
 
             devMessage = ScreenKit.AddLabel(
-                devPanel, "Editor / Development Build only.", 26,
+                devPanel, "Dev cheats unlocked.", 26,
                 TextAnchor.MiddleCenter, 0.1f, 0.12f, 0.9f, 0.22f);
 
             devButtons.Add(ScreenKit.AddButton(devPanel, "Unlock ALL cards (max copies, incl. secrets)",
@@ -892,6 +882,49 @@ namespace MultiverseCardBattle.Screens
 
             foreach (Button button in devButtons)
                 ButtonSelectGlow.Add(button);
+        }
+
+        // ปุ่มลับในเมนูหลัก: ↑ ↑ ↓ ↓ ← → เปิดแผง Dev (ไม่มีปุ่มบนจอ)
+        private string secretKeys = "";
+
+        private void Update()
+        {
+            if (mainPanel == null || !mainPanel.gameObject.activeSelf)
+            {
+                secretKeys = "";
+                return;
+            }
+
+            Keyboard keyboard = Keyboard.current;
+
+            if (keyboard == null)
+                return;
+
+            char pressed = '\0';
+
+            if (keyboard.upArrowKey.wasPressedThisFrame) pressed = 'U';
+            else if (keyboard.downArrowKey.wasPressedThisFrame) pressed = 'D';
+            else if (keyboard.leftArrowKey.wasPressedThisFrame) pressed = 'L';
+            else if (keyboard.rightArrowKey.wasPressedThisFrame) pressed = 'R';
+            else if (keyboard.anyKey.wasPressedThisFrame) secretKeys = "";
+
+            if (pressed == '\0')
+                return;
+
+            secretKeys += pressed;
+
+            if (secretKeys.Length > DevCheats.Sequence.Length)
+                secretKeys = secretKeys.Substring(secretKeys.Length - DevCheats.Sequence.Length);
+
+            if (secretKeys != DevCheats.Sequence)
+                return;
+
+            secretKeys = "";
+
+            DevCheats.Unlocked = true;
+
+            Show(devPanel);
+            SelectFirstDevButton();
         }
 
         // เลือกปุ่มแรกของแผง Dev เพื่อให้กดลูกศร ↑ ↓ ← → เลื่อนปุ่ม และ Enter/Space กดได้
