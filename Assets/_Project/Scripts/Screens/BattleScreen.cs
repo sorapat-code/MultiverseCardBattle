@@ -22,7 +22,7 @@ namespace MultiverseCardBattle.Screens
         private static readonly Vector2 HandCardSize = new Vector2(140f, 200f);
         private static readonly Vector2 FieldCardSize = new Vector2(150f, 210f);
         private static readonly Vector2 DiscoverCardSize = new Vector2(220f, 310f);
-        private static readonly Vector2 PreviewCardSize = new Vector2(250f, 350f);
+        private static readonly Vector2 PreviewCardSize = new Vector2(220f, 308f);
 
         private static float AIActionDelay
         {
@@ -45,6 +45,8 @@ namespace MultiverseCardBattle.Screens
         private const int MaxLogBubbles = 150;
         private Text termsText;
         private Image termsPanel;
+        private Text termsHeader;
+        private Image previewGlow;
 
         // สนามหญ้า: แสงเรืองขอบ / ลิ้นชักล็อก / หน้าต่างข้อมูล Leader
         private CanvasGroup logGroup;
@@ -422,6 +424,9 @@ namespace MultiverseCardBattle.Screens
             {
                 termsPanel.gameObject.SetActive(show);
                 termsText.gameObject.SetActive(show);
+
+                if (termsHeader != null)
+                    termsHeader.gameObject.SetActive(show);
             }
         }
 
@@ -743,22 +748,47 @@ namespace MultiverseCardBattle.Screens
 
             // ----- พรีวิวการ์ด + คำอธิบายศัพท์ (ลอยทางซ้าย โผล่เฉพาะตอนชี้การ์ด) -----
             previewZone = UIFactory.CreateZone(
-                root, "PreviewZone", 0.0f, 0.26f, 0.16f, 0.84f);
+                root, "PreviewZone", 0.0f, 0.49f, 0.16f, 0.80f);
+
+            // แสงทองนุ่มๆ ด้านหลังการ์ดพรีวิว (เปิดพร้อมการ์ด)
+            previewGlow = UIFactory.CreatePanel(previewZone, "PreviewGlow", new Color(1f, 0.78f, 0.35f, 0.5f));
+
+            previewGlow.sprite = UIShapes.Glow;
+            previewGlow.type = Image.Type.Simple;
+            previewGlow.raycastTarget = false;
+
+            previewGlow.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            previewGlow.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            previewGlow.rectTransform.anchoredPosition = Vector2.zero;
+            previewGlow.rectTransform.sizeDelta = PreviewCardSize + new Vector2(90f, 90f);
+            previewGlow.gameObject.SetActive(false);
 
             previewView = CardView.Create(previewZone, PreviewCardSize);
 
             previewView.SetInteractable(false);
             previewView.gameObject.SetActive(false);
+            if (previewGlow != null)
+                previewGlow.gameObject.SetActive(false);
 
             termsPanel = ScreenKit.AddPanel(
-                root, "TermsPanel", new Color(0.03f, 0.025f, 0.025f, 0.9f),
-                0.005f, 0.02f, 0.158f, 0.25f);
+                root, "TermsPanel", new Color(0.035f, 0.05f, 0.06f, 0.93f),
+                0.005f, 0.295f, 0.158f, 0.485f);
 
             termsPanel.raycastTarget = false;
 
+            termsHeader = ScreenKit.AddLabel(
+                root, "KEYWORDS", 14, TextAnchor.MiddleLeft,
+                0.014f, 0.452f, 0.15f, 0.48f, FontStyle.Bold);
+
+            termsHeader.color = UIFactory.Gold;
+
+            UIFactory.AddTextShadow(termsHeader);
+
+            termsHeader.gameObject.SetActive(false);
+
             termsText = ScreenKit.AddLabel(
                 root, "", 16, TextAnchor.UpperLeft,
-                0.012f, 0.025f, 0.152f, 0.245f);
+                0.012f, 0.30f, 0.152f, 0.45f);
 
             termsText.resizeTextForBestFit = true;
             termsText.resizeTextMinSize = 9;
@@ -807,13 +837,13 @@ namespace MultiverseCardBattle.Screens
             // ----- อัญมณี Energy ซ้ายสนาม (แดง = ศัตรู ฟ้า = เรา) -----
             enemyWidget.GemText = BuildGem(
                 "EnemyGem", new Color(0.95f, 0.25f, 0.3f, 1f),
-                0.018f, 0.585f, 0.082f, 0.715f, out enemyWidget.GemMax,
-                0.012f, 0.55f, 0.088f, 0.585f);
+                0.624f, 0.895f, 0.662f, 0.985f, out enemyWidget.GemMax,
+                0.664f, 0.915f, 0.725f, 0.965f);
 
             playerWidget.GemText = BuildGem(
                 "PlayerGem", new Color(0.3f, 0.65f, 1f, 1f),
-                0.018f, 0.285f, 0.082f, 0.415f, out playerWidget.GemMax,
-                0.012f, 0.25f, 0.088f, 0.285f);
+                0.012f, 0.195f, 0.052f, 0.285f, out playerWidget.GemMax,
+                0.054f, 0.215f, 0.12f, 0.265f);
 
             // ----- คอลัมน์ขวา: กองการ์ด / จบเทิร์น -----
             // จำนวนการ์ดในมือคู่ต่อสู้ (แสดงเฉพาะตัวเลข ดูการ์ดในมือไม่ได้แล้ว คลิกไม่ได้)
@@ -1184,6 +1214,9 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.Stretch(widget.HpFill.rectTransform);
 
+            AddGloss(widget.HpFill.transform, 6f);
+            UIFactory.AddRing(hpBack.transform, new Color(0.9f, 0.72f, 0.33f, 0.75f), 6f);
+
             widget.HpText = UIFactory.CreateText(
                 hpBack.transform, "", 17, Color.white,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
@@ -1249,6 +1282,9 @@ namespace MultiverseCardBattle.Screens
 
             widget.PowerFill.rectTransform.anchorMax = new Vector2(0f, 1f);
 
+            AddGloss(widget.PowerFill.transform, 6f);
+            UIFactory.AddRing(powerBack.transform, new Color(0.9f, 0.72f, 0.33f, 0.75f), 6f);
+
             widget.PowerText = UIFactory.CreateText(
                 powerBack.transform, "", 15, Color.white,
                 TextAnchor.MiddleCenter, FontStyle.Bold);
@@ -1273,6 +1309,17 @@ namespace MultiverseCardBattle.Screens
         }
 
         private const int MaxCrystals = 10;
+
+        // แถบสว่างครึ่งบนของแถบ HP/Power ให้ดูมันเงา
+        private static void AddGloss(Transform fill, float corner)
+        {
+            Image gloss = UIFactory.CreateRoundedPanel(
+                fill, "Gloss", new Color(1f, 1f, 1f, 0.2f), corner);
+
+            gloss.raycastTarget = false;
+
+            UIFactory.SetAnchors(gloss.rectTransform, 0.02f, 0.5f, 0.98f, 0.95f);
+        }
 
         // ตั้งรูป Leader (ถ้ามีไฟล์ใน Resources/UI) ไม่งั้นใช้ตัวอักษรย่อของชื่อ
         private static void SetPortrait(LeaderWidget widget, string name, Sprite art)
@@ -1830,6 +1877,8 @@ namespace MultiverseCardBattle.Screens
 
             if (previewView != null)
                 previewView.gameObject.SetActive(false);
+                if (previewGlow != null)
+                    previewGlow.gameObject.SetActive(false);
 
             if (termsText != null)
                 termsText.text = "";
@@ -1849,6 +1898,8 @@ namespace MultiverseCardBattle.Screens
 
             if (previewView != null)
                 previewView.gameObject.SetActive(true);
+                if (previewGlow != null)
+                    previewGlow.gameObject.SetActive(true);
         }
 
         private bool PinnedValid()
@@ -1870,6 +1921,8 @@ namespace MultiverseCardBattle.Screens
             previewView.ShowInstance(pinnedCard);
             previewView.SetHighlight(CardHighlight.None);
             previewView.gameObject.SetActive(true);
+            if (previewGlow != null)
+                previewGlow.gameObject.SetActive(true);
 
             termsText.text = GameGlossary.HintsFor(pinnedCard.Data, pinnedCard);
 
@@ -1906,6 +1959,8 @@ namespace MultiverseCardBattle.Screens
             else if (!ShowPinned())
             {
                 previewView.gameObject.SetActive(false);
+                if (previewGlow != null)
+                    previewGlow.gameObject.SetActive(false);
                 termsText.text = "";
             }
         }

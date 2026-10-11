@@ -130,7 +130,9 @@ namespace MultiverseCardBattle.Screens
             BuildTable();
             BuildFrame();
             BuildGlowStrips();
-            BuildFoliage();
+            if (!BuildNature())
+                BuildFoliage();
+
             BuildParticles();
             BuildScenery();
 

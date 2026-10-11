@@ -330,3 +330,8 @@ board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). A
 - เสาหินคริสตัลเรืองแสงสี่มุม (ชมพูศัตรู/ฟ้าเรา สว่างตามเทิร์น), วงรูนกลางสนามหมุนช้า, กรอบช่องวางยูนิต 7 ช่องต่อฝั่ง, ลำแสงลอดใบไม้, หมอกพื้น, ละอองแสง
 - โพสต์เอฟเฟกต์เขียนเองด้วย `Resources/MCBPostFx.shader` + `StagePostFx` (Bloom สองระดับ, ปรับสี, วิกเน็ต) ไม่ต้องติดตั้ง package; เชดเดอร์เรืองแสง `Resources/MCBGlow.shader`
 - กล้องขยับตามเมาส์เล็กน้อยและสั่นตอนโดนตี (`stage.Shake`); การ์ดมีขอบทอง ลอยเบาๆ และเอียงตามเมาส์ตอนชี้
+
+### Asset ภายนอก (CC0)
+
+- โมเดลต้นไม้/พุ่ม/หิน/ดอกไม้ใน `Assets/_Project/Resources/Nature` มาจาก **Quaternius – Ultimate Stylized Nature Pack** (CC0 1.0, สาธารณสมบัติ) ดึงจาก repo `tilakpatell/tilakverse-assets` (texture ย่อเหลือ 512px) ใช้เชดเดอร์ `MCB/FoliageCutout`; ไม่ต้องใส่เครดิตแต่ใส่ไว้เพื่อให้เกียรติ: https://quaternius.com
+- `BattleStage3D.Nature.cs` วางต้นสน/ต้นไม้/พุ่ม/หินสองข้างและหลังโต๊ะ (ถ้าหาโมเดลไม่เจอจะถอยไปใช้ทรงกลมแบบเดิม)

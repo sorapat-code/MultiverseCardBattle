@@ -1,0 +1,264 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace MultiverseCardBattle.Screens
+{
+    /// <summary>
+    /// ของตกแต่งสองข้างและด้านหลังโต๊ะจากโมเดลจริง: Quaternius "Ultimate Stylized Nature Pack" (CC0 / สาธารณสมบัติ)
+    /// อยู่ใน Resources/Nature (FBX + texture ย่อเหลือ 512px) โหลดด้วย Resources.Load และสวม Material
+    /// เชดเดอร์ MCB/FoliageCutout ตามชื่อ material ในโมเดล (เช่น PineTree_Leaves -> Textures/PineTree_Leaves)
+    /// ถ้าหาโมเดลไม่เจอ ให้ตัวสร้างพุ่มไม้แบบเดิม (ทรงกลม) ทำงานแทน
+    /// </summary>
+    public partial class BattleStage3D
+    {
+        private const float GroundY = -0.32f;
+
+        private static Shader foliageShader;
+        private readonly Dictionary<string, Material> natureMaterials = new Dictionary<string, Material>();
+
+        private struct Spot
+        {
+            public float X;
+            public float Z;
+            public float Radius;
+        }
+
+        private readonly List<Spot> spots = new List<Spot>();
+
+        private Material NatureMaterial(Material source)
+        {
+            string key = source != null ? source.name.Replace(" (Instance)", "").Trim() : "";
+
+            Material cached;
+
+            if (natureMaterials.TryGetValue(key, out cached))
+                return cached;
+
+            if (foliageShader == null)
+                foliageShader = Resources.Load<Shader>("MCBFoliage");
+
+            if (foliageShader == null)
+                return source;
+
+            string textureName = key == "Rock" ? "Rocks" : key;
+
+            Texture2D texture = Resources.Load<Texture2D>("Nature/Textures/" + textureName);
+
+            Material material = new Material(foliageShader);
+
+            bool leafy = key.Contains("Leaves") || key == "Flowers" || key == "Grass";
+
+            if (texture != null)
+            {
+                material.mainTexture = texture;
+                material.color = leafy ? new Color(0.82f, 0.95f, 0.86f, 1f) : new Color(0.85f, 0.85f, 0.9f, 1f);
+            }
+            else
+            {
+                material.color = source != null ? source.color : new Color(0.3f, 0.5f, 0.3f, 1f);
+            }
+
+            material.SetFloat("_UseAlpha", leafy && texture != null ? 1f : 0f);
+            material.SetFloat("_Cutoff", 0.45f);
+
+            natureMaterials[key] = material;
+
+            return material;
+        }
+
+        // วางโมเดลหนึ่งชิ้น: ปรับให้สูงตามที่ต้องการ ฐานแตะพื้น สวม material เอง
+        private GameObject Spawn(string model, Transform parent, float x, float z, float height, float yaw, float sink)
+        {
+            GameObject prefab = Resources.Load<GameObject>("Nature/" + model);
+
+            if (prefab == null)
+                return null;
+
+            GameObject go = Instantiate(prefab, parent);
+
+            go.name = model;
+            go.transform.localPosition = new Vector3(x, 0f, z);
+            go.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            go.transform.localScale = Vector3.one;
+
+            Renderer[] renderers = go.GetComponentsInChildren<Renderer>();
+
+            if (renderers.Length == 0)
+            {
+                Destroy(go);
+                return null;
+            }
+
+            Bounds bounds = renderers[0].bounds;
+
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+
+            if (bounds.size.y > 0.0001f)
+                go.transform.localScale = Vector3.one * (height / bounds.size.y);
+
+            bounds = renderers[0].bounds;
+
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
+
+            go.transform.position += Vector3.up * (GroundY - sink - bounds.min.y);
+
+            foreach (Renderer renderer in renderers)
+            {
+                Material[] materials = renderer.sharedMaterials;
+
+                for (int i = 0; i < materials.Length; i++)
+                    materials[i] = NatureMaterial(materials[i]);
+
+                renderer.sharedMaterials = materials;
+                renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                renderer.receiveShadows = true;
+            }
+
+            return go;
+        }
+
+        private bool Free(float x, float z, float radius)
+        {
+            // เสาหินสี่มุม
+            float px = BoardHalfWidth + 1.15f;
+            float pz = BoardHalfDepth + 1.0f;
+
+            foreach (float sx in new[] { -px, px })
+            {
+                foreach (float sz in new[] { -pz, pz })
+                {
+                    if ((x - sx) * (x - sx) + (z - sz) * (z - sz) < (radius + 1.1f) * (radius + 1.1f))
+                        return false;
+                }
+            }
+
+            foreach (Spot spot in spots)
+            {
+                float dx = x - spot.X;
+                float dz = z - spot.Z;
+                float r = radius + spot.Radius;
+
+                if (dx * dx + dz * dz < r * r)
+                    return false;
+            }
+
+            return true;
+        }
+
+        // สุ่มวางจนกว่าจะได้ที่ว่าง (สูงสุด 12 ครั้ง)
+        private bool Place(
+            string[] models, Transform parent, float xMin, float xMax, float zMin, float zMax,
+            float heightMin, float heightMax, float radius, float sink)
+        {
+            for (int attempt = 0; attempt < 12; attempt++)
+            {
+                float x = Random.Range(xMin, xMax);
+                float z = Random.Range(zMin, zMax);
+
+                if (!Free(x, z, radius))
+                    continue;
+
+                string model = models[Random.Range(0, models.Length)];
+
+                GameObject go = Spawn(
+                    model, parent, x, z, Random.Range(heightMin, heightMax), Random.Range(0f, 360f), sink);
+
+                if (go == null)
+                    return false;
+
+                spots.Add(new Spot { X = x, Z = z, Radius = radius });
+
+                return true;
+            }
+
+            return true;
+        }
+
+        /// <summary>คืน false ถ้าไม่มีโมเดล (ให้ใช้ฉากพุ่มไม้ทรงกลมแทน)</summary>
+        private bool BuildNature()
+        {
+            if (Resources.Load<GameObject>("Nature/PineTree_1") == null)
+                return false;
+
+            Random.State saved = Random.state;
+
+            Random.InitState(20261012);
+
+            Transform folder = new GameObject("Nature").transform;
+
+            folder.SetParent(transform, false);
+
+            string[] pines = { "PineTree_1", "PineTree_2", "PineTree_3" };
+            string[] leafy = { "NormalTree_1", "NormalTree_2", "NormalTree_3", "BirchTree_1", "BirchTree_2", "MapleTree_1" };
+            string[] dead = { "DeadTree_1", "DeadTree_2", "DeadTree_3" };
+            string[] bushes = { "Bush", "Bush_Large", "Bush_Large_Flowers", "Bush_Flowers", "Bush_Small" };
+            string[] rocks = { "Rock_1", "Rock_2", "Rock_3", "Rock_4", "Rock_5" };
+            string[] flowers = { "Flower_1_Clump", "Flower_2_Clump", "Flower_3_Clump", "Plant_1", "Grass_Small" };
+
+            float edge = BoardHalfWidth + 0.95f;
+
+            // แถวหลังสุด: แนวต้นไม้ใหญ่ปิดฉาก (สนสลับต้นไม้ มีต้นไม้แห้งแซม)
+            for (int i = 0; i < 16; i++)
+            {
+                float x = Mathf.Lerp(-16f, 16f, i / 15f) + Random.Range(-0.8f, 0.8f);
+
+                string[] set = Random.value < 0.55f ? pines : (Random.value < 0.8f ? leafy : dead);
+
+                Place(set, folder, x - 0.01f, x + 0.01f, 8.4f, 11.5f, 6.5f, 10f, 1.5f, 0f);
+            }
+
+            for (int side = -1; side <= 1; side += 2)
+            {
+                // ต้นไม้ใหญ่ข้างโต๊ะ (ไกลออกไป)
+                for (int i = 0; i < 9; i++)
+                {
+                    float z = Mathf.Lerp(-6f, 8f, i / 8f);
+
+                    string[] set = Random.value < 0.5f ? pines : (Random.value < 0.85f ? leafy : dead);
+
+                    Place(set, folder, side * (edge + 2.6f), side * (edge + 5.6f), z - 0.4f, z + 0.4f, 5f, 8.5f, 1.4f, 0f);
+                }
+
+                // พุ่มไม้ชิดกรอบ
+                for (int i = 0; i < 9; i++)
+                {
+                    float z = Mathf.Lerp(-4.5f, 6f, i / 8f);
+
+                    Place(bushes, folder, side * (edge + 0.2f), side * (edge + 1.8f), z - 0.3f, z + 0.3f, 1.0f, 1.9f, 0.9f, 0.05f);
+                }
+
+                // ก้อนหิน
+                for (int i = 0; i < 5; i++)
+                {
+                    Place(rocks, folder, side * (edge + 0.1f), side * (edge + 2.6f), -5.5f, 7.5f, 0.7f, 1.8f, 0.8f, 0.1f);
+                }
+
+                // ดอกไม้/หญ้ากอเล็ก
+                for (int i = 0; i < 12; i++)
+                {
+                    Place(flowers, folder, side * (edge + 0.1f), side * (edge + 1.5f), -5f, 6.5f, 0.35f, 0.7f, 0.35f, 0f);
+                }
+            }
+
+            // แนวพุ่ม/หิน/ดอกไม้หลังโต๊ะ
+            for (int i = 0; i < 14; i++)
+            {
+                float x = Mathf.Lerp(-edge, edge, i / 13f);
+
+                Place(bushes, folder, x - 0.2f, x + 0.2f, BoardHalfDepth + 1.7f, BoardHalfDepth + 3.2f, 1.0f, 1.9f, 0.9f, 0.05f);
+            }
+
+            for (int i = 0; i < 4; i++)
+                Place(rocks, folder, -edge, edge, BoardHalfDepth + 1.7f, BoardHalfDepth + 3f, 0.8f, 1.8f, 0.8f, 0.1f);
+
+            for (int i = 0; i < 14; i++)
+                Place(flowers, folder, -edge, edge, BoardHalfDepth + 1.3f, BoardHalfDepth + 2.2f, 0.35f, 0.7f, 0.35f, 0f);
+
+            Random.state = saved;
+
+            return true;
+        }
+    }
+}
