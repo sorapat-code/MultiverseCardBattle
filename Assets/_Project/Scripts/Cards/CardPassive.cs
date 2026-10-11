@@ -48,6 +48,12 @@ namespace MultiverseCardBattle.Cards
         Geass = 1 << 11,
 
         // Lelouch (Chessmaster): ครั้งแรกในแต่ละเทิร์นที่เจ้าของเล่นการ์ดใบที่สอง จั่วการ์ด 1 ใบ
-        Chessmaster = 1 << 12
+        Chessmaster = 1 << 12,
+
+        // Guts: ถูกความเสียหายแล้ว HP เหลือ 2 หรือน้อยกว่า ได้ ATK +3 และ Unstoppable จนจบเทิร์น
+        Berserker = 1 << 13,
+
+        // Zhongli: เมื่อ Shield ของยูนิตฝ่ายเราถูกทำลายครั้งแรกในแต่ละเทิร์น ฟื้นฟู Leader 1
+        JadeShield = 1 << 14
     }
 }

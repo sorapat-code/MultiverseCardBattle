@@ -5,7 +5,7 @@ using MultiverseCardBattle.Data;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ตรวจชุดการ์ดปัจจุบัน: ตัวประกอบ (SUP_) ไม่เกิน Epic, เวทมนตร์ (MAG_), การ์ดลับไม่หลุดเข้าแพ็ก</summary>
+    /// <summary>ตรวจชุดการ์ดปัจจุบัน: ตัวประกอบ/ตัวละคร (SUP_) ไม่เป็น Secret, เวทมนตร์ (MAG_), การ์ดลับไม่หลุดเข้าแพ็ก</summary>
     public class RosterTests
     {
         [Test]
@@ -28,7 +28,7 @@ namespace MultiverseCardBattle.Tests
                 }
             }
 
-            Assert.AreEqual(30, units);
+            Assert.AreEqual(34, units);
             Assert.AreEqual(15, spells);
         }
 
@@ -57,15 +57,16 @@ namespace MultiverseCardBattle.Tests
             Assert.AreEqual(3, leaderGear);
         }
 
+        // ไม่จำกัดแค่ Epic แล้ว (เจ้าของโปรเจกต์ใส่ตัวละคร Legendary เองได้) แต่ห้ามเป็น Secret
         [Test]
-        public void SupportingCharacters_AreNeverAboveEpic()
+        public void SupportUnits_AreNeverSecret()
         {
             foreach (CardData card in StarterCardLibrary.All)
             {
                 if (!card.CardID.StartsWith("SUP_"))
                     continue;
 
-                Assert.LessOrEqual((int)card.Rarity, (int)CardRarity.Epic, card.CardID);
+                Assert.AreNotEqual(CardRarity.Secret, card.Rarity, card.CardID);
             }
         }
 

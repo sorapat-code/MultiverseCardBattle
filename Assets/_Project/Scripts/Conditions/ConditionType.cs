@@ -58,6 +58,9 @@ namespace MultiverseCardBattle.Conditions
         FirstUnitAttackThisTurn,
 
         // เจ้าของมียูนิต CardID นี้บนสนาม และมันยังไม่ได้โจมตียูนิตศัตรูในเทิร์นนี้
-        AllyCardNotUnitAttackedYet
+        AllyCardNotUnitAttackedYet,
+
+        // เป้าหมาย (ของ Trigger) เป็นการ์ดที่มี Cost ตั้งแต่ Value ขึ้นไป (เช่น Spell ที่ใช้ตอน Spellburst)
+        TargetCostAtLeast
     }
 }

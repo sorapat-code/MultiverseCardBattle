@@ -143,6 +143,8 @@ namespace MultiverseCardBattle.Battle
 
             foreach (BattlePlayer player in players)
             {
+                player.ShieldHealUsedThisTurn = false;
+
                 foreach (CardInstance card in player.Field)
                 {
                     card.TurnAttackBonus = 0;

@@ -112,9 +112,22 @@ namespace MultiverseCardBattle.Battle
                 if (!card.HasKeyword(Keyword.Spellburst))
                     continue;
 
-                Fire(card, e);
+                // ผู้ฟังรู้ว่า Spell ใบไหนถูกใช้ (Target = Spell) เพื่อให้เช็คเงื่อนไขเช่น Cost ได้
+                GameEvent heard = new GameEvent();
 
-                card.RemoveKeyword(Keyword.Spellburst);
+                heard.Trigger = TriggerType.Spellburst;
+                heard.Card = card;
+                heard.Player = e.Player;
+                heard.Target = e.Card;
+
+                int matched;
+                int passed;
+
+                FireCore(card, heard, out matched, out passed);
+
+                // Spellburst ถูกใช้ไปก็ต่อเมื่อเงื่อนไขผ่าน ถ้ามี Action แต่เงื่อนไขไม่ผ่าน (เช่น Spell Cost ต่ำไป) ยังเก็บไว้
+                if (matched == 0 || passed > 0)
+                    card.RemoveKeyword(Keyword.Spellburst);
             }
         }
 
@@ -173,6 +186,18 @@ namespace MultiverseCardBattle.Battle
 
         private void Fire(CardInstance card, GameEvent e)
         {
+            int matched;
+            int passed;
+
+            FireCore(card, e, out matched, out passed);
+        }
+
+        // matched = จำนวน Action ที่ Trigger ตรงกับเหตุการณ์, passed = ที่ผ่านเงื่อนไขแล้วทำงานจริง
+        private void FireCore(CardInstance card, GameEvent e, out int matched, out int passed)
+        {
+            matched = 0;
+            passed = 0;
+
             if (card == null || card.Data == null)
                 return;
 
@@ -203,6 +228,8 @@ namespace MultiverseCardBattle.Battle
                 if (e.Trigger == TriggerType.OnTarget && !MatchesTargeted(action, card, e))
                     continue;
 
+                matched++;
+
                 EffectContext context = new EffectContext();
 
                 context.SourceCard = card;
@@ -212,6 +239,14 @@ namespace MultiverseCardBattle.Battle
                 context.Battle = battle;
                 context.CardPool = battle.DiscoverPool;
                 context.ChosenTarget = e.ChosenTarget;
+
+                // เช็คล่วงหน้าเฉพาะ Spellburst (ต้องรู้ว่าเงื่อนไขผ่านไหมก่อนใช้ Keyword) ส่วน Trigger อื่น
+                // ให้ ExecuteAction เช็คเอง จะได้ไม่สุ่ม Chance ซ้ำสองรอบ
+                if (e.Trigger == TriggerType.Spellburst &&
+                    !CardActionResolver.ConditionsMet(action, context))
+                    continue;
+
+                passed++;
 
                 CardActionResolver.ExecuteAction(
                     action,

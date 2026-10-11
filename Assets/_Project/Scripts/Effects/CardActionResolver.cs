@@ -125,6 +125,24 @@ namespace MultiverseCardBattle.Effects
             return new List<TargetCandidate> { results[index] };
         }
 
+        /// <summary>ทุกเงื่อนไขของ Action ผ่านหรือไม่ (ไม่มีเงื่อนไข = ผ่าน)</summary>
+        public static bool ConditionsMet(CardActionData action, EffectContext context)
+        {
+            if (action == null || context == null)
+                return false;
+
+            if (action.Conditions == null)
+                return true;
+
+            foreach (ConditionData condition in action.Conditions)
+            {
+                if (!ConditionEvaluator.Evaluate(condition, context))
+                    return false;
+            }
+
+            return true;
+        }
+
         public static void ExecuteAction(
             CardActionData action,
             EffectContext sourceContext,

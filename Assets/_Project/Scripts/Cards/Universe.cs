@@ -30,6 +30,9 @@ namespace MultiverseCardBattle.Cards
 
         HonkaiImpact,
 
-        CodeGeass
+        CodeGeass,
+
+        Berserk,
+        GenshinImpact
     }
 }

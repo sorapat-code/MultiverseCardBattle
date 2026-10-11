@@ -30,6 +30,9 @@ namespace MultiverseCardBattle.Battle
         // Energy ที่ได้จาก Dark Wisdom ในเทิร์นนี้ (สูงสุด 3)
         public int DarkWisdomEnergyThisTurn;
 
+        // Zhongli: ฟื้นฟู Leader จากการที่ Shield แตกไปแล้วในเทิร์นนี้ (รีเซ็ตทุกเทิร์น)
+        public bool ShieldHealUsedThisTurn;
+
         // อุปกรณ์ Leader ที่สวมอยู่ (null = ไม่มี) กับจำนวนเทิร์นที่เหลือ
         public CardInstance LeaderGear;
         public int LeaderGearTurns;

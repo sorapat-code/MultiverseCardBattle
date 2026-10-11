@@ -88,6 +88,16 @@ namespace MultiverseCardBattle.Cards
         Schicksal,
 
         // Code Geass
-        BlackKnights
+        BlackKnights,
+
+        // Fate
+        HolyGrailWar,
+
+        // Berserk
+        BandOfTheHawk,
+
+        // Genshin Impact
+        Inazuma,
+        Liyue
     }
 }

@@ -267,6 +267,56 @@ namespace MultiverseCardBattle.Data
 
             Add(lelouch);
 
+            // ตัวละครที่เจ้าของโปรเจกต์ออกแบบเอง (Legendary ได้ — ไม่จำกัดแค่ Epic แบบตัวประกอบเดิม)
+            Add(Unit("SUP_031", "Saber Alter",
+                Universe.Fate, Faction.HolyGrailWar, CardRarity.Epic,
+                7, 7, 6, Keyword.Overwhelm | Keyword.Enrage,
+                CardTag.Spirit | CardTag.Elite | CardTag.Melee | CardTag.Dark));
+
+            CardData guts = Unit("SUP_032", "Guts",
+                Universe.Berserk, Faction.BandOfTheHawk, CardRarity.Epic,
+                5, 6, 5, Keyword.Pierce | Keyword.Retaliate,
+                CardTag.Human | CardTag.Elite | CardTag.Melee | CardTag.Dark);
+
+            guts.Passives = CardPassive.Berserker;
+
+            guts.Description =
+                "Berserker: Whenever Guts is damaged and has 2 or less Health, " +
+                "he gains +3 Attack and Unstoppable until end of turn.";
+
+            Add(guts);
+
+            // Spellburst จริง: ทำงานครั้งเดียวต่อแมตช์ และใช้ Keyword เมื่อ Spell ที่ใช้ Cost 3+ เท่านั้น
+            CardData raiden = Unit("SUP_033", "Raiden Shogun",
+                Universe.GenshinImpact, Faction.Inazuma, CardRarity.Legendary,
+                7, 5, 6, Keyword.Charge | Keyword.Spellburst,
+                CardTag.Human | CardTag.God | CardTag.Elite | CardTag.Melee | CardTag.Lightning,
+                ActWhen(TriggerType.Spellburst, TargetRule.AllyLeader, TargetSelection.All,
+                    new[] { Cond(ConditionType.TargetCostAtLeast, null, 3) },
+                    Fx(EffectType.GainEnergy, 1)));
+
+            raiden.Description =
+                "Spellburst: When you play a Spell that costs 3 or more, restore 1 spent Energy.";
+
+            Add(raiden);
+
+            CardData zhongli = Unit("SUP_034", "Zhongli",
+                Universe.GenshinImpact, Faction.Liyue, CardRarity.Legendary,
+                7, 3, 9, Keyword.Taunt | Keyword.Shield,
+                CardTag.Human | CardTag.God | CardTag.Elite | CardTag.Tank | CardTag.Earth,
+                Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                    FxKeyword(EffectType.AddKeyword, Keyword.Shield)));
+
+            zhongli.AuraDefense = 1;
+            zhongli.Passives = CardPassive.JadeShield;
+
+            zhongli.Description =
+                "Battlecry: Give another friendly unit Shield.\n" +
+                "Aura: Your other units have Defense Up +1 while Zhongli is on the field.\n" +
+                "The first time each turn a friendly unit's Shield is broken, restore 1 Health to your Leader.";
+
+            Add(zhongli);
+
             // ================= เวทมนตร์ =================
 
             ElemSpell("MAG_001", "Spark", CardRarity.Common, 1, CardTag.Lightning,

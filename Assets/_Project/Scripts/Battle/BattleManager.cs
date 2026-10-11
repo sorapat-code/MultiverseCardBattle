@@ -855,6 +855,56 @@ namespace MultiverseCardBattle.Battle
 
         // ---------- ความเสียหาย / การรักษา ----------
 
+        private const int BerserkerThreshold = 2;
+        private const int BerserkerAttack = 3;
+
+        // Aura ลดดาเมจของ Zhongli: ยูนิตพวกเดียวกัน "ตัวอื่น" ได้ Defense Up ตามค่า AuraDefense
+        private int AuraDefenseFor(CardInstance target)
+        {
+            BattlePlayer owner = GetPlayer(target.OwnerID);
+
+            if (owner == null)
+                return 0;
+
+            int total = 0;
+
+            foreach (CardInstance unit in owner.Field)
+            {
+                if (unit != target &&
+                    unit.Data != null &&
+                    unit.Data.AuraDefense > 0 &&
+                    !unit.IsSilenced)
+                    total += unit.Data.AuraDefense;
+            }
+
+            return total;
+        }
+
+        // Zhongli (Jade Shield): Shield ของยูนิตฝ่ายเราถูกทำลายครั้งแรกในเทิร์น ฟื้นฟู Leader 1
+        private void OnShieldBroken(CardInstance target)
+        {
+            BattlePlayer owner = GetPlayer(target.OwnerID);
+
+            if (owner == null || owner.ShieldHealUsedThisTurn)
+                return;
+
+            foreach (CardInstance unit in new List<CardInstance>(owner.Field))
+            {
+                if (unit.Zone != CardZone.Field ||
+                    unit.IsSilenced ||
+                    !unit.HasPassive(CardPassive.JadeShield))
+                    continue;
+
+                owner.ShieldHealUsedThisTurn = true;
+
+                Log(unit.Data.CardName + "'s Jade Shield restores 1 Health");
+
+                HealLeader(unit, owner, 1);
+
+                return;
+            }
+        }
+
         /// <summary>
         /// ทำความเสียหายกับยูนิต จัดการ Shield / Poison / Lifesteal และ Trigger
         /// source เป็น null ได้ (เช่น Burn) คืนค่าความเสียหายที่ทำได้จริง
@@ -902,6 +952,8 @@ namespace MultiverseCardBattle.Battle
 
                 Log(target.Data.CardName + "'s shield absorbs the damage");
 
+                OnShieldBroken(target);
+
                 return 0;
             }
 
@@ -922,7 +974,7 @@ namespace MultiverseCardBattle.Battle
                 {
                     int defense = overwhelming
                         ? 0
-                        : target.StatusValue(StatusType.DefenseUp);
+                        : target.StatusValue(StatusType.DefenseUp) + AuraDefenseFor(target);
 
                     if (defense > 0)
                         amount = Mathf.Max(1, amount - defense);
@@ -994,6 +1046,24 @@ namespace MultiverseCardBattle.Battle
 
                 Log(target.Data.CardName + " flies into a frenzy (+" +
                     FrenzyBonus + " Attack)");
+            }
+
+            // Guts (Berserker): รอดแต่ HP เหลือน้อย ได้ ATK +3 และ Unstoppable จนจบเทิร์น (ไม่ซ้อนทับ)
+            if (target.CurrentHealth > 0 &&
+                target.CurrentHealth <= BerserkerThreshold &&
+                target.HasPassive(CardPassive.Berserker) &&
+                target.TempUnstoppableUntil < 0)
+            {
+                target.TurnAttackBonus += BerserkerAttack;
+                target.TempUnstoppableUntil = TurnManager.TotalTurns;
+
+                if (!target.HasKeyword(Keyword.Unstoppable))
+                {
+                    target.AddKeyword(Keyword.Unstoppable);
+                    target.TempUnstoppableGranted = true;
+                }
+
+                Log(target.Data.CardName + " is enraged (+" + BerserkerAttack + " Attack, Unstoppable)");
             }
 
             // Lifesteal: ฟื้น HP ให้ Leader เจ้าของผู้ทำความเสียหาย

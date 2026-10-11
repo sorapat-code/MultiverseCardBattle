@@ -82,6 +82,9 @@ namespace MultiverseCardBattle.Cards
         public int AuraAttack;
         public int AuraHealth;
 
+        // ลดความเสียหายที่ยูนิตพวกเดียวกันตัวอื่นได้รับ (เหมือน Defense Up) ขณะอยู่บนสนาม
+        public int AuraDefense;
+
         [Header("Evolve")]
 
         // เปลี่ยนเป็นร่างนี้เมื่ออยู่บนสนามครบ EvolveAfterTurns เทิร์นของเจ้าของ

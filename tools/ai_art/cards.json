@@ -217,6 +217,34 @@
       "desc": "a scheming young prince in a black-and-gold cape and high collar, one eye glowing red, holding a dark helmet mask, burning city at dusk behind him"
     },
     {
+      "id": "SUP_031",
+      "name": "Saber Alter",
+      "kind": "unit",
+      "ref": "Saber Alter (Fate/stay night)",
+      "desc": "a pale blonde knight in dark corrupted armor with red cracks, holding a black greatsword with glowing red runes"
+    },
+    {
+      "id": "SUP_032",
+      "name": "Guts",
+      "kind": "unit",
+      "ref": "Guts (Berserk)",
+      "desc": "a scarred black swordsman in heavy dark armor and a torn black cloak, gripping an enormous slab of a sword"
+    },
+    {
+      "id": "SUP_033",
+      "name": "Raiden Shogun",
+      "kind": "unit",
+      "ref": "Raiden Shogun (Genshin Impact)",
+      "desc": "a regal long purple-haired swordswoman in a lavender kimono with a gold crescent hair ornament, drawing a katana"
+    },
+    {
+      "id": "SUP_034",
+      "name": "Zhongli",
+      "kind": "unit",
+      "ref": "Zhongli (Genshin Impact)",
+      "desc": "a calm brown-haired scholar in a brown-and-white ornate coat with black gloves, holding a calligraphy brush at a desk"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",

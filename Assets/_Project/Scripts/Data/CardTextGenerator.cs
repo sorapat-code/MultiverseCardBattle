@@ -88,6 +88,14 @@ namespace MultiverseCardBattle.Data
             }
 
             // Aura: ให้ยูนิตพวกเดียวกันตัวอื่นขณะอยู่บนสนาม
+            if (data.AuraDefense != 0)
+            {
+                if (text.Length > 0)
+                    text.Append('\n');
+
+                text.Append("Aura: other allies get Defense Up +").Append(data.AuraDefense).Append('.');
+            }
+
             if (data.AuraAttack != 0 || data.AuraHealth != 0)
             {
                 if (text.Length > 0)

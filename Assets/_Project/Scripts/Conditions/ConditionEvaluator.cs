@@ -125,6 +125,11 @@ namespace MultiverseCardBattle.Conditions
                     return context.SourceCard != null &&
                            context.SourceCard.UnitAttacksThisTurn == 1;
 
+                case ConditionType.TargetCostAtLeast:
+                    return context.TargetCard != null &&
+                           context.TargetCard.Data != null &&
+                           context.TargetCard.Data.Cost >= condition.Value;
+
                 case ConditionType.AllyCardNotUnitAttackedYet:
                     if (string.IsNullOrEmpty(condition.CardID))
                         return false;

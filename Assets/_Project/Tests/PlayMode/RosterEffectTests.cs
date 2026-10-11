@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei และ Lelouch</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost), Dan Heng, คู่ Kiana / Mei, Lelouch, Guts, Raiden Shogun และ Zhongli</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -423,6 +423,133 @@ namespace MultiverseCardBattle.Tests
 
             // ใบที่สอง: เล่นออก 1 ใบ จั่วเข้ามา 1 ใบ
             Assert.AreEqual(1, P1.Hand.Count);
+        }
+
+        [Test]
+        public void Guts_DroppingToTwoHealthGrantsAttackAndUnstoppableUntilEndOfTurn()
+        {
+            CardInstance guts = Place(P1, "SUP_032");
+            CardInstance enemy = EnemyWithHealth(9);
+
+            battle.DamageUnit(enemy, guts, 1);   // 5 -> 4: ยังไม่ถึง
+
+            battle.RefreshModifiers();
+
+            Assert.AreEqual(6, guts.CurrentAttack);
+            Assert.IsFalse(guts.HasKeyword(Keyword.Unstoppable));
+
+            battle.DamageUnit(enemy, guts, 2);   // 4 -> 2
+
+            battle.RefreshModifiers();
+
+            Assert.AreEqual(9, guts.CurrentAttack);
+            Assert.IsTrue(guts.HasKeyword(Keyword.Unstoppable));
+
+            // โดนซ้ำตอนยังอยู่ในสถานะนี้ ไม่ซ้อนทับ
+            battle.DamageUnit(enemy, guts, 1);   // 2 -> 1
+
+            battle.RefreshModifiers();
+
+            Assert.AreEqual(9, guts.CurrentAttack);
+        }
+
+        private CardInstance SpellInHand(string id)
+        {
+            return InHand(id);
+        }
+
+        [Test]
+        public void Raiden_SpellburstOnlyUsedByAThreeCostSpell_AndRestoresOneEnergy()
+        {
+            CardInstance raiden = Place(P1, "SUP_033");
+
+            P1.CurrentEnergy = 10;
+
+            // Spell Cost 2: ไม่เข้าเงื่อนไข ไม่ฟื้น Energy และยังเก็บ Spellburst ไว้
+            CardInstance cheap = SpellInHand("MAG_006");
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, cheap)).Success);
+
+            Assert.AreEqual(8, P1.CurrentEnergy);
+            Assert.IsTrue(raiden.HasKeyword(Keyword.Spellburst));
+
+            // Spell Cost 3: ฟื้น 1 (8 - 3 + 1) แล้ว Spellburst หมดไป
+            CardInstance big = SpellInHand("MAG_004");
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, big)).Success);
+
+            Assert.AreEqual(6, P1.CurrentEnergy);
+            Assert.IsFalse(raiden.HasKeyword(Keyword.Spellburst));
+        }
+
+        [Test]
+        public void Zhongli_AuraReducesDamageToOtherAllies_ButNotToHimself()
+        {
+            CardInstance zhongli = Place(P1, "SUP_034");
+            CardInstance ally = Place(P1, "SUP_001");
+            CardInstance enemy = EnemyWithHealth(9);
+
+            ally.Keywords = Keyword.None;
+
+            int allyBefore = ally.CurrentHealth;
+            int zhongliBefore = zhongli.CurrentHealth;
+
+            zhongli.RemoveKeyword(Keyword.Shield);
+
+            battle.DamageUnit(enemy, ally, 3);
+            battle.DamageUnit(enemy, zhongli, 3);
+
+            Assert.AreEqual(allyBefore - 2, ally.CurrentHealth);
+            Assert.AreEqual(zhongliBefore - 3, zhongli.CurrentHealth);
+        }
+
+        [Test]
+        public void Zhongli_FirstShieldBreakEachTurnHealsLeaderOnce()
+        {
+            Place(P1, "SUP_034");
+
+            CardInstance allyA = Place(P1, "SUP_001");
+            CardInstance allyB = Place(P1, "SUP_002");
+            CardInstance enemy = EnemyWithHealth(9);
+
+            allyA.AddKeyword(Keyword.Shield);
+            allyB.AddKeyword(Keyword.Shield);
+
+            P1.LeaderHealth = 20;
+
+            battle.DamageUnit(enemy, allyA, 3);
+
+            Assert.AreEqual(21, P1.LeaderHealth);
+
+            // ครั้งที่สองในเทิร์นเดียวกัน ไม่ฟื้นอีก
+            battle.DamageUnit(enemy, allyB, 3);
+
+            Assert.AreEqual(21, P1.LeaderHealth);
+        }
+
+        [Test]
+        public void Zhongli_Battlecry_GivesShieldToChosenAlly()
+        {
+            CardInstance ally = Place(P1, "SUP_001");
+            CardInstance zhongli = InHand("SUP_034");
+
+            List<TargetCandidate> options = BattleRules.GetPlayTargets(battle, P1, zhongli);
+
+            TargetCandidate chosen = null;
+
+            foreach (TargetCandidate option in options)
+            {
+                if (option.TargetObject == ally)
+                    chosen = option;
+            }
+
+            Assert.IsNotNull(chosen);
+
+            ally.Keywords = Keyword.None;
+
+            Assert.IsTrue(battle.Submit(new PlayCardCommand(P1, zhongli, chosen)).Success);
+
+            Assert.IsTrue(ally.HasKeyword(Keyword.Shield));
         }
     }
 }
