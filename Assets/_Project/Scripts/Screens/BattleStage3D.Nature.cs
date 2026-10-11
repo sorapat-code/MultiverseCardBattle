@@ -67,9 +67,14 @@ namespace MultiverseCardBattle.Screens
         }
 
         // วางโมเดลหนึ่งชิ้น: ปรับให้สูงตามที่ต้องการ ฐานแตะพื้น สวม material เอง
-        private GameObject Spawn(string model, Transform parent, float x, float z, float height, float yaw, float sink)
+        private GameObject Spawn(string path, Transform parent, float x, float z, float height, float yaw, float sink)
         {
-            GameObject prefab = Resources.Load<GameObject>("Nature/" + model);
+            GameObject prefab = Resources.Load<GameObject>(path);
+
+            // โมเดล Quaternius ต้องสวม material ของเราเอง; ของจากแพ็คอื่น (NatureAsset) ใช้ material เดิมของมัน
+            bool swapMaterials = path.StartsWith("Nature/");
+
+            string model = path.Substring(path.LastIndexOf('/') + 1);
 
             if (prefab == null)
                 return null;
@@ -133,10 +138,14 @@ namespace MultiverseCardBattle.Screens
             {
                 Material[] materials = renderer.sharedMaterials;
 
-                for (int i = 0; i < materials.Length; i++)
-                    materials[i] = NatureMaterial(materials[i]);
+                if (swapMaterials)
+                {
+                    for (int i = 0; i < materials.Length; i++)
+                        materials[i] = NatureMaterial(materials[i]);
 
-                renderer.sharedMaterials = materials;
+                    renderer.sharedMaterials = materials;
+                }
+
                 renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 renderer.receiveShadows = true;
             }
@@ -201,11 +210,68 @@ namespace MultiverseCardBattle.Screens
             return true;
         }
 
+        private static string[] Q(params string[] names)
+        {
+            string[] paths = new string[names.Length];
+
+            for (int i = 0; i < names.Length; i++)
+                paths[i] = "Nature/" + names[i];
+
+            return paths;
+        }
+
+        // ชื่อ prefab ทั้งหมดในโฟลเดอร์ Resources/NatureAsset/<category> (ที่เครื่องมือ Collect สร้างให้)
+        private static string[] PackPaths(string category)
+        {
+            GameObject[] prefabs = Resources.LoadAll<GameObject>("NatureAsset/" + category);
+
+            string[] paths = new string[prefabs.Length];
+
+            for (int i = 0; i < prefabs.Length; i++)
+                paths[i] = "NatureAsset/" + category + "/" + prefabs[i].name;
+
+            return paths;
+        }
+
         /// <summary>คืน false ถ้าไม่มีโมเดล (ให้ใช้ฉากพุ่มไม้ทรงกลมแทน)</summary>
         private bool BuildNature()
         {
-            if (Resources.Load<GameObject>("Nature/PineTree_1") == null)
-                return false;
+            string[] pines;
+            string[] leafy;
+            string[] dead;
+            string[] bushes;
+            string[] rocks;
+            string[] flowers;
+
+            string[] packTrees = PackPaths("Trees");
+
+            if (packTrees.Length > 0)
+            {
+                // แพ็คที่นำเข้ามา (เช่น Ultimate Nature Starter) — ใช้ต้นไม้ทั้งหมดผสมกัน
+                pines = packTrees;
+                leafy = packTrees;
+                dead = packTrees;
+
+                string[] packBushes = PackPaths("Bushes");
+                string[] packRocks = PackPaths("Rocks");
+                string[] packSmall = PackPaths("Small");
+
+                bushes = packBushes.Length > 0 ? packBushes : packTrees;
+                rocks = packRocks.Length > 0 ? packRocks : bushes;
+                flowers = packSmall.Length > 0 ? packSmall : bushes;
+            }
+            else
+            {
+                if (Resources.Load<GameObject>("Nature/PineTree_1") == null)
+                    return false;
+
+                pines = Q("PineTree_1", "PineTree_2", "PineTree_3");
+                leafy = Q("NormalTree_1", "NormalTree_2", "NormalTree_3", "BirchTree_1", "BirchTree_2", "MapleTree_1");
+                dead = Q("DeadTree_1", "DeadTree_2", "DeadTree_3");
+                bushes = Q("Bush", "Bush_Large", "Bush_Large_Flowers", "Bush_Flowers", "Bush_Small");
+                rocks = Q("Rock_1", "Rock_2", "Rock_3", "Rock_4", "Rock_5");
+                flowers = Q("Flower_1_Clump", "Flower_2_Clump", "Flower_3_Clump", "Plant_1", "Grass_Small");
+            }
 
             Random.State saved = Random.state;
 
@@ -214,13 +280,6 @@ namespace MultiverseCardBattle.Screens
             Transform folder = new GameObject("Nature").transform;
 
             folder.SetParent(transform, false);
-
-            string[] pines = { "PineTree_1", "PineTree_2", "PineTree_3" };
-            string[] leafy = { "NormalTree_1", "NormalTree_2", "NormalTree_3", "BirchTree_1", "BirchTree_2", "MapleTree_1" };
-            string[] dead = { "DeadTree_1", "DeadTree_2", "DeadTree_3" };
-            string[] bushes = { "Bush", "Bush_Large", "Bush_Large_Flowers", "Bush_Flowers", "Bush_Small" };
-            string[] rocks = { "Rock_1", "Rock_2", "Rock_3", "Rock_4", "Rock_5" };
-            string[] flowers = { "Flower_1_Clump", "Flower_2_Clump", "Flower_3_Clump", "Plant_1", "Grass_Small" };
 
             float edge = BoardHalfWidth + 0.95f;
 
