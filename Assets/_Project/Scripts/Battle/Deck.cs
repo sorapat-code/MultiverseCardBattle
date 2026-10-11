@@ -58,6 +58,13 @@ namespace MultiverseCardBattle.Battle
                 cards.Add(card);
         }
 
+        /// <summary>ย้ายการ์ดในกองไปไว้บนสุด (จั่วใบถัดไป)</summary>
+        public void MoveToTop(CardInstance card)
+        {
+            if (cards.Remove(card))
+                cards.Insert(0, card);
+        }
+
         public void Clear()
         {
             cards.Clear();

@@ -262,7 +262,7 @@ namespace MultiverseCardBattle.Battle
 
             foreach (CardInstance card in Player2.Hand.Cards)
             {
-                if (CanMulligan(card) && card.Data.Cost >= 5)
+                if (CanMulligan(card) && card.Data.Cost >= AIPlanner.MulliganCost)
                     aiReplace.Add(card);
             }
 
@@ -317,6 +317,20 @@ namespace MultiverseCardBattle.Battle
                 Player2.LeaderHealth = BattleSetup.EnemyHealth;
             }
 
+            // ระดับความยาก AI: ปรับ HP ของ Leader ศัตรู (Normal = ไม่เปลี่ยน)
+            AIPlanner.Difficulty = BattleSetup.Difficulty;
+
+            float healthScale = AiDifficultyInfo.EnemyHealthScale(BattleSetup.Difficulty);
+
+            if (!Mathf.Approximately(healthScale, 1f))
+            {
+                int scaled = Mathf.Max(
+                    1, Mathf.RoundToInt(Player2.MaxLeaderHealth * healthScale));
+
+                Player2.MaxLeaderHealth = scaled;
+                Player2.LeaderHealth = scaled;
+            }
+
             List<CardData> deck1 = BattleSetup.PlayerDeck;
             List<CardData> deck2 = BattleSetup.EnemyDeck;
 
@@ -328,6 +342,12 @@ namespace MultiverseCardBattle.Battle
 
             Player1.LoadDeck(deck1);
             Player2.LoadDeck(deck2);
+
+            // แมตช์สอนเล่น: จัดลำดับการ์ดบนสุดของผู้เล่นให้ตรงกับบทเรียน
+            AIPlanner.TutorialMode = BattleSetup.Tutorial;
+
+            if (BattleSetup.Tutorial)
+                TutorialSetup.StackPlayerDeck(Player1);
 
             Stats.Init(Player1, Player2);
         }

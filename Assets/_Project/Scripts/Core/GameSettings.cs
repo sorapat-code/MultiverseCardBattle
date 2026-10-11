@@ -75,6 +75,13 @@ namespace MultiverseCardBattle.Core
             set { Data.AiSpeed = Mathf.Clamp(value, 0, AiDelays.Length - 1); }
         }
 
+        /// <summary>ระดับความยาก AI ที่ผู้เล่นเลือก (ใช้ตอนเริ่มแมตช์)</summary>
+        public static AiDifficulty AiLevel
+        {
+            get { return AiDifficultyInfo.FromInt(Data.AiLevel); }
+            set { Data.AiLevel = (int)value; }
+        }
+
         /// <summary>เวลาหน่วงระหว่างแอ็กชันของ AI (วินาที)</summary>
         public static float AiActionDelay
         {
@@ -98,6 +105,7 @@ namespace MultiverseCardBattle.Core
             d.FpsLimit = source.FpsLimit;
             d.AnimSpeed = source.AnimSpeed;
             d.AiSpeed = source.AiSpeed;
+            d.AiLevel = source.AiLevel;
             d.TextScale = source.TextScale;
         }
 

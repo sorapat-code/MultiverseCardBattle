@@ -91,8 +91,10 @@ namespace MultiverseCardBattle.Screens
             rewardsPanel = CreatePanel("RewardsPanel");
             optionsPanel = CreatePanel("OptionsPanel");
             leaderPanel = CreatePanel("LeaderPanel");
+            statsPanel = CreatePanel("StatsPanel");
 
             BuildMain();
+            BuildStats();
             BuildShop();
             BuildHelp();
             BuildGlossary();
@@ -147,6 +149,8 @@ namespace MultiverseCardBattle.Screens
                 creditsPanel.gameObject.SetActive(panel == creditsPanel);
             if (leaderPanel != null)
                 leaderPanel.gameObject.SetActive(panel == leaderPanel);
+            if (statsPanel != null)
+                statsPanel.gameObject.SetActive(panel == statsPanel);
 
             RefreshMenuNotices();
             RefreshGold();
@@ -306,9 +310,153 @@ namespace MultiverseCardBattle.Screens
 
             RefreshLeaderMenuButton();
 
+            // แถวล่าง: ระดับความยาก AI / สถิติ / Tutorial
+            difficultyButton = ScreenKit.AddButton(mainPanel, "",
+                () =>
+                {
+                    GameSettings.AiLevel = (AiDifficulty)(((int)GameSettings.AiLevel + 1) % 3);
+
+                    SaveManager.Save();
+
+                    RefreshDifficultyButton();
+
+                    message.text = AiDifficultyInfo.Describe(GameSettings.AiLevel);
+                },
+                UIFactory.Muted, 0.28f, 0.085f, 0.42f, 0.155f, 22);
+
+            ScreenKit.AddButton(mainPanel, "Stats & History",
+                () =>
+                {
+                    RebuildStats();
+
+                    Show(statsPanel);
+                },
+                UIFactory.Accent, 0.43f, 0.085f, 0.57f, 0.155f, 22);
+
+            tutorialButton = ScreenKit.AddButton(mainPanel, "",
+                StartTutorial,
+                UIFactory.Success, 0.58f, 0.085f, 0.72f, 0.155f, 22);
+
+            RefreshDifficultyButton();
+
             message = ScreenKit.AddLabel(
                 mainPanel, "", 26, TextAnchor.MiddleCenter,
-                0.1f, 0.02f, 0.9f, 0.1f);
+                0.1f, 0.01f, 0.9f, 0.08f);
+
+            // เปิดเกมครั้งแรก: ชวนให้เล่น Tutorial
+            if (!SaveManager.Profile.Data.TutorialDone)
+                message.text = "New here? Try the Tutorial!";
+        }
+
+        private Button difficultyButton;
+        private Button tutorialButton;
+        private RectTransform statsPanel;
+        private RectTransform statsList;
+        private Text statsOverview;
+
+        private void RefreshDifficultyButton()
+        {
+            AiDifficulty level = GameSettings.AiLevel;
+
+            UIFactory.SetButtonLabel(
+                difficultyButton, "Difficulty: " + AiDifficultyInfo.NameOf(level));
+
+            UIFactory.SetButtonLabel(
+                tutorialButton,
+                SaveManager.Profile.Data.TutorialDone ? "Tutorial" : "Tutorial (!)");
+        }
+
+        private void StartTutorial()
+        {
+            string error = CampaignService.StartTutorial();
+
+            if (error != null)
+                message.text = "<color=#FF8080>" + error + "</color>";
+        }
+
+        // ---------- สถิติและประวัติแมตช์ ----------
+
+        private void BuildStats()
+        {
+            UIFactory.CreateTitle(statsPanel, "STATS & HISTORY");
+
+            statsOverview = ScreenKit.AddLabel(
+                statsPanel, "", 22, TextAnchor.UpperLeft,
+                0.04f, 0.14f, 0.40f, 0.84f);
+
+            statsOverview.supportRichText = true;
+
+            ScreenKit.AddLabel(
+                statsPanel, "Recent matches", 28, TextAnchor.MiddleLeft,
+                0.44f, 0.82f, 0.96f, 0.88f, FontStyle.Bold).color = UIFactory.Gold;
+
+            ScreenKit.AddScroll(
+                statsPanel, "HistoryScroll",
+                0.44f, 0.14f, 0.96f, 0.82f, out statsList);
+
+            UIFactory.AddVertical(statsList, 6f, 8);
+
+            ScreenKit.AddButton(statsPanel, "Back",
+                () => Show(mainPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+
+        private void RebuildStats()
+        {
+            PlayerProfile profile = SaveManager.Profile;
+
+            statsOverview.text = StatsService.BuildOverview(profile);
+
+            ScreenKit.ClearNow(statsList);
+
+            List<MatchRecord> history = profile.Data.History;
+
+            if (history == null || history.Count == 0)
+            {
+                Image emptyRow = UIFactory.CreateFramedPanel(
+                    statsList, "Empty", UIFactory.Panel);
+
+                emptyRow.rectTransform.sizeDelta = new Vector2(0f, 90f);
+
+                Text empty = UIFactory.CreateText(
+                    emptyRow.transform, "No matches yet. Win or lose, they show up here.",
+                    24, UIFactory.GoldDim, TextAnchor.MiddleCenter);
+
+                UIFactory.Stretch(empty.rectTransform);
+
+                return;
+            }
+
+            // ใหม่สุดอยู่บนสุด
+            for (int i = history.Count - 1; i >= 0; i--)
+            {
+                MatchRecord record = history[i];
+
+                Color tint = record.Result == 1
+                    ? new Color(0.10f, 0.22f, 0.12f, 0.95f)
+                    : (record.Result == 2
+                        ? new Color(0.22f, 0.2f, 0.08f, 0.95f)
+                        : new Color(0.24f, 0.1f, 0.1f, 0.95f));
+
+                Image row = UIFactory.CreateFramedPanel(
+                    statsList, "Match_" + i, tint);
+
+                row.rectTransform.sizeDelta = new Vector2(0f, 84f);
+
+                Text top = UIFactory.CreateText(
+                    row.transform, StatsService.FormatRecord(record),
+                    24, UIFactory.TextColor, TextAnchor.MiddleLeft, FontStyle.Bold);
+
+                top.supportRichText = true;
+
+                UIFactory.SetAnchors(top.rectTransform, 0.02f, 0.5f, 0.98f, 0.95f);
+
+                Text detail = UIFactory.CreateText(
+                    row.transform, StatsService.FormatRecordDetail(record),
+                    20, new Color(0.8f, 0.76f, 0.68f, 1f), TextAnchor.MiddleLeft);
+
+                UIFactory.SetAnchors(detail.rectTransform, 0.02f, 0.05f, 0.98f, 0.5f);
+            }
         }
 
         // ---------- Leader ----------

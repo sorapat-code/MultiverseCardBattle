@@ -8,6 +8,7 @@ namespace MultiverseCardBattle.Data
     public class BattleSummary
     {
         public int Turns;
+        public bool Draw;
         public int PlayerHealth;
         public int PlayerMaxHealth;
         public bool OpponentDeckOut;

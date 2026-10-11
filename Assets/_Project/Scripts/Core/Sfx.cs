@@ -24,7 +24,7 @@ namespace MultiverseCardBattle.Core
     /// เสียงเอฟเฟกต์สร้างจากโค้ด (คลื่นเสียงสังเคราะห์) จึงไม่ต้องมีไฟล์เสียง
     /// เปลี่ยนเป็นไฟล์เสียงจริงทีหลังได้โดยแก้เฉพาะคลาสนี้
     /// </summary>
-    public static class Sfx
+    public static partial class Sfx
     {
         private const int SampleRate = 22050;
         private const float Volume = 0.5f;
@@ -85,7 +85,10 @@ namespace MultiverseCardBattle.Core
 
             musicSource.mute = Muted;
 
-            if (musicStarted && currentTrack == track)
+            // ตอนต่อสู้ เพลงและเสียงบรรยากาศขึ้นกับธีมของด่าน (ดู Sfx.Themes.cs)
+            string themeKey = track == MusicTrack.Battle ? BattleMusicKey() : "";
+
+            if (musicStarted && currentTrack == track && currentThemeKey == themeKey)
             {
                 if (!musicSource.isPlaying)
                     musicSource.Play();
@@ -95,10 +98,13 @@ namespace MultiverseCardBattle.Core
 
             musicStarted = true;
             currentTrack = track;
+            currentThemeKey = themeKey;
 
             musicFader.FadeTo(
                 GetMusicClip(track),
                 MusicLevel(track));
+
+            UpdateAmbience(track);
         }
 
         private static float MusicLevel(MusicTrack track)
@@ -113,6 +119,8 @@ namespace MultiverseCardBattle.Core
         {
             if (musicFader != null && musicStarted)
                 musicFader.SetVolume(MusicLevel(currentTrack));
+
+            RefreshAmbienceVolume();
         }
 
         private static void EnsureMusicSource()
@@ -145,10 +153,8 @@ namespace MultiverseCardBattle.Core
 
             if (track == MusicTrack.Battle)
             {
-                clip = Resources.Load<AudioClip>("Music/battle");
-
-                if (clip == null)
-                    clip = BuildBattleMusic();
+                // เพลงต่อสู้แยกตามธีมด่าน (เก็บแคชแยกในไฟล์ Themes)
+                return GetBattleMusicClip(currentThemeKey);
             }
             else
             {
@@ -173,6 +179,9 @@ namespace MultiverseCardBattle.Core
         {
             if (musicSource != null)
                 musicSource.mute = Muted;
+
+            if (ambientSource != null)
+                ambientSource.mute = Muted;
         }
 
         // เพลงเมนู: อาร์เปจโจสงบๆ คอร์ด Am-F-C-G วน
@@ -356,7 +365,8 @@ namespace MultiverseCardBattle.Core
         }
 
         // กลองใหญ่: ความถี่ลดจากสูงไปต่ำอย่างรวดเร็ว
-        private static void AddKick(float[] data, int start, int stepSamples)
+        private static void AddKick(
+            float[] data, int start, int stepSamples, float gain = 0.55f)
         {
             int length = Mathf.Min(stepSamples, Mathf.RoundToInt(0.16f * SampleRate));
 
@@ -372,7 +382,7 @@ namespace MultiverseCardBattle.Core
 
                 float envelope = Mathf.Pow(1f - t, 2f);
 
-                data[start + i] += Mathf.Sin(phase) * envelope * 0.55f;
+                data[start + i] += Mathf.Sin(phase) * envelope * gain;
             }
         }
 

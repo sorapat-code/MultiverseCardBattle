@@ -169,6 +169,9 @@ namespace MultiverseCardBattle.Screens
         private float aiTimer;
         private int aiFailures;
 
+        // ผู้สอนในแมตช์ Tutorial (null ถ้าเป็นแมตช์ปกติ)
+        private TutorialCoach coach;
+
         private bool resultShown;
         private List<string> resultLines = new List<string>();
 
@@ -396,6 +399,9 @@ namespace MultiverseCardBattle.Screens
             UpdateTurnBanner();
 
             RunAI();
+
+            if (coach != null)
+                coach.Update();
 
             HandleHotkeys();
 
@@ -959,6 +965,17 @@ namespace MultiverseCardBattle.Screens
             UIFactory.Stretch(pileOverlay);
 
             pileOverlay.gameObject.SetActive(false);
+
+            // แมตช์สอนเล่น: ผู้สอนขั้นตอนมุมซ้ายบน
+            if (BattleSetup.Tutorial)
+            {
+                coach = TutorialCoach.Create(
+                    root, battle, Human, Ai,
+                    handZone, playerField,
+                    (RectTransform)endTurnButton.transform,
+                    (RectTransform)playerLeader.transform,
+                    leaderRoot, previewZone);
+            }
 
             // Overlay (Discover / ผลการต่อสู้) อยู่บนสุด
             overlay = UIFactory.CreateRect("Overlay", root);
@@ -2657,6 +2674,7 @@ namespace MultiverseCardBattle.Screens
                 BattleSummary summary = new BattleSummary();
 
                 summary.Turns = battle.TurnManager.TurnNumber;
+                summary.Draw = battle.Winner == null;
                 summary.PlayerHealth = Human.LeaderHealth;
                 summary.PlayerMaxHealth = Human.MaxLeaderHealth;
                 summary.OpponentDeckOut = Ai.Deck.Count == 0 && Human.Deck.Count > 0;
@@ -2669,8 +2687,11 @@ namespace MultiverseCardBattle.Screens
                 summary.LeaderDamage = battle.Stats.LeaderDamage[Human.PlayerID];
                 summary.PlayedCardIds.AddRange(battle.Stats.PlayedCardIds[Human.PlayerID]);
 
-                unlockBanners = SecretCardService.Evaluate(
-                    battle, Human.PlayerID, won, SaveManager.Profile);
+                // Tutorial ไม่ปลดล็อกการ์ดลับ
+                unlockBanners = BattleSetup.Tutorial
+                    ? new List<SecretUnlock>()
+                    : SecretCardService.Evaluate(
+                        battle, Human.PlayerID, won, SaveManager.Profile);
 
                 foreach (SecretUnlock unlock in unlockBanners)
                     summary.SecretIds.Add(unlock.CardId);
@@ -2719,9 +2740,37 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.AddTextShadow(titleText);
 
+            // สรุปแมตช์ (ไม่แสดงใน Tutorial)
+            if (!BattleSetup.Tutorial)
+            {
+                SaveData data = SaveManager.Profile.Data;
+
+                MatchRecord last = data.History != null && data.History.Count > 0
+                    ? data.History[data.History.Count - 1]
+                    : null;
+
+                if (last != null)
+                {
+                    Text recap = ScreenKit.AddLabel(
+                        overlay,
+                        "Turns " + last.Turns +
+                        "     Cards played " + last.CardsPlayed +
+                        "     Units destroyed " + last.UnitsKilled +
+                        "     Leader damage " + last.LeaderDamage +
+                        "\nWin streak " + data.StatWinStreak +
+                        "     Record " + data.StatWins + " W / " +
+                        Mathf.Max(0, data.StatBattles - data.StatWins) + " L" +
+                        "     Difficulty " +
+                        AiDifficultyInfo.NameOf((AiDifficulty)last.Difficulty),
+                        24, TextAnchor.MiddleCenter, 0.15f, 0.54f, 0.85f, 0.62f);
+
+                    recap.color = UIFactory.GoldDim;
+                }
+            }
+
             ScreenKit.AddLabel(
                 overlay, string.Join("\n", resultLines), 30,
-                TextAnchor.UpperCenter, 0.25f, 0.34f, 0.75f, 0.6f);
+                TextAnchor.UpperCenter, 0.25f, 0.30f, 0.75f, 0.53f);
 
             bool fromCampaign = BattleSetup.Stage != null;
 

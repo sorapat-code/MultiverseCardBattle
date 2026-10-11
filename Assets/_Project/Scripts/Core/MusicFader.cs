@@ -29,12 +29,37 @@ namespace MultiverseCardBattle.Core
         {
             pendingClip = clip;
             targetVolume = volume;
+            fadingOut = false;
         }
+
+        /// <summary>ค่อยๆ เบาลงจนเงียบแล้วหยุดเล่น (ใช้กับเสียงบรรยากาศ)</summary>
+        public void FadeOut()
+        {
+            pendingClip = null;
+            fadingOut = true;
+        }
+
+        private bool fadingOut;
 
         private void Update()
         {
             if (source == null)
                 return;
+
+            if (fadingOut)
+            {
+                source.volume = Mathf.Max(
+                    0f, source.volume - Time.unscaledDeltaTime / (FadeSeconds * 2f) * 0.5f);
+
+                if (source.volume <= 0.001f)
+                {
+                    source.Stop();
+                    source.volume = 0f;
+                    fadingOut = false;
+                }
+
+                return;
+            }
 
             float step = Time.unscaledDeltaTime / FadeSeconds * targetVolume;
 

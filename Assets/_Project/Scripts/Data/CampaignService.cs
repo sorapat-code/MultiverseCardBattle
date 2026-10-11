@@ -75,6 +75,38 @@ namespace MultiverseCardBattle.Data
             return null;
         }
 
+        /// <summary>
+        /// แมตช์สอนเล่น: เด็คและมือเปิดถูกจัดไว้ คู่ซ้อมลงยูนิตแต่ไม่โจมตี
+        /// ไม่นับสถิติ ไม่มีรางวัลปกติ (ได้ Gold โบนัสครั้งแรกที่ผ่าน)
+        /// </summary>
+        public static string StartTutorial()
+        {
+            BattleSetup.Reset();
+
+            BattleSetup.Tutorial = true;
+            BattleSetup.Difficulty = AiDifficulty.Normal;
+
+            BattleSetup.PlayerDeck = MultiverseCardBattle.Battle.TutorialSetup.BuildPlayerDeck();
+            BattleSetup.EnemyDeck = MultiverseCardBattle.Battle.TutorialSetup.BuildEnemyDeck();
+
+            if (BattleSetup.PlayerDeck.Count == 0 || BattleSetup.EnemyDeck.Count == 0)
+                return "Tutorial cards are missing";
+
+            BattleSetup.PlayerName = "You";
+            BattleSetup.EnemyName = "Training Dummy";
+            BattleSetup.PlayerLeaderId = SaveManager.Profile.Data.LeaderId;
+            BattleSetup.EnemyLeaderId = null;
+            BattleSetup.EnemyHealth = MultiverseCardBattle.Battle.TutorialSetup.EnemyHealth;
+
+            // ผู้เล่นเริ่มก่อนเสมอ ไม่มี Mulligan
+            BattleSetup.UseCoinFlip = false;
+            BattleSetup.UseMulligan = false;
+
+            SceneLoader.Go(GameScene.Battle);
+
+            return null;
+        }
+
         private static string PreparePlayerSide()
         {
             PlayerProfile profile = SaveManager.Profile;
@@ -87,6 +119,8 @@ namespace MultiverseCardBattle.Data
                 return "Your active deck is not valid: " + problems[0];
 
             BattleSetup.Reset();
+
+            BattleSetup.Difficulty = GameSettings.AiLevel;
 
             // โยนเหรียญสุ่มว่าใครเริ่มก่อน
             BattleSetup.UseCoinFlip = true;
@@ -103,6 +137,7 @@ namespace MultiverseCardBattle.Data
         public const int GoldStageReplay = 40;
         public const int GoldQuickWin = 30;
         public const int GoldLoss = 10;
+        public const int TutorialGold = 100;
 
         /// <summary>
         /// เรียกเมื่อการต่อสู้จบ: บันทึกความคืบหน้า/รางวัล/Gold คืนข้อความสรุปให้แสดง
@@ -139,6 +174,36 @@ namespace MultiverseCardBattle.Data
             CampaignStage stage = BattleSetup.Stage;
 
             PlayerProfile profile = SaveManager.Profile;
+
+            // Tutorial: ไม่นับสถิติ/รางวัล แค่จำว่าเล่นจบแล้ว
+            if (BattleSetup.Tutorial)
+            {
+                if (playerWon)
+                {
+                    bool first = !profile.Data.TutorialDone;
+
+                    profile.Data.TutorialDone = true;
+
+                    if (first)
+                    {
+                        profile.AddGold(TutorialGold);
+
+                        lines.Add("Tutorial complete! Gold +" + TutorialGold);
+                    }
+                    else
+                    {
+                        lines.Add("Tutorial complete!");
+                    }
+                }
+                else
+                {
+                    lines.Add("Tutorial not finished - try again from the main menu.");
+                }
+
+                SaveManager.Save();
+
+                return lines;
+            }
 
             int gold;
 
@@ -177,15 +242,50 @@ namespace MultiverseCardBattle.Data
                 gold = playerWon ? GoldQuickWin : GoldLoss;
             }
 
+            // ระดับความยาก: ชนะบนระดับยากได้ Gold มากขึ้น (แพ้ไม่ปรับ)
+            if (playerWon && BattleSetup.Difficulty != AiDifficulty.Normal)
+            {
+                gold = Mathf.Max(
+                    1, Mathf.RoundToInt(
+                        gold * AiDifficultyInfo.GoldScale(BattleSetup.Difficulty)));
+            }
+
             profile.AddGold(gold);
 
-            lines.Add("Gold +" + gold);
+            lines.Add("Gold +" + gold +
+                (BattleSetup.Difficulty != AiDifficulty.Normal
+                    ? " (" + AiDifficultyInfo.NameOf(BattleSetup.Difficulty) + ")"
+                    : ""));
 
             // สถิติสำหรับ Achievement
             profile.Data.StatBattles++;
 
             if (playerWon)
                 profile.Data.StatWins++;
+
+            // ประวัติแมตช์ + สถิติรวม
+            MatchRecord record = new MatchRecord();
+
+            record.Date = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            record.Result = playerWon ? 1 : (summary != null && summary.Draw ? 2 : 0);
+            record.Opponent = string.IsNullOrEmpty(BattleSetup.EnemyName)
+                ? "Opponent"
+                : BattleSetup.EnemyName;
+            record.Mode = stage != null ? stage.Name : "Quick Battle";
+            record.Difficulty = (int)BattleSetup.Difficulty;
+            record.Gold = gold;
+
+            if (summary != null)
+            {
+                record.Turns = summary.Turns;
+                record.HealthLeft = Mathf.Max(0, summary.PlayerHealth);
+                record.CardsPlayed = summary.CardsPlayed;
+                record.UnitsKilled = summary.UnitsKilled;
+                record.LeaderDamage = summary.LeaderDamage;
+            }
+
+            StatsService.Record(
+                profile, record, summary != null ? summary.PlayedCardIds : null);
 
             DailyService.ReportBattle(profile, playerWon, summary);
 

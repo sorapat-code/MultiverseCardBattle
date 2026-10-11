@@ -38,8 +38,17 @@ namespace MultiverseCardBattle.Data
         // ด่านของ Campaign ที่กำลังเล่น (null = Quick Battle / ทดสอบ)
         public static CampaignStage Stage;
 
+        // ระดับความยาก AI (ค่าเริ่มต้น Normal = พฤติกรรมเดิม)
+        public static AiDifficulty Difficulty = AiDifficulty.Normal;
+
+        // โหมดสอนเล่น: เด็คและมือเปิดถูกจัดไว้ AI ไม่ทำอะไร (ดู TutorialCoach)
+        public static bool Tutorial;
+
         public static void Reset()
         {
+            Difficulty = AiDifficulty.Normal;
+            Tutorial = false;
+
             PlayerDeck = null;
             EnemyDeck = null;
 

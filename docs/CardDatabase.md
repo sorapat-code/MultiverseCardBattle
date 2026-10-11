@@ -342,3 +342,26 @@ board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). A
 (Quick Battle / ด่าน 1 = ป่ายามสาย): 2 Bandit Road ฝุ่นทองบ่ายแก่, 3 Shadow Alley กลางคืนนีออน, 4 Temple Siege หินทรายเรืองทอง,
 5 Mage Tower ม่วงอาร์เคน, 6 Titan Gate หินเทาหมอกหนา, 7 Dragon Peak ภูเขาไฟประกายไฟ, 8 Grand Line ดาดฟ้าเรือทะเลสด,
 9 Soul Reaper's Trial จันทร์ซีดกลีบซากุระ, 10 Multiverse จักรวาลม่วงทอง ธีมที่ไม่มีต้นไม้ (8, 10) จะไม่วางโมเดลธรรมชาติ
+
+## ระดับความยาก AI (AiDifficulty)
+
+- เลือกได้ที่ปุ่ม **Difficulty** ในเมนูหลัก (Easy / Normal / Hard) เก็บใน `SaveData.AiLevel` แล้วส่งผ่าน `BattleSetup.Difficulty` → `AIPlanner.Difficulty` ตอนเริ่มแมตช์
+- **Normal** = พฤติกรรมเดิมทุกอย่าง (เทสต์เดิมไม่เปลี่ยน). **Easy**: ลงการ์ดสุ่มและข้ามบางใบ, บางครั้งไม่โจมตี/เลือกเป้าหมายมั่ว, ใช้สกิล Leader ไม่ค่อยเป็น, ตอบโต้ Fast spell น้อย, HP Leader ศัตรู x0.8, Gold ที่ชนะ x0.7. **Hard**: คำนวณ "ตีรวมจบเกม" (lethal) ก่อนทุกครั้ง, ให้ความสำคัญกับเป้าหมายอันตราย (Lifesteal/DoubleStrike/Pierce/Overwhelm), ตอบโต้เกือบทุกครั้ง, Mulligan ใบ Cost 4+, HP Leader ศัตรู x1.25, Gold ที่ชนะ x1.5
+- ตัวคูณทั้งหมดอยู่ใน `Data/AiDifficulty.cs` (`AiDifficultyInfo`)
+
+## สถิติและประวัติแมตช์ (StatsService)
+
+- `Data/StatsService.cs` บันทึกทุกแมตช์ (ไม่รวม Tutorial) เป็น `MatchRecord` ใน `SaveData.History` (เก็บล่าสุด 50 รายการ) พร้อมสถิติรวม: ชนะ/แพ้/เสมอ, สตรีคปัจจุบัน/สูงสุด, สถิติแยกตามระดับความยาก, จำนวนการ์ดที่ลง, ยูนิตที่กำจัด, ดาเมจใส่ Leader, การ์ดที่ใช้บ่อยสุด (`CardUsage`)
+- เรียกจาก `CampaignService.OnBattleFinished` หน้าสรุปผลแสดงรีแคปแมตช์ + สตรีค; ดูทั้งหมดได้ที่ปุ่ม **Stats & History** ในเมนูหลัก. `SaveData.CurrentVersion` = 5 (เซฟเก่าเปิดได้ ค่าใหม่เริ่มจากศูนย์)
+
+## เพลงและเสียงบรรยากาศตามธีมด่าน (Sfx.Themes)
+
+- `Core/Sfx.Themes.cs` สร้างเพลงต่อสู้ 10 สไตล์ (คอร์ด/จังหวะ/กลอง/เสียงลีดต่างกันต่อด่าน; Quick Battle ใช้เพลงต่อสู้ดั้งเดิม) และเสียงบรรยากาศวนลูป 8 วินาที: ป่า (ลม+นก), ทะเลทราย (ลม+กองไฟ), ซอยฝนตก, วิหาร (เสียงประสาน+ระฆัง), หอคอยเวท (ฮัมอาร์เคน+ประกาย), ลมหนาว, ภูเขาไฟ (ไฟปะทุ), ทะเล (คลื่น+นกนางนวล), คืนจันทร์ (ระฆังไกลๆ), จักรวาล
+- ทุกอย่างสร้างจากโค้ด; วางไฟล์ `Resources/Music/battle_stage_05` (หรือ `ambience_stage_05`) เพื่อใช้ไฟล์จริงแทนของด่านนั้น. ระดับเสียงบรรยากาศใช้สไลเดอร์ Master x Effects, เพลงใช้ Master x Music
+- ออกจากการต่อสู้ไปเมนู บรรยากาศจะค่อยๆ เบาลงแล้วหยุด
+
+## Tutorial แบบโต้ตอบ
+
+- ปุ่ม **Tutorial** ในเมนูหลัก (`CampaignService.StartTutorial`) ตั้ง `BattleSetup.Tutorial = true`: ผู้เล่นเริ่มก่อน ไม่มี Mulligan, การ์ดบนสุดของเด็คถูกจัดไว้ (`Battle/TutorialSetup.cs`), คู่ซ้อมมี HP 10 ลงได้แต่ยูนิต ไม่โจมตี ไม่ใช้สกิล (`AIPlanner.TutorialMode`)
+- `Screens/TutorialCoach.cs` แสดงกล่องคำสอนมุมซ้ายบนและกรอบไฮไลต์กะพริบ เลื่อนขั้นเองเมื่อผู้เล่นทำตามจริง: เป้าหมาย → Energy → ลงยูนิต → จบเทิร์น → เทิร์นศัตรู → โจมตี → สเปล → เคล็ดลับ → ชนะ. กด Skip ข้ามได้
+- ไม่นับสถิติ/Achievement/Daily/การ์ดลับ; ชนะครั้งแรกได้ Gold 100 และจำค่า `SaveData.TutorialDone` (ปุ่มจะไม่มี "(!)" อีก)

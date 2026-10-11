@@ -18,6 +18,51 @@ namespace MultiverseCardBattle.Battle
         public static System.Func<float> RandomValue =
             () => UnityEngine.Random.value;
 
+        // ระดับความยาก (BattleManager.StartBattle ตั้งจาก BattleSetup.Difficulty)
+        // Normal = พฤติกรรมเดิมทุกอย่าง
+        public static AiDifficulty Difficulty = AiDifficulty.Normal;
+
+        // แมตช์สอนเล่น: AI ลงได้แต่ยูนิต ไม่โจมตี ไม่ใช้สกิล ไม่ตอบโต้
+        public static bool TutorialMode;
+
+        // AI ยอมเปลี่ยนการ์ด Cost ตั้งแต่เท่าไรตอน Mulligan
+        public static int MulliganCost
+        {
+            get
+            {
+                switch (Difficulty)
+                {
+                    case AiDifficulty.Easy: return 99;
+                    case AiDifficulty.Hard: return 4;
+                    default: return 5;
+                }
+            }
+        }
+
+        // โอกาสที่จะ "ปล่อยผ่าน" ไม่ตอบโต้ด้วย Fast spell
+        private static float PassChance
+        {
+            get
+            {
+                switch (Difficulty)
+                {
+                    case AiDifficulty.Easy: return 0.65f;
+                    case AiDifficulty.Hard: return 0.03f;
+                    default: return 0.2f;
+                }
+            }
+        }
+
+        private static bool IsEasy
+        {
+            get { return Difficulty == AiDifficulty.Easy; }
+        }
+
+        private static bool IsHard
+        {
+            get { return Difficulty == AiDifficulty.Hard; }
+        }
+
         public static IBattleCommand NextCommand(
             BattleManager battle,
             BattlePlayer player)
@@ -26,6 +71,13 @@ namespace MultiverseCardBattle.Battle
                 return null;
 
             if (battle.IsOver || battle.CurrentPlayer != player)
+                return null;
+
+            if (TutorialMode)
+                return PlanPlay(battle, player);
+
+            // ระดับง่าย: บางครั้งจบเทิร์นก่อนเวลา
+            if (IsEasy && RandomValue() < 0.06f)
                 return null;
 
             IBattleCommand play = PlanPlay(battle, player);
@@ -52,6 +104,10 @@ namespace MultiverseCardBattle.Battle
                 return null;
 
             if (!LeaderSkillCommand.Validate(battle, player).Success)
+                return null;
+
+            // ระดับง่าย: ใช้สกิลไม่ค่อยเป็น
+            if (IsEasy && RandomValue() < 0.5f)
                 return null;
 
             BattlePlayer enemy = battle.GetOpponent(player);
@@ -119,13 +175,14 @@ namespace MultiverseCardBattle.Battle
             BattlePlayer player)
         {
             if (battle == null || player == null || battle.IsOver ||
-                battle.ChainStack.Count == 0)
+                battle.ChainStack.Count == 0 || TutorialMode)
                 return null;
 
             ChainLink top = battle.ChainStack[battle.ChainStack.Count - 1];
 
             // บางครั้งก็ปล่อยผ่าน ไม่ตอบโต้ทุกอย่าง
-            if (RandomValue() > 0.8f)
+            // (Normal = 0.8 เหมือนเดิม)
+            if (RandomValue() > 1f - PassChance)
                 return null;
 
             List<CardInstance> hand = new List<CardInstance>(player.Hand.Cards);
@@ -180,11 +237,25 @@ namespace MultiverseCardBattle.Battle
             List<CardInstance> hand =
                 new List<CardInstance>(player.Hand.Cards);
 
-            // เรียงจากราคามากไปน้อย
-            hand.Sort((a, b) => b.CurrentCost.CompareTo(a.CurrentCost));
+            if (IsEasy)
+            {
+                // ระดับง่าย: ลงการ์ดมั่วๆ ไม่เรียงตามราคา และบางใบก็ไม่ลง
+                Shuffle(hand);
+            }
+            else
+            {
+                // เรียงจากราคามากไปน้อย
+                hand.Sort((a, b) => b.CurrentCost.CompareTo(a.CurrentCost));
+            }
 
             foreach (CardInstance card in hand)
             {
+                if (TutorialMode && card.Data.Type != CardType.Unit)
+                    continue;
+
+                if (IsEasy && RandomValue() < 0.25f)
+                    continue;
+
                 if (!BattleRules.ValidateBasicPlay(battle, player, card).Success)
                     continue;
 
@@ -206,6 +277,18 @@ namespace MultiverseCardBattle.Battle
             }
 
             return null;
+        }
+
+        private static void Shuffle<T>(List<T> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = System.Math.Min(i, (int)(RandomValue() * (i + 1)));
+
+                T temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+            }
         }
 
         private static TargetCandidate PickPlayTarget(
@@ -321,20 +404,83 @@ namespace MultiverseCardBattle.Battle
 
         // ---------- โจมตี ----------
 
-        private static IBattleCommand PlanAttack(
+        // ระดับยาก: รวมพลังโจมตีของทุกตัวที่ตี Leader ได้ ถ้าพอจบเกม ตีเข้า Leader เลย
+        private static IBattleCommand PlanLethal(
             BattleManager battle,
             BattlePlayer player)
         {
+            BattlePlayer enemy = battle.GetOpponent(player);
+
+            int total = 0;
+
+            AttackCommand first = null;
+
             foreach (CardInstance attacker in
                 new List<CardInstance>(player.Field))
             {
                 if (!BattleRules.CanAttack(battle, player, attacker))
                     continue;
 
+                TargetCandidate leaderTarget = null;
+
+                foreach (TargetCandidate candidate in
+                    BattleRules.GetAttackTargets(battle, player, attacker))
+                {
+                    if (candidate.TargetObject is BattlePlayer)
+                    {
+                        leaderTarget = candidate;
+                        break;
+                    }
+                }
+
+                if (leaderTarget == null)
+                    continue;
+
+                total += attacker.CurrentAttack *
+                    (attacker.HasKeyword(Keyword.DoubleStrike) ? 2 : 1);
+
+                if (first == null)
+                    first = new AttackCommand(player, attacker, null, enemy);
+            }
+
+            return total >= enemy.LeaderHealth ? first : null;
+        }
+
+        private static IBattleCommand PlanAttack(
+            BattleManager battle,
+            BattlePlayer player)
+        {
+            if (IsHard)
+            {
+                IBattleCommand lethal = PlanLethal(battle, player);
+
+                if (lethal != null)
+                    return lethal;
+            }
+
+            foreach (CardInstance attacker in
+                new List<CardInstance>(player.Field))
+            {
+                if (!BattleRules.CanAttack(battle, player, attacker))
+                    continue;
+
+                // ระดับง่าย: บางตัวไม่ยอมตี
+                if (IsEasy && RandomValue() < 0.25f)
+                    continue;
+
                 List<TargetCandidate> targets =
                     BattleRules.GetAttackTargets(battle, player, attacker);
 
                 TargetCandidate pick = PickAttackTarget(attacker, targets);
+
+                // ระดับง่าย: บางครั้งเลือกเป้าหมายมั่ว
+                if (IsEasy && targets.Count > 0 && RandomValue() < 0.4f)
+                {
+                    int index = System.Math.Min(
+                        targets.Count - 1, (int)(RandomValue() * targets.Count));
+
+                    pick = targets[index];
+                }
 
                 if (pick == null)
                     continue;
@@ -404,6 +550,14 @@ namespace MultiverseCardBattle.Battle
 
                     if (survives)
                         score += 100;
+
+                    // ระดับยาก: ให้ความสำคัญกับตัวที่อันตราย
+                    if (IsHard &&
+                        (unit.HasKeyword(Keyword.Lifesteal) ||
+                         unit.HasKeyword(Keyword.DoubleStrike) ||
+                         unit.HasKeyword(Keyword.Pierce) ||
+                         unit.HasKeyword(Keyword.Overwhelm)))
+                        score += 60;
 
                     if (score > bestTradeScore)
                     {

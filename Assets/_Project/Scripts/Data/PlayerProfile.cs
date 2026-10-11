@@ -52,6 +52,32 @@ namespace MultiverseCardBattle.Data
         public int RewardedLevel;
     }
 
+    /// <summary>ประวัติแมตช์ 1 รายการ (เก็บล่าสุดไม่เกิน StatsService.MaxHistory)</summary>
+    [Serializable]
+    public class MatchRecord
+    {
+        public string Date;         // yyyy-MM-dd HH:mm
+        public int Result;          // 0 = แพ้, 1 = ชนะ, 2 = เสมอ
+        public string Opponent;
+        public string Mode;         // ชื่อด่าน หรือ "Quick Battle"
+        public int Difficulty;      // AiDifficulty
+        public int Turns;
+        public int HealthLeft;
+        public int CardsPlayed;
+        public int UnitsKilled;
+        public int LeaderDamage;
+        public int Gold;
+    }
+
+    /// <summary>จำนวนแมตช์ที่ใช้การ์ดใบนี้ และชนะกี่แมตช์ (ใช้ทำอันดับการ์ดโปรด)</summary>
+    [Serializable]
+    public class CardUsageEntry
+    {
+        public string CardID;
+        public int Matches;
+        public int Wins;
+    }
+
     /// <summary>
     /// ข้อมูลที่บันทึกลงไฟล์ (JsonUtility)
     /// </summary>
@@ -60,7 +86,8 @@ namespace MultiverseCardBattle.Data
     {
         // 1 = ก่อนมี Gold / 2 = มี Gold และตั้งค่าเสียง / 3 = มี Dust และ Achievement
         // 4 = มี Daily Login / Daily Quest / Mastery / Milestone
-        public const int CurrentVersion = 4;
+        // 5 = มีระดับความยาก AI / ประวัติแมตช์ / สถิติ / Tutorial
+        public const int CurrentVersion = 5;
 
         public int Version = CurrentVersion;
 
@@ -126,6 +153,30 @@ namespace MultiverseCardBattle.Data
 
         // Story Mode: บทที่รับรางวัลจบบทแล้ว ("chapter_1" ...)
         public List<string> StoryChaptersRewarded = new List<string>();
+
+        // ระดับความยาก AI (0 = Easy, 1 = Normal, 2 = Hard)
+        public int AiLevel = 1;
+
+        // เล่น Tutorial จบแล้วหรือยัง
+        public bool TutorialDone;
+
+        // ประวัติแมตช์ (ใหม่สุดอยู่ท้ายลิสต์)
+        public List<MatchRecord> History = new List<MatchRecord>();
+
+        // สถิติรวม
+        public int StatDraws;
+        public int StatWinStreak;
+        public int StatBestStreak;
+        public int StatTotalTurns;
+        public int StatTotalKills;
+        public int StatTotalCardsPlayed;
+        public int StatTotalLeaderDamage;
+
+        // จำนวนแมตช์/ชนะ แยกตามระดับความยาก (ดัชนี 0-2)
+        public List<int> DifficultyBattles = new List<int> { 0, 0, 0 };
+        public List<int> DifficultyWins = new List<int> { 0, 0, 0 };
+
+        public List<CardUsageEntry> CardUsage = new List<CardUsageEntry>();
     }
 
     /// <summary>
