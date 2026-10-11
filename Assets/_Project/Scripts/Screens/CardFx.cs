@@ -245,8 +245,13 @@ namespace MultiverseCardBattle.Screens
 
             view.ShowInstance(card);
 
-            CanvasGroup group = view.gameObject.AddComponent<CanvasGroup>();
+            // CardView สร้าง CanvasGroup ไว้แล้ว ใช้ตัวเดิม (AddComponent ซ้ำจะได้ null)
+            CanvasGroup group = view.GetComponent<CanvasGroup>();
 
+            if (group == null)
+                group = view.gameObject.AddComponent<CanvasGroup>();
+
+            group.alpha = 1f;
             group.blocksRaycasts = false;
             group.interactable = false;
 

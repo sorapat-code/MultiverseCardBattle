@@ -1089,6 +1089,10 @@ namespace MultiverseCardBattle.Screens
 
         private void HidePreview(CardView view)
         {
+            // มีการ์ดที่คลิกปักหมุดไว้ = กลับไปแสดงใบนั้นแทนการซ่อน
+            if (ShowPinned())
+                return;
+
             if (previewView != null)
                 previewView.gameObject.SetActive(false);
 
@@ -1096,11 +1100,60 @@ namespace MultiverseCardBattle.Screens
                 termsText.text = "";
         }
 
+        // การ์ดที่คลิกซ้ายไว้ พรีวิวซ้ายบนจะค้างที่ใบนี้จนกว่าจะคลิกใบอื่น
+        private CardInstance pinnedCard;
+
+        private void PinCard(CardView view)
+        {
+            if (view == null || view.Instance == null)
+                return;
+
+            pinnedCard = view.Instance;
+
+            ShowPreview(view);
+
+            if (previewView != null)
+                previewView.gameObject.SetActive(true);
+        }
+
+        private bool PinnedValid()
+        {
+            return pinnedCard != null && pinnedCard.Data != null &&
+                (pinnedCard.Zone == CardZone.Field ||
+                 pinnedCard.Zone == CardZone.Hand ||
+                 pinnedCard.Zone == CardZone.Graveyard);
+        }
+
+        private bool ShowPinned()
+        {
+            if (!PinnedValid() || previewView == null || termsText == null)
+            {
+                pinnedCard = null;
+                return false;
+            }
+
+            previewView.ShowInstance(pinnedCard);
+            previewView.SetHighlight(CardHighlight.None);
+            previewView.gameObject.SetActive(true);
+
+            termsText.text = GameGlossary.HintsFor(pinnedCard.Data, pinnedCard);
+
+            return true;
+        }
+
         // วาดใหม่หลังสถานะเปลี่ยน: อัปเดตค่าบนพรีวิว หรือซ่อนถ้าการ์ดหายไปแล้ว
         private void RefreshPreview()
         {
-            if (previewView == null || !previewView.gameObject.activeSelf)
+            if (previewView == null)
                 return;
+
+            if (!previewView.gameObject.activeSelf)
+            {
+                if (pinnedCard != null)
+                    ShowPinned();
+
+                return;
+            }
 
             CardInstance shown = previewView.Instance;
 
@@ -1115,7 +1168,7 @@ namespace MultiverseCardBattle.Screens
 
                 termsText.text = GameGlossary.HintsFor(shown.Data, shown);
             }
-            else
+            else if (!ShowPinned())
             {
                 previewView.gameObject.SetActive(false);
                 termsText.text = "";
@@ -1165,7 +1218,10 @@ namespace MultiverseCardBattle.Screens
                         {
                             // การ์ดบินจากมือมาลงสนาม  ตัวจริงซ่อนไว้จนกว่าจะถึง
                             CanvasGroup hidden =
-                                entered.gameObject.AddComponent<CanvasGroup>();
+                                entered.GetComponent<CanvasGroup>();
+
+                            if (hidden == null)
+                                hidden = entered.gameObject.AddComponent<CanvasGroup>();
 
                             hidden.alpha = 0f;
 
@@ -2205,6 +2261,8 @@ namespace MultiverseCardBattle.Screens
 
         private void OnHandCardClicked(CardView view)
         {
+            PinCard(view);
+
             if (!CanAct() || view.Instance == null)
                 return;
 
@@ -2245,6 +2303,8 @@ namespace MultiverseCardBattle.Screens
 
         private void OnFieldCardClicked(CardView view)
         {
+            PinCard(view);
+
             // ความสามารถที่รอให้เลือกยูนิตศัตรู (Grasp Heart)
             if (battle != null && battle.HasPendingTarget &&
                 battle.PendingTarget.Player == Human &&
