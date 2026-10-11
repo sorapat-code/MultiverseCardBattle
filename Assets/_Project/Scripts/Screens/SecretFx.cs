@@ -122,13 +122,45 @@ namespace MultiverseCardBattle.Screens
             return new KeyValuePair<float, Action>(time, action);
         }
 
+        /// <summary>คำโปรยใต้ชื่อในฉากไซเนมาติก</summary>
+        public static string Epithet(CardData data)
+        {
+            if (data == null)
+                return "A secret awakens";
+
+            switch (data.CardID)
+            {
+                case StarterCardLibrary.SecretId: return "The Shadow Monarch rises";
+                case StarterCardLibrary.ArtoriasId: return "The Abysswalker descends";
+                case StarterCardLibrary.AinzId: return "The Supreme One takes the stage";
+                case StarterCardLibrary.VergilId: return "The Yamato is drawn";
+                case StarterCardLibrary.DevilTriggerId: return "Power beyond limits";
+                default: return "A secret awakens";
+            }
+        }
+
+        /// <summary>หยุดเวลาสั้นๆ ตอนกระแทก (hit-stop) แล้วคืนความเร็วเดิม</summary>
+        public static void HitStop(Transform host, float timeScale, float seconds)
+        {
+            if (host == null)
+                return;
+
+            HitStopper stopper = host.GetComponent<HitStopper>();
+
+            if (stopper == null)
+                stopper = host.gameObject.AddComponent<HitStopper>();
+
+            stopper.Begin(timeScale, seconds);
+        }
+
         // ---------- การ์ดลงสนาม ----------
 
         /// <summary>
         /// การ์ดลับเปิดตัวบนสนาม: แสงวาบ เสาแสง คลื่นกระแทก รอยฟัน อนุภาค จอสั่น และชื่อการ์ดขึ้นกลางจอ
         /// </summary>
         public static void Arrive(
-            Transform fx, RectTransform shakeTarget, Vector3 pos, CardData data)
+            Transform fx, RectTransform shakeTarget, Vector3 pos, CardData data,
+            bool withTitle = true)
         {
             if (fx == null || data == null)
                 return;
@@ -145,7 +177,8 @@ namespace MultiverseCardBattle.Screens
             UiFx.Ring(fx, pos, c, 60f, 780f, 0.85f);
             UiFx.Burst(fx, pos, c, 56, 540f, 38f, 1.2f, -60f);
 
-            Title(fx, pos + new Vector3(0f, 230f, 0f), data.CardName.ToUpperInvariant(), c);
+            if (withTitle)
+                Title(fx, pos + new Vector3(0f, 230f, 0f), data.CardName.ToUpperInvariant(), c);
 
             Sfx.Play(SoundId.Pack);
 
@@ -186,6 +219,18 @@ namespace MultiverseCardBattle.Screens
 
                 return;
             }
+
+            // จังหวะกระแทกร่วมของทุกสกิล: หยุดเวลาสั้นๆ แสงวาบ เสาแสง และประกาย
+            HitStop(fx, 0.06f, 0.18f);
+
+            Flash(fx, c, 0.3f, 0.45f);
+
+            UiFx.Ring(fx, to, new Color(1f, 1f, 1f, 0.9f), 30f, 420f, 0.4f);
+            UiFx.Beam(fx, to, new Color(c.r, c.g, c.b, 0.7f), 170f, 950f, 0.7f);
+
+            Timeline(fx,
+                At(0.18f, () => UiFx.Burst(
+                    fx, to, Color.Lerp(c, Color.white, 0.5f), 30, 430f, 30f, 0.9f, 120f)));
 
             switch (data.CardID)
             {
@@ -300,6 +345,47 @@ namespace MultiverseCardBattle.Screens
     }
 
     // ---------- ตัวช่วย ----------
+
+    public class HitStopper : MonoBehaviour
+    {
+        private float restore = 1f;
+        private float until;
+        private bool active;
+
+        public void Begin(float timeScale, float seconds)
+        {
+            if (!active)
+                restore = Time.timeScale;
+
+            Time.timeScale = timeScale;
+            until = Time.unscaledTime + seconds;
+            active = true;
+        }
+
+        private void Update()
+        {
+            if (active && Time.unscaledTime >= until)
+                Restore();
+        }
+
+        private void Restore()
+        {
+            Time.timeScale = restore;
+            active = false;
+        }
+
+        private void OnDisable()
+        {
+            if (active)
+                Restore();
+        }
+
+        private void OnDestroy()
+        {
+            if (active)
+                Restore();
+        }
+    }
 
     public class ScreenFlash : MonoBehaviour
     {

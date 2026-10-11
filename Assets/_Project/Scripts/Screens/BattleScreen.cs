@@ -192,7 +192,39 @@ namespace MultiverseCardBattle.Screens
         }
 
         // การ์ดลับใช้สกิล: จดไว้ แล้วเล่นเอฟเฟกต์ตอนวาดหน้าจอครั้งถัดไป (ตอนนั้นการ์ดมี View แล้ว)
+        private SecretCinematic cinematic;
+        private SecretCinematic unlockCinematic;
+        private int unlockCinematicIndex = -1;
+
         private readonly List<GameEvent> pendingSecretEvents = new List<GameEvent>();
+
+        // การ์ดลับลงสนาม: ฉากไซเนมาติกก่อน แล้วการ์ดบินลงช่องของมันพร้อมเอฟเฟกต์ลงสนาม
+        private void PlayArrivalCinematic(CardData cardData, CardView view, CanvasGroup group)
+        {
+            if (group == null)
+                group = view.GetComponent<CanvasGroup>();
+
+            if (group != null)
+                group.alpha = 0f;
+
+            Vector3 destination = view.transform.position;
+
+            cinematic = SecretCinematic.Play(
+                root, SecretCinematic.Mode.Arrival, cardData,
+                "", cardData.CardName, SecretFx.Epithet(cardData),
+                root, destination,
+                () =>
+                {
+                    if (group != null)
+                        group.alpha = 1f;
+
+                    if (view != null)
+                        CardFx.Pop(view);
+
+                    SecretFx.Arrive(fxLayer, root, destination, cardData, false);
+                },
+                null);
+        }
 
         private void OnBattleEvent(GameEvent e)
         {
@@ -462,6 +494,10 @@ namespace MultiverseCardBattle.Screens
 
         private void RunAI()
         {
+            // ฉากการ์ดลับกำลังเล่น: รอให้จบก่อน
+            if (cinematic != null)
+                return;
+
             if (battle.IsOver || battle.HasPendingChoice)
                 return;
 
@@ -1500,6 +1536,14 @@ namespace MultiverseCardBattle.Screens
                                 entered.transform.position, false,
                                 () =>
                                 {
+                                    if (landing != null &&
+                                        SecretFx.IsSecret(card.Data) &&
+                                        cinematic == null)
+                                    {
+                                        PlayArrivalCinematic(card.Data, landing, hidden);
+                                        return;
+                                    }
+
                                     if (hidden != null)
                                         hidden.alpha = 1f;
 
@@ -1519,12 +1563,19 @@ namespace MultiverseCardBattle.Screens
                         }
                         else
                         {
-                            CardFx.Pop(entered);
-
-                            if (SecretFx.IsSecret(card.Data))
+                            if (SecretFx.IsSecret(card.Data) && cinematic == null)
                             {
-                                SecretFx.Arrive(
-                                    fxLayer, root, entered.transform.position, card.Data);
+                                PlayArrivalCinematic(card.Data, entered, null);
+                            }
+                            else
+                            {
+                                CardFx.Pop(entered);
+
+                                if (SecretFx.IsSecret(card.Data))
+                                {
+                                    SecretFx.Arrive(
+                                        fxLayer, root, entered.transform.position, card.Data);
+                                }
                             }
                         }
 
@@ -2071,84 +2122,36 @@ namespace MultiverseCardBattle.Screens
 
         private void ShowUnlockBanner(SecretUnlock unlock)
         {
-            bool nazarick = unlock.Style == BannerStyle.Nazarick;
-            bool yamato = unlock.Style == BannerStyle.Yamato;
-
-            Image dim = UIFactory.CreatePanel(
-                overlay, "BannerDim",
-                nazarick
-                    ? new Color(0.06f, 0f, 0.02f, 0.96f)
-                    : (yamato
-                        ? new Color(0f, 0.02f, 0.08f, 0.96f)
-                        : new Color(0f, 0f, 0f, 0.92f)));
-
-            UIFactory.Stretch(dim.rectTransform);
-
-            if (yamato)
-                BannerMagic.Create(overlay, unlock.Tint, true);
-            else
-                BannerMagic.Create(overlay, unlock.Tint);
-
-            // เปิดฉากด้วยแสงวาบเต็มจอ
-            SecretFx.Flash(overlay, unlock.Tint, 0.85f, 1.0f);
-            Sfx.Play(SoundId.Pack);
-
-            Button next = dim.gameObject.AddComponent<Button>();
-
-            next.transition = Selectable.Transition.None;
-            next.onClick.AddListener(() =>
-            {
-                bannerIndex++;
-                ShowResult();
-            });
-
-            Text title = ScreenKit.AddLabel(
-                overlay, unlock.Title, 58, TextAnchor.MiddleCenter,
-                0.03f, 0.8f, 0.97f, 0.95f, FontStyle.Bold);
-
-            title.color = unlock.Tint;
-            title.raycastTarget = false;
-            UIFactory.AddTextShadow(title);
-
-            Text sub = ScreenKit.AddLabel(
-                overlay, unlock.Subtitle, 32, TextAnchor.MiddleCenter,
-                0.2f, 0.73f, 0.8f, 0.8f);
-
-            sub.raycastTarget = false;
-
             CardData card = CardRegistry.Get(unlock.CardId);
 
-            string name = card != null ? card.CardName : unlock.CardId;
-
-            // ตัวการ์ดลับพลิกหมุนเข้ามากระแทกกลางจอ
-            if (card != null)
+            if (card == null)
             {
-                CardView reveal = CardView.Create(overlay, new Vector2(300f, 420f));
-
-                reveal.ShowData(card);
-
-                RectTransform revealRect = (RectTransform)reveal.transform;
-
-                revealRect.anchorMin = new Vector2(0.5f, 0.47f);
-                revealRect.anchorMax = new Vector2(0.5f, 0.47f);
-                revealRect.anchoredPosition = Vector2.zero;
-
-                CardReveal.Attach(reveal, overlay, unlock.Tint);
+                // ไม่พบข้อมูลการ์ด: ข้ามฉาก
+                bannerIndex++;
+                ShowResult();
+                return;
             }
 
-            Text unlocked = ScreenKit.AddLabel(
-                overlay, "Secret card unlocked: " + name, 36,
-                TextAnchor.MiddleCenter, 0.2f, 0.14f, 0.8f, 0.22f,
-                FontStyle.Bold);
+            unlockCinematicIndex = bannerIndex;
 
-            unlocked.color = UIFactory.Gold;
-            unlocked.raycastTarget = false;
+            unlockCinematic = SecretCinematic.Play(
+                overlay, SecretCinematic.Mode.Unlock, card,
+                unlock.Title, card.CardName, unlock.Subtitle,
+                null, null, null,
+                () =>
+                {
+                    bannerIndex++;
+                    ShowResult();
+                });
 
-            Text hint = ScreenKit.AddLabel(
-                overlay, "Click to continue", 24, TextAnchor.MiddleCenter,
-                0.3f, 0.05f, 0.7f, 0.11f);
+            // เวทวงกลมหมุนและประกายเดิม ซ้อนอยู่ในฉาก
+            BannerMagic.Create(
+                unlockCinematic.Layer, unlock.Tint, unlock.Style == BannerStyle.Yamato);
 
-            hint.raycastTarget = false;
+            // ให้อยู่หลังการ์ดและข้อความ (ต่อจากพื้นหลัง / ไฟสาด / รัศมี)
+            Transform magic = unlockCinematic.Layer.GetChild(unlockCinematic.Layer.childCount - 1);
+
+            magic.SetSiblingIndex(Mathf.Min(3, unlockCinematic.Layer.childCount - 1));
         }
 
         private void ShowResult()
@@ -2185,6 +2188,13 @@ namespace MultiverseCardBattle.Screens
                 if (battle.Winner != null)
                     Sfx.Play(won ? SoundId.Win : SoundId.Lose);
             }
+
+            // ฉากปลดล็อกกำลังเล่นอยู่: อย่าสร้างซ้ำตอนมีการวาดหน้าจอใหม่
+            if (unlockCinematic != null &&
+                unlockCinematicIndex == bannerIndex &&
+                unlockBanners != null &&
+                bannerIndex < unlockBanners.Count)
+                return;
 
             ScreenKit.ClearNow(overlay);
 
@@ -2235,6 +2245,9 @@ namespace MultiverseCardBattle.Screens
 
         private bool CanAct()
         {
+            if (cinematic != null)
+                return false;
+
             if (battle == null || battle.IsOver || battle.HasPendingChoice)
                 return false;
 
@@ -2803,9 +2816,33 @@ namespace MultiverseCardBattle.Screens
                 {
                     Vector3 position = view.transform.position;
 
-                    SecretFx.DevilTrigger(fxLayer, root, position);
+                    CardData dtData = view.Data != null
+                        ? view.Data
+                        : CardRegistry.Get(StarterCardLibrary.DevilTriggerId);
 
-                    CardFx.Flash(view, new Color(0.4f, 0.7f, 1f, 1f));
+                    CardView dtView = view;
+
+                    if (cinematic == null && dtData != null)
+                    {
+                        cinematic = SecretCinematic.Play(
+                            root, SecretCinematic.Mode.Transform, dtData,
+                            "", "Devil Trigger", SecretFx.Epithet(CardRegistry.Get(StarterCardLibrary.DevilTriggerId)),
+                            root, null,
+                            () =>
+                            {
+                                SecretFx.DevilTrigger(fxLayer, root, position);
+
+                                if (dtView != null)
+                                    CardFx.Flash(dtView, new Color(0.4f, 0.7f, 1f, 1f));
+                            },
+                            null);
+                    }
+                    else
+                    {
+                        SecretFx.DevilTrigger(fxLayer, root, position);
+
+                        CardFx.Flash(view, new Color(0.4f, 0.7f, 1f, 1f));
+                    }
                 }
 
                 devilFxInstance = 0;
