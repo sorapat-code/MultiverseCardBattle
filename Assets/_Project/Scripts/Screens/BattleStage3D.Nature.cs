@@ -66,6 +66,57 @@ namespace MultiverseCardBattle.Screens
             return material;
         }
 
+        private readonly Dictionary<string, Material> packMaterials = new Dictionary<string, Material>();
+
+        // ย้อมสี material ขาวไม่มี texture ตามชื่อ (ใบ/เปลือก/หิน/ดอก/เห็ด) ให้ฉากมีสีแม้แพ็คแปลงสีมาไม่ครบ
+        private Material PackMaterial(Material source, string model)
+        {
+            if (source == null)
+                return null;
+
+            bool white = source.HasProperty("_Color") && source.color.r > 0.93f && source.color.g > 0.93f && source.color.b > 0.93f;
+
+            if (source.mainTexture != null || !white)
+                return source;
+
+            string key = (source.name + "|" + model).ToLowerInvariant();
+
+            Material cached;
+
+            if (packMaterials.TryGetValue(key, out cached))
+                return cached;
+
+            Color color;
+
+            float variation = (Mathf.Abs(key.GetHashCode()) % 100) / 100f;
+
+            if (key.Contains("bark") || key.Contains("trunk") || key.Contains("wood") ||
+                key.Contains("branch") || key.Contains("log") || key.Contains("stump"))
+                color = Color.Lerp(new Color(0.3f, 0.19f, 0.11f), new Color(0.4f, 0.27f, 0.16f), variation);
+            else if (key.Contains("rock") || key.Contains("stone") || key.Contains("cliff") || key.Contains("boulder") || key.Contains("pebble"))
+                color = Color.Lerp(new Color(0.4f, 0.41f, 0.43f), new Color(0.52f, 0.5f, 0.48f), variation);
+            else if (key.Contains("mushroom"))
+                color = Color.Lerp(new Color(0.78f, 0.22f, 0.18f), new Color(0.85f, 0.72f, 0.55f), variation);
+            else if (key.Contains("flower") || key.Contains("petal"))
+                color = Color.Lerp(new Color(0.9f, 0.45f, 0.65f), new Color(0.95f, 0.8f, 0.35f), variation);
+            else
+                color = Color.Lerp(new Color(0.14f, 0.36f, 0.2f), new Color(0.3f, 0.5f, 0.2f), variation);
+
+            Material tinted = new Material(source);
+
+            tinted.color = color;
+
+            if (tinted.HasProperty("_Glossiness"))
+                tinted.SetFloat("_Glossiness", 0.08f);
+
+            if (tinted.HasProperty("_Metallic"))
+                tinted.SetFloat("_Metallic", 0f);
+
+            packMaterials[key] = tinted;
+
+            return tinted;
+        }
+
         // วางโมเดลหนึ่งชิ้น: ปรับให้สูงตามที่ต้องการ ฐานแตะพื้น สวม material เอง
         private GameObject Spawn(string path, Transform parent, float x, float z, float height, float yaw, float sink)
         {
@@ -148,6 +199,14 @@ namespace MultiverseCardBattle.Screens
                 {
                     for (int i = 0; i < materials.Length; i++)
                         materials[i] = NatureMaterial(materials[i]);
+
+                    renderer.sharedMaterials = materials;
+                }
+                else
+                {
+                    // แพ็คอื่น: ถ้า material ไม่มี texture และเป็นสีขาว (สี/texture หายตอนแปลงจาก URP) ย้อมสีตามชื่อ
+                    for (int i = 0; i < materials.Length; i++)
+                        materials[i] = PackMaterial(materials[i], model);
 
                     renderer.sharedMaterials = materials;
                 }
