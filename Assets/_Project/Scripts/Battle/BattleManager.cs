@@ -75,7 +75,8 @@ namespace MultiverseCardBattle.Battle
             {
                 return PendingDiscover != null ||
                        PendingAdapt != null ||
-                       PendingTarget != null;
+                       PendingTarget != null ||
+                       MulliganPending;
             }
         }
 
@@ -169,7 +170,93 @@ namespace MultiverseCardBattle.Battle
 
             Publish(TriggerType.BattleStart);
 
+            // Mulligan: รอให้ผู้เล่นเลือกเปลี่ยนการ์ดก่อน แล้วค่อยเริ่มเทิร์นแรก
+            if (BattleSetup.UseMulligan)
+            {
+                MulliganPending = true;
+                pendingFirstId = firstId;
+
+                Log("Mulligan: choose cards to replace");
+
+                return;
+            }
+
             TurnManager.StartBattle(firstId);
+        }
+
+        // ---------- Mulligan (เปลี่ยนการ์ดตอนเริ่มเกม) ----------
+
+        public bool MulliganPending { get; private set; }
+
+        private int pendingFirstId = 1;
+
+        /// <summary>เปลี่ยนการ์ดได้ (ไม่รวมการ์ด Coin)</summary>
+        public static bool CanMulligan(CardInstance card)
+        {
+            return card != null && card.Data != null &&
+                card.Data.CardID != StarterCardLibrary.CoinId;
+        }
+
+        /// <summary>
+        /// ใส่การ์ดที่เลือกกลับเด็ค จั่วใบใหม่จำนวนเท่ากันก่อน แล้วค่อยสับใบเก่าเข้าเด็ค
+        /// คืนจำนวนใบที่เปลี่ยน
+        /// </summary>
+        public int Mulligan(BattlePlayer player, IList<CardInstance> replace)
+        {
+            if (player == null || replace == null)
+                return 0;
+
+            List<CardInstance> returned = new List<CardInstance>();
+
+            foreach (CardInstance card in replace)
+            {
+                if (CanMulligan(card) && player.Hand.Remove(card))
+                    returned.Add(card);
+            }
+
+            for (int i = 0; i < returned.Count; i++)
+                DrawCard(player);
+
+            foreach (CardInstance card in returned)
+            {
+                card.ApplyBaseStats(card.Data);
+
+                player.Deck.Add(card);
+            }
+
+            player.Deck.Shuffle();
+
+            if (returned.Count > 0)
+                Log(player.Name + " replaces " + returned.Count + " card(s)");
+
+            Touch();
+
+            return returned.Count;
+        }
+
+        /// <summary>
+        /// จบช่วง Mulligan: ผู้เล่นเปลี่ยนใบที่เลือก, AI เปลี่ยนใบ Cost สูงเอง แล้วเริ่มเทิร์นแรก
+        /// </summary>
+        public void FinishMulligan(IList<CardInstance> humanReplace)
+        {
+            if (!MulliganPending)
+                return;
+
+            MulliganPending = false;
+
+            Mulligan(Player1, humanReplace);
+
+            List<CardInstance> aiReplace = new List<CardInstance>();
+
+            foreach (CardInstance card in Player2.Hand.Cards)
+            {
+                if (CanMulligan(card) && card.Data.Cost >= 5)
+                    aiReplace.Add(card);
+            }
+
+            Mulligan(Player2, aiReplace);
+
+            TurnManager.StartBattle(pendingFirstId);
         }
 
         // ผู้เล่นที่เริ่มก่อน และว่ามีการโยนเหรียญหรือไม่ (ให้ UI แสดงผล)

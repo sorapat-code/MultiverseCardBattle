@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using MultiverseCardBattle.Battle;
@@ -114,6 +115,20 @@ namespace MultiverseCardBattle.Screens
         private bool sawHeal;
 
         // การเลือกของผู้เล่น
+        // ลากการ์ด: ghost ตามเมาส์ แล้วตัดสินตอนปล่อย
+        private CardView dragGhost;
+        private CardInstance dragCard;
+        private bool dragFromHand;
+        private RectTransform dropZone;
+
+        // Mulligan
+        private RectTransform mulliganRoot;
+        private RectTransform mulliganRow;
+        private Button mulliganButton;
+        private readonly HashSet<CardInstance> mulliganPicks = new HashSet<CardInstance>();
+        private bool mulliganShown;
+        private bool mulliganDirty;
+
         private CardInstance selectedHand;
         private CardInstance selectedAttacker;
         private List<TargetCandidate> activeTargets =
@@ -173,6 +188,20 @@ namespace MultiverseCardBattle.Screens
                 battle.StartBattle();
                 return;
             }
+
+            // Mulligan: รอผู้เล่นเลือกเปลี่ยนการ์ดก่อน ยังไม่เริ่มเทิร์นแรก
+            if (battle.MulliganPending)
+            {
+                if (!mulliganShown)
+                    BeginMulligan();
+
+                if (mulliganDirty)
+                    RefreshMulligan();
+
+                return;
+            }
+
+            UpdateDrag();
 
             UpdateBanner();
 
@@ -463,6 +492,9 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddPanel(
                 root, "HandLane", new Color(0f, 0f, 0f, 0.35f),
                 0.34f, 0.0f, 0.865f, 0.262f);
+
+            // พื้นที่ปล่อยการ์ดที่ลากมาเล่น (ทั้งสนาม ไม่มีภาพ)
+            dropZone = UIFactory.CreateZone(root, "DropZone", 0.175f, 0.27f, 0.865f, 0.765f);
 
             enemyField = CreateRow(root, "EnemyField", 0.175f, 0.525f, 0.865f, 0.765f, 8f);
             playerField = CreateRow(root, "PlayerField", 0.175f, 0.27f, 0.865f, 0.515f, 8f);
@@ -951,6 +983,12 @@ namespace MultiverseCardBattle.Screens
                 }
 
                 view.Clicked += OnFieldCardClicked;
+
+                if (owner == Human)
+                    view.DragStarted += OnCardDragStarted;
+
+                if (card == dragCard)
+                    view.SetDimmed(true);
             }
         }
 
@@ -1023,6 +1061,10 @@ namespace MultiverseCardBattle.Screens
                 view.SetHighlight(highlight);
 
                 view.Clicked += OnHandCardClicked;
+                view.DragStarted += OnCardDragStarted;
+
+                if (card == dragCard)
+                    view.SetDimmed(true);
             }
         }
 
@@ -1833,6 +1875,332 @@ namespace MultiverseCardBattle.Screens
                 !battle.IsOver &&
                 !battle.HasPendingChoice &&
                 battle.CurrentPlayer == Human;
+        }
+
+        // ---------- ลากการ์ด ----------
+
+        private void OnCardDragStarted(CardView view)
+        {
+            if (mulliganRoot != null || dragCard != null ||
+                !CanAct() || view == null || view.Instance == null)
+                return;
+
+            CardInstance card = view.Instance;
+
+            if (card.OwnerID != Human.PlayerID)
+                return;
+
+            ClearSelection();
+
+            if (card.Zone == CardZone.Hand)
+            {
+                ActionResult check = BattleRules.ValidatePlayable(battle, Human, card);
+
+                if (!check.Success)
+                {
+                    SetHint(check.Message);
+                    return;
+                }
+
+                dragFromHand = true;
+
+                SetHint("Drop the card on the field to play it");
+            }
+            else if (card.Zone == CardZone.Field)
+            {
+                SelectAttacker(card);
+
+                // เลือกไม่สำเร็จ (ยังตีไม่ได้) จะมีข้อความบอกไว้แล้ว
+                if (selectedAttacker != card)
+                    return;
+
+                dragFromHand = false;
+            }
+            else
+            {
+                return;
+            }
+
+            dragCard = card;
+
+            dragGhost = CardView.Create(
+                root, card.Zone == CardZone.Hand ? HandCardSize : FieldCardSize);
+
+            dragGhost.ShowInstance(card);
+            dragGhost.SetInteractable(false);
+            dragGhost.transform.SetAsLastSibling();
+            dragGhost.transform.localScale = Vector3.one * 1.08f;
+
+            MoveGhost();
+
+            dirty = true;
+        }
+
+        private static Vector2 PointerPosition()
+        {
+            Pointer pointer = Pointer.current;
+
+            return pointer != null ? pointer.position.ReadValue() : Vector2.zero;
+        }
+
+        private static bool PointerReleased()
+        {
+            if (Mouse.current != null && Mouse.current.leftButton.wasReleasedThisFrame)
+                return true;
+
+            return Touchscreen.current != null &&
+                Touchscreen.current.primaryTouch.press.wasReleasedThisFrame;
+        }
+
+        private void MoveGhost()
+        {
+            if (dragGhost == null)
+                return;
+
+            Vector2 pos = PointerPosition();
+
+            dragGhost.transform.position = new Vector3(pos.x, pos.y, 0f);
+        }
+
+        private void UpdateDrag()
+        {
+            if (dragCard == null)
+                return;
+
+            Keyboard keyboard = Keyboard.current;
+
+            bool cancel =
+                !CanAct() ||
+                (keyboard != null && keyboard.escapeKey.wasPressedThisFrame);
+
+            if (cancel)
+            {
+                EndDrag();
+                ClearSelection();
+                return;
+            }
+
+            MoveGhost();
+
+            if (PointerReleased())
+                DropCard();
+        }
+
+        private void EndDrag()
+        {
+            if (dragGhost != null)
+                Destroy(dragGhost.gameObject);
+
+            dragGhost = null;
+            dragCard = null;
+
+            dirty = true;
+        }
+
+        private void DropCard()
+        {
+            Vector2 pos = PointerPosition();
+
+            CardInstance card = dragCard;
+            bool fromHand = dragFromHand;
+
+            EndDrag();
+
+            if (fromHand)
+            {
+                bool inField =
+                    dropZone != null &&
+                    RectTransformUtility.RectangleContainsScreenPoint(dropZone, pos, null);
+
+                if (inField)
+                    PlayDroppedCard(card);
+                else
+                    ClearSelection();
+
+                return;
+            }
+
+            object target = FindDropTarget(pos);
+
+            if (target == null || ReferenceEquals(target, card))
+            {
+                ClearSelection();
+                return;
+            }
+
+            TryAttack(target);
+
+            // ปล่อยผิดเป้า: ยกเลิกการเลือก
+            if (selectedAttacker == card)
+                ClearSelection();
+        }
+
+        // ลงการ์ดที่ลากมาปล่อยบนสนาม: ถ้าต้องเลือกเป้าหมาย เข้าโหมดเลือกเป้าเหมือนการคลิก
+        private void PlayDroppedCard(CardInstance card)
+        {
+            if (!CanAct() || card == null)
+            {
+                ClearSelection();
+                return;
+            }
+
+            ActionResult check = BattleRules.ValidatePlayable(battle, Human, card);
+
+            if (!check.Success)
+            {
+                SetHint(check.Message);
+                return;
+            }
+
+            List<TargetCandidate> targets =
+                BattleRules.GetPlayTargets(battle, Human, card);
+
+            if (targets.Count == 0)
+            {
+                ClearSelection();
+
+                Report(battle.Submit(new PlayCardCommand(Human, card)));
+                return;
+            }
+
+            selectedHand = card;
+            selectedAttacker = null;
+            activeTargets = targets;
+
+            SetHint("Choose a target for " + card.Data.CardName);
+        }
+
+        // ยูนิต / Leader ที่อยู่ใต้ตำแหน่งที่ปล่อย (null = ไม่มี)
+        private object FindDropTarget(Vector2 screenPos)
+        {
+            if (EventSystem.current == null)
+                return null;
+
+            PointerEventData data = new PointerEventData(EventSystem.current);
+
+            data.position = screenPos;
+
+            List<RaycastResult> results = new List<RaycastResult>();
+
+            EventSystem.current.RaycastAll(data, results);
+
+            foreach (RaycastResult result in results)
+            {
+                if (result.gameObject == null)
+                    continue;
+
+                CardView view = result.gameObject.GetComponentInParent<CardView>();
+
+                if (view != null && view.Instance != null)
+                    return view.Instance;
+
+                Transform hit = result.gameObject.transform;
+
+                if (enemyLeader != null && hit.IsChildOf(enemyLeader.transform))
+                    return Ai;
+            }
+
+            return null;
+        }
+
+        // ---------- Mulligan (เปลี่ยนการ์ดตอนเริ่มเกม) ----------
+
+        private void BeginMulligan()
+        {
+            mulliganShown = true;
+
+            mulliganPicks.Clear();
+
+            Image overlay = UIFactory.CreatePanel(
+                root, "Mulligan", new Color(0f, 0f, 0f, 0.92f));
+
+            UIFactory.Stretch(overlay.rectTransform);
+
+            mulliganRoot = overlay.rectTransform;
+
+            mulliganRoot.SetAsLastSibling();
+
+            string order = battle.FirstPlayerID == Human.PlayerID
+                ? "You go first"
+                : Ai.Name + " goes first  -  you get The Coin (+1 Energy)";
+
+            ScreenKit.AddLabel(
+                mulliganRoot,
+                "<b>MULLIGAN</b>\n<size=28>" + order +
+                "\nClick the cards you want to replace (once only)</size>",
+                48, TextAnchor.UpperCenter, 0.08f, 0.68f, 0.92f, 0.97f);
+
+            mulliganRow = CreateRow(
+                mulliganRoot, "MulliganHand", 0.04f, 0.28f, 0.96f, 0.68f, 18f);
+
+            mulliganButton = ScreenKit.AddButton(
+                mulliganRoot, "Keep all", ConfirmMulligan,
+                UIFactory.Success, 0.38f, 0.1f, 0.62f, 0.2f, 32);
+
+            RefreshMulligan();
+        }
+
+        private void RefreshMulligan()
+        {
+            mulliganDirty = false;
+
+            ScreenKit.ClearNow(mulliganRow);
+
+            Vector2 size = new Vector2(HandCardSize.x * 1.55f, HandCardSize.y * 1.55f);
+
+            foreach (CardInstance card in Human.Hand.Cards)
+            {
+                CardView view = CardView.Create(mulliganRow, size);
+
+                view.ShowInstance(card);
+
+                bool replaceable = BattleManager.CanMulligan(card);
+                bool picked = mulliganPicks.Contains(card);
+
+                view.SetHighlight(picked ? CardHighlight.Selected : CardHighlight.None);
+
+                if (picked)
+                    view.SetStateLabel("REPLACE");
+                else if (!replaceable)
+                    view.SetStateLabel("KEPT");
+
+                view.SetDimmed(picked);
+
+                view.Clicked += OnMulliganCardClicked;
+            }
+
+            UIFactory.SetButtonLabel(
+                mulliganButton,
+                mulliganPicks.Count == 0
+                    ? "Keep all"
+                    : "Replace " + mulliganPicks.Count + " card(s)");
+        }
+
+        private void OnMulliganCardClicked(CardView view)
+        {
+            if (view == null || view.Instance == null ||
+                !BattleManager.CanMulligan(view.Instance))
+                return;
+
+            if (!mulliganPicks.Add(view.Instance))
+                mulliganPicks.Remove(view.Instance);
+
+            mulliganDirty = true;
+        }
+
+        private void ConfirmMulligan()
+        {
+            if (!battle.MulliganPending)
+                return;
+
+            battle.FinishMulligan(new List<CardInstance>(mulliganPicks));
+
+            if (mulliganRoot != null)
+                Destroy(mulliganRoot.gameObject);
+
+            mulliganRoot = null;
+
+            dirty = true;
         }
 
         private void OnHandCardClicked(CardView view)

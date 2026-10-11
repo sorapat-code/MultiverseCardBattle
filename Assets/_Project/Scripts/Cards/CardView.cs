@@ -27,11 +27,17 @@ namespace MultiverseCardBattle.Screens
     /// การ์ด 1 ใบบนหน้าจอ สร้างด้วยโค้ดผ่าน CardView.Create
     /// แสดงได้ 2 แบบ: CardInstance (ในการต่อสู้) หรือ CardData (คอลเลกชัน/เด็ค)
     /// </summary>
-    public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    public class CardView : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler,
+        IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         public event Action<CardView> Clicked;
         public event Action<CardView> HoverEntered;
         public event Action<CardView> HoverExited;
+
+        // เริ่มลากการ์ด (หน้า Battle ใช้ลากลงสนาม / ลากไปตี) ถ้าไม่มีใครรับ จะส่งต่อให้ ScrollRect ด้านบน
+        public event Action<CardView> DragStarted;
+
+        private bool forwardingDrag;
 
         public CardInstance Instance { get; private set; }
         public CardData Data { get; private set; }
@@ -533,6 +539,44 @@ namespace MultiverseCardBattle.Screens
         {
             if (Clicked != null)
                 Clicked(this);
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (DragStarted != null)
+            {
+                DragStarted(this);
+
+                return;
+            }
+
+            forwardingDrag = true;
+
+            if (transform.parent != null)
+            {
+                ExecuteEvents.ExecuteHierarchy(
+                    transform.parent.gameObject, eventData, ExecuteEvents.beginDragHandler);
+            }
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (forwardingDrag && transform.parent != null)
+            {
+                ExecuteEvents.ExecuteHierarchy(
+                    transform.parent.gameObject, eventData, ExecuteEvents.dragHandler);
+            }
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (forwardingDrag && transform.parent != null)
+            {
+                ExecuteEvents.ExecuteHierarchy(
+                    transform.parent.gameObject, eventData, ExecuteEvents.endDragHandler);
+            }
+
+            forwardingDrag = false;
         }
 
         public void OnPointerEnter(PointerEventData eventData)

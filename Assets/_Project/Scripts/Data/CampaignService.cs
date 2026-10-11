@@ -88,6 +88,7 @@ namespace MultiverseCardBattle.Data
 
             // โยนเหรียญสุ่มว่าใครเริ่มก่อน
             BattleSetup.UseCoinFlip = true;
+            BattleSetup.UseMulligan = true;
 
             BattleSetup.PlayerDeck = StarterDecks.ToCards(deck.CardIDs);
             BattleSetup.PlayerName = "You";

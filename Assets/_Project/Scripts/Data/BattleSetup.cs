@@ -23,6 +23,9 @@ namespace MultiverseCardBattle.Data
         // false = ผู้เล่น 1 เริ่มก่อนเสมอ (ใช้ในเทสต์)
         public static bool UseCoinFlip;
 
+        // เปิดช่วงเปลี่ยนการ์ด (Mulligan) ก่อนเริ่มเทิร์นแรก
+        public static bool UseMulligan;
+
         // 1 หรือ 2 = บังคับว่าใครเริ่มก่อน (ใช้กับ UseCoinFlip) 0 = สุ่ม
         public static int FirstPlayerOverride;
 
@@ -43,6 +46,7 @@ namespace MultiverseCardBattle.Data
             Stage = null;
 
             UseCoinFlip = false;
+            UseMulligan = false;
             FirstPlayerOverride = 0;
         }
     }
