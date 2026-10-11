@@ -610,6 +610,27 @@ namespace MultiverseCardBattle.Data
             return effect;
         }
 
+        // DealDamage ที่ได้ความเสียหายเพิ่มเมื่อเป้าหมายมี HP ไม่เกิน maxHealth (ก่อนโดนโจมตี)
+        private static EffectData FxDamageBonus(int value, int bonus, int maxHealth)
+        {
+            EffectData effect = Fx(EffectType.DealDamage, value);
+
+            effect.BonusValue = bonus;
+            effect.BonusIfHealthAtMost = maxHealth;
+
+            return effect;
+        }
+
+        // DrawCard ที่ถ้าจั่วได้ Spell จะลด Cost ลง discount จนจบเทิร์น
+        private static EffectData FxDrawSpellDiscount(int count, int discount)
+        {
+            EffectData effect = Fx(EffectType.DrawCard, count);
+
+            effect.DrawnSpellDiscount = discount;
+
+            return effect;
+        }
+
         private static EffectData FxCard(EffectType type, CardData card)
         {
             EffectData effect = Fx(type);

@@ -155,6 +155,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 - **ตัวประกอบ `SUP_001`–`SUP_026`** (ยูนิต 26 ใบ จาก 16 จักรวาล): Common 11 / Rare 10 / Epic 5 — เช่น Konohamaru, Rock Lee, Usopp, Chopper, Krillin, Connie, Sasha, March 7th, Chixia, Kobeni, Crestfallen Warrior (Common); Nami, Uryu, Nobara, Mash, Zenitsu, Power, Lady, Solaire, Cha Hae-In, Polnareff (Rare); Igris, Albedo, Shalltear, Rengoku, Gaara (Epic)
 - **เวทมนตร์ `MAG_001`–`MAG_015`** (15 ใบ ใส่ Tag ธาตุเพื่อให้เสียง/เอฟเฟกต์เลือกตามธาตุ): Spark, Frost Shard, Healing Rain, Gale Slash, Stone Wall, Scholar's Notes, Chain Lightning, Shadow Bind, Blessing of Dawn, Spellbreaker (Fast), Emergency Ward (Fast), Inferno, Rewind Fate, World's End (Legendary), Flame Dart
+- **เอฟเฟกต์เสริมใน `EffectData`** (ใช้ในตัวประกอบบางใบ): `BonusValue` + `BonusIfHealthAtMost` กับ `DealDamage` = ถ้าเป้าหมายยูนิตมี HP ไม่เกินค่านี้ (ตรวจก่อนโดนดาเมจ) ดาเมจเพิ่ม — ใช้กับ `SUP_003` Usopp (1 ดาเมจ, +1 ถ้า HP ≤ 2); `DrawnSpellDiscount` กับ `DrawCard` = ถ้าจั่วได้ Spell ลด Cost ลงจนจบเทิร์นของเจ้าของ (สถานะ `CostDown` อายุ 1) — ใช้กับ `SUP_012` Nami; เทสต์อยู่ที่ `Tests/PlayMode/RosterEffectTests.cs`
 - เด็คตั้งต้น (30 ใบ), เด็คศัตรู/รางวัลของด่าน 1–10, และ Tutorial ใช้การ์ดชุดนี้ (`StarterDecks`, `CampaignLibrary`, `TutorialSetup`)
 - การ์ดทุกใบต้องได้มาจากด่านหรือเด็คตั้งต้นเสมอ (มีเทสต์ `EveryCollectibleCard_CanBeObtained`) — เพิ่มการ์ดใหม่แล้วอย่าลืมใส่เป็นรางวัลด่านหรือในเด็คตั้งต้น
 

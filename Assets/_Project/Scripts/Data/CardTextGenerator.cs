@@ -316,6 +316,13 @@ namespace MultiverseCardBattle.Data
             switch (effect.Type)
             {
                 case EffectType.DealDamage:
+                    if (effect.BonusValue > 0)
+                    {
+                        return "deal " + value + " damage to " + target +
+                               " (+" + effect.BonusValue + " if its health is " +
+                               effect.BonusIfHealthAtMost + " or less)";
+                    }
+
                     return "deal " + value + " damage to " + target;
 
                 case EffectType.DealTrueDamage:
@@ -346,6 +353,13 @@ namespace MultiverseCardBattle.Data
                     return "set " + target + " cost to " + value;
 
                 case EffectType.DrawCard:
+                    if (effect.DrawnSpellDiscount > 0)
+                    {
+                        return "draw " + value + (value == 1 ? " card" : " cards") +
+                               "; a Spell drawn this way costs " +
+                               effect.DrawnSpellDiscount + " less this turn";
+                    }
+
                     return "draw " + value + (value == 1 ? " card" : " cards");
 
                 case EffectType.DiscardCard:

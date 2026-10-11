@@ -269,12 +269,21 @@ namespace MultiverseCardBattle.Effects
 
             if (context.TargetCard != null)
             {
+                int amount = effect.Value;
+
+                // โบนัสเมื่อเป้าหมายเลือดน้อย (ตรวจก่อนโดนความเสียหาย)
+                if (effect.BonusValue > 0 &&
+                    context.TargetCard.CurrentHealth <= effect.BonusIfHealthAtMost)
+                {
+                    amount += effect.BonusValue;
+                }
+
                 if (context.Battle != null)
                 {
                     int dealt = context.Battle.DamageUnit(
                         context.SourceCard,
                         context.TargetCard,
-                        effect.Value,
+                        amount,
                         trueDamage);
 
                     if (dealt > 0 && effect.HealOwnerPerHit > 0 &&
@@ -287,7 +296,7 @@ namespace MultiverseCardBattle.Effects
                     return;
                 }
 
-                context.TargetCard.CurrentHealth -= effect.Value;
+                context.TargetCard.CurrentHealth -= amount;
 
                 if (context.TargetCard.CurrentHealth < 0)
                     context.TargetCard.CurrentHealth = 0;
@@ -466,7 +475,16 @@ namespace MultiverseCardBattle.Effects
                 if (context.Battle != null)
                 {
                     // จัดการ Fatigue / มือเต็ม / Trigger Draw ให้เอง
-                    context.Battle.DrawCard(context.TargetPlayer);
+                    CardInstance drawn = context.Battle.DrawCard(context.TargetPlayer);
+
+                    // จั่วได้ Spell: ลด Cost จนจบเทิร์น (สถานะ CostDown อายุ 1 เทิร์นของเจ้าของ)
+                    if (drawn != null && effect.DrawnSpellDiscount > 0 &&
+                        drawn.Data != null && drawn.Data.Type == CardType.Spell)
+                    {
+                        drawn.AddStatus(StatusType.CostDown, effect.DrawnSpellDiscount, 1);
+                        context.Battle.RefreshModifiers();
+                    }
+
                     continue;
                 }
 

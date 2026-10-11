@@ -43,7 +43,7 @@ namespace MultiverseCardBattle.Data
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Common,
                 2, 2, 2, Keyword.None, CardTag.Human | CardTag.Ranged,
                 Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
-                    Fx(EffectType.DealDamage, 1))));
+                    FxDamageBonus(1, 1, 2))));
 
             Add(Unit("SUP_004", "Tony Tony Chopper",
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Common,
@@ -89,7 +89,7 @@ namespace MultiverseCardBattle.Data
                 Universe.OnePiece, Faction.StrawHatPirates, CardRarity.Rare,
                 3, 2, 3, Keyword.None, CardTag.Human | CardTag.Support | CardTag.Lightning,
                 Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
-                    Fx(EffectType.DrawCard, 1))));
+                    FxDrawSpellDiscount(1, 1))));
 
             Add(Unit("SUP_013", "Uryu Ishida",
                 Universe.Bleach, Faction.SoulSociety, CardRarity.Rare,
