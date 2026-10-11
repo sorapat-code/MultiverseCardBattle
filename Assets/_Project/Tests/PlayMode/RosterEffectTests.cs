@@ -10,7 +10,7 @@ using MultiverseCardBattle.Targeting;
 
 namespace MultiverseCardBattle.Tests
 {
-    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2) และ Nami (จั่ว Spell แล้วลด Cost)</summary>
+    /// <summary>ทดสอบสกิลพิเศษของ Usopp (ดาเมจเพิ่มเมื่อเป้า HP ≤ 2), Nami (จั่ว Spell แล้วลด Cost) และ Dan Heng</summary>
     public class RosterEffectTests
     {
         private GameObject host;
@@ -200,6 +200,71 @@ namespace MultiverseCardBattle.Tests
 
             Assert.IsNotNull(drawn);
             Assert.AreEqual(3, drawn.CurrentCost);
+        }
+
+        private CardInstance Place(BattlePlayer owner, string id)
+        {
+            CardInstance card = new CardInstance(CardRegistry.Get(id));
+
+            card.OwnerID = owner.PlayerID;
+
+            battle.SummonUnit(card, owner);
+
+            card.SummonedOnTurn = -100;
+
+            return card;
+        }
+
+        [Test]
+        public void DanHeng_FullHealthTarget_TakesExtraTwoDamage()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance danHeng = Place(P1, "SUP_027");
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, danHeng, enemy, null)).Success);
+
+            // 2 (โบนัส) + 4 (ATK) = 6
+            Assert.AreEqual(3, enemy.CurrentHealth);
+        }
+
+        [Test]
+        public void DanHeng_DamagedTarget_NoExtraDamage()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+
+            enemy.CurrentHealth = 8;
+
+            CardInstance danHeng = Place(P1, "SUP_027");
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, danHeng, enemy, null)).Success);
+
+            Assert.AreEqual(4, enemy.CurrentHealth);
+        }
+
+        [Test]
+        public void DanHeng_WithMarch7th_GainsShieldAfterFirstAttack()
+        {
+            Place(P1, "SUP_008");
+
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance danHeng = Place(P1, "SUP_027");
+
+            Assert.IsFalse(danHeng.HasKeyword(Keyword.Shield));
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, danHeng, enemy, null)).Success);
+
+            Assert.IsTrue(danHeng.HasKeyword(Keyword.Shield));
+        }
+
+        [Test]
+        public void DanHeng_WithoutMarch7th_GetsNoShield()
+        {
+            CardInstance enemy = EnemyWithHealth(9);
+            CardInstance danHeng = Place(P1, "SUP_027");
+
+            Assert.IsTrue(battle.Submit(new AttackCommand(P1, danHeng, enemy, null)).Success);
+
+            Assert.IsFalse(danHeng.HasKeyword(Keyword.Shield));
         }
     }
 }

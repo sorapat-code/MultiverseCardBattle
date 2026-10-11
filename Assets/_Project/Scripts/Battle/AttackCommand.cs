@@ -103,6 +103,17 @@ namespace MultiverseCardBattle.Battle
                     battle, targetUnit, attackerHealthBefore, targetHealthBefore);
             }
 
+            // หลังโจมตี: ความสามารถแบบ "หลังโจมตี" (เช่น ได้ Shield)
+            if (Attacker.Zone == CardZone.Field && Attacker.CurrentHealth > 0)
+            {
+                battle.Publish(
+                    TriggerType.AfterAttack,
+                    card: Attacker,
+                    player: Player,
+                    target: targetUnit,
+                    targetPlayer: targetLeader);
+            }
+
             // ยูนิตเดียวกันโจมตีครบ 3 ครั้งโดยไม่ตาย (ปลดล็อก Vergil)
             if (Attacker.Zone == CardZone.Field && Attacker.CurrentHealth > 0)
                 battle.Stats.NoteSurvivingAttacks(Player.PlayerID, Attacker.TotalAttacks);

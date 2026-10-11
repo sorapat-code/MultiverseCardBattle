@@ -8,5 +8,8 @@ namespace MultiverseCardBattle.Conditions
         public ConditionType Condition;
 
         public int Value;
+
+        // ใช้กับ AllyCardOnField
+        public string CardID;
     }
 }

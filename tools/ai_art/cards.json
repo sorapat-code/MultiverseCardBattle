@@ -189,6 +189,13 @@
       "desc": "a stoic young man with short red hair, teal eyes with dark rings, a small red mark on his forehead, swirling sand around him, desert backdrop"
     },
     {
+      "id": "SUP_027",
+      "name": "Dan Heng",
+      "kind": "unit",
+      "ref": "Dan Heng (Honkai: Star Rail)",
+      "desc": "a calm young spearman with messy black hair, a teal-and-white coat and a long jade spear, sitting mid-air with arms crossed"
+    },
+    {
       "id": "MAG_001",
       "name": "Spark",
       "kind": "spell",

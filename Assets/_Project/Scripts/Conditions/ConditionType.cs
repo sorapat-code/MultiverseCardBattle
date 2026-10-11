@@ -37,6 +37,15 @@ namespace MultiverseCardBattle.Conditions
         Combo,
 
         // เป้าหมาย (ของ Trigger) ติดสถานะ Marked อยู่
-        TargetMarked
+        TargetMarked,
+
+        // เป้าหมาย (ของ Trigger) เป็นยูนิตที่มี HP เต็ม
+        TargetFullHealth,
+
+        // เจ้าของมียูนิตที่มี CardID ตาม ConditionData.CardID อยู่บนสนาม
+        AllyCardOnField,
+
+        // ยูนิตต้นเหตุกำลังโจมตีครั้งแรกของเทิร์นนี้ (ใช้กับ Trigger Attack / AfterAttack)
+        FirstAttackThisTurn
     }
 }

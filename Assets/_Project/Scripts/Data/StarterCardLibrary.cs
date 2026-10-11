@@ -610,6 +610,32 @@ namespace MultiverseCardBattle.Data
             return effect;
         }
 
+        private static ConditionData Cond(ConditionType type, string cardId = null, int value = 0)
+        {
+            ConditionData data = new ConditionData();
+
+            data.Condition = type;
+            data.Value = value;
+            data.CardID = cardId;
+
+            return data;
+        }
+
+        // Action ที่มีหลายเงื่อนไข (ต้องผ่านทุกข้อ)
+        private static CardActionData ActWhen(
+            TriggerType trigger,
+            TargetRule rule,
+            TargetSelection selection,
+            ConditionData[] conditions,
+            params EffectData[] effects)
+        {
+            CardActionData action = Act(trigger, rule, selection, effects);
+
+            action.Conditions.AddRange(conditions);
+
+            return action;
+        }
+
         // DealDamage ที่ได้ความเสียหายเพิ่มเมื่อเป้าหมายมี HP ไม่เกิน maxHealth (ก่อนโดนโจมตี)
         private static EffectData FxDamageBonus(int value, int bonus, int maxHealth)
         {

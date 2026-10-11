@@ -28,7 +28,7 @@ namespace MultiverseCardBattle.Tests
                 }
             }
 
-            Assert.AreEqual(26, units);
+            Assert.AreEqual(27, units);
             Assert.AreEqual(15, spells);
         }
 

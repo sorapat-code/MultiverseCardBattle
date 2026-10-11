@@ -41,6 +41,7 @@ namespace MultiverseCardBattle.Battle
                 case TriggerType.LeaderAttack:
                 case TriggerType.OnTarget:
                 case TriggerType.Graveyard:
+                case TriggerType.AfterAttack:
                     Fire(e.Card, e);
                     break;
 
@@ -96,6 +97,7 @@ namespace MultiverseCardBattle.Battle
             return trigger == TriggerType.TurnStart ||
                    trigger == TriggerType.TurnEnd ||
                    trigger == TriggerType.Attack ||
+                   trigger == TriggerType.AfterAttack ||
                    trigger == TriggerType.Hit ||
                    trigger == TriggerType.LeaderAttack;
         }

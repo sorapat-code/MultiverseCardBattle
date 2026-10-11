@@ -79,6 +79,11 @@ namespace MultiverseCardBattle.Data
                 if (prefix.Length > 0)
                     text.Append(prefix).Append(' ');
 
+                string conditions = ConditionsText(action);
+
+                if (conditions.Length > 0)
+                    text.Append(conditions).Append(", ");
+
                 text.Append(string.Join(", ", parts.ToArray())).Append('.');
             }
 
@@ -230,9 +235,47 @@ namespace MultiverseCardBattle.Data
                 case TriggerType.LeaderAttack: return "On leader attack:";
                 case TriggerType.OnTarget: return "When targeted:";
                 case TriggerType.Graveyard: return "When sent to the Graveyard:";
+                case TriggerType.AfterAttack: return "After attacking:";
                 case TriggerType.Spellburst: return "Spellburst:";
                 default: return "";
             }
+        }
+
+        // เงื่อนไขของ Action เป็นข้อความ เช่น "if the target has full health and March 7th is on the field"
+        // (เงื่อนไขเก่าอย่าง Combo แสดงผ่าน prefix อยู่แล้ว จึงไม่ซ้ำที่นี่)
+        private static string ConditionsText(CardActionData action)
+        {
+            if (action.Conditions == null)
+                return "";
+
+            List<string> phrases = new List<string>();
+
+            foreach (ConditionData condition in action.Conditions)
+            {
+                if (condition == null)
+                    continue;
+
+                switch (condition.Condition)
+                {
+                    case ConditionType.TargetFullHealth:
+                        phrases.Add("the target has full health");
+                        break;
+
+                    case ConditionType.AllyCardOnField:
+                        CardData ally = CardRegistry.Get(condition.CardID);
+
+                        phrases.Add(
+                            (ally != null ? ally.CardName : condition.CardID) +
+                            " is on the field");
+                        break;
+
+                    case ConditionType.FirstAttackThisTurn:
+                        phrases.Add("this is its first attack this turn");
+                        break;
+                }
+            }
+
+            return phrases.Count == 0 ? "" : "if " + string.Join(" and ", phrases.ToArray());
         }
 
         private static string TargetText(CardActionData action)
@@ -279,7 +322,11 @@ namespace MultiverseCardBattle.Data
                     return "all units";
 
                 case TargetRule.EventSource:
-                    return "the source";
+                    // Attack / AfterAttack: ต้นเหตุของเหตุการณ์คือเป้าหมายที่ถูกโจมตี
+                    return action.Trigger == TriggerType.Attack ||
+                           action.Trigger == TriggerType.AfterAttack
+                        ? "the target"
+                        : "the source";
 
                 default:
                     return "the target";

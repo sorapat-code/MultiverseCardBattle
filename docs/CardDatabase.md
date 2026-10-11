@@ -150,12 +150,13 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 ## ชุดการ์ดปัจจุบัน (Roster)
 
-เขียนอยู่ที่ `Data/StarterCardLibrary.Roster.cs` (ตัวประกอบ 26 + เวทมนตร์ 15 + อุปกรณ์ 8 = 49 ใบ) ตัวละครสำคัญระดับ Legendary/Secret เจ้าของโปรเจกต์เพิ่มเอง
+เขียนอยู่ที่ `Data/StarterCardLibrary.Roster.cs` (ตัวประกอบ 27 + เวทมนตร์ 15 + อุปกรณ์ 8 = 50 ใบ) ตัวละครสำคัญระดับ Legendary/Secret เจ้าของโปรเจกต์เพิ่มเอง
 ตัวประกอบทุกใบไม่เกิน Epic (มีเทสต์ตรวจ `RosterTests`)
 
-- **ตัวประกอบ `SUP_001`–`SUP_026`** (ยูนิต 26 ใบ จาก 16 จักรวาล): Common 11 / Rare 10 / Epic 5 — เช่น Konohamaru, Rock Lee, Usopp, Chopper, Krillin, Connie, Sasha, March 7th, Chixia, Kobeni, Crestfallen Warrior (Common); Nami, Uryu, Nobara, Mash, Zenitsu, Power, Lady, Solaire, Cha Hae-In, Polnareff (Rare); Igris, Albedo, Shalltear, Rengoku, Gaara (Epic)
+- **ตัวประกอบ `SUP_001`–`SUP_027`** (ยูนิต 27 ใบ จาก 16 จักรวาล): Common 11 / Rare 11 / Epic 5 — เช่น Konohamaru, Rock Lee, Usopp, Chopper, Krillin, Connie, Sasha, March 7th, Chixia, Kobeni, Crestfallen Warrior (Common); Nami, Uryu, Nobara, Mash, Zenitsu, Power, Lady, Solaire, Cha Hae-In, Polnareff, Dan Heng (Rare); Igris, Albedo, Shalltear, Rengoku, Gaara (Epic)
 - **เวทมนตร์ `MAG_001`–`MAG_015`** (15 ใบ ใส่ Tag ธาตุเพื่อให้เสียง/เอฟเฟกต์เลือกตามธาตุ): Spark, Frost Shard, Healing Rain, Gale Slash, Stone Wall, Scholar's Notes, Chain Lightning, Shadow Bind, Blessing of Dawn, Spellbreaker (Fast), Emergency Ward (Fast), Inferno, Rewind Fate, World's End (Legendary), Flame Dart
 - **เอฟเฟกต์เสริมใน `EffectData`** (ใช้ในตัวประกอบบางใบ): `BonusValue` + `BonusIfHealthAtMost` กับ `DealDamage` = ถ้าเป้าหมายยูนิตมี HP ไม่เกินค่านี้ (ตรวจก่อนโดนดาเมจ) ดาเมจเพิ่ม — ใช้กับ `SUP_003` Usopp (1 ดาเมจ, +1 ถ้า HP ≤ 2); `DrawnSpellDiscount` กับ `DrawCard` = ถ้าจั่วได้ Spell ลด Cost ลงจนจบเทิร์นของเจ้าของ (สถานะ `CostDown` อายุ 1) — ใช้กับ `SUP_012` Nami; เทสต์อยู่ที่ `Tests/PlayMode/RosterEffectTests.cs`
+- **เงื่อนไข/Trigger ที่ Dan Heng (`SUP_027`) ใช้**: `ConditionType.TargetFullHealth` (เป้าหมายของ Trigger HP เต็ม), `AllyCardOnField` (ระบุ `ConditionData.CardID` — มียูนิต ID นั้นบนสนาม ไม่นับตัวเอง), `FirstAttackThisTurn` (โจมตีครั้งแรกของเทิร์น) และ `TriggerType.AfterAttack` (ยิงหลังสู้เสร็จถ้ายังอยู่บนสนาม); สกิล: โจมตียูนิตที่ HP เต็ม +2 ดาเมจ (แยกเป็นดาเมจก่อนสู้ ถ้ามี Shield ที่เป้าจะโดน Shield กินก่อน) / หลังโจมตีครั้งแรกของเทิร์น ถ้า March 7th อยู่บนสนามได้ Shield — เป็นรางวัลด่าน 5; เทสต์ใน `RosterEffectTests`
 - เด็คตั้งต้น (30 ใบ), เด็คศัตรู/รางวัลของด่าน 1–10, และ Tutorial ใช้การ์ดชุดนี้ (`StarterDecks`, `CampaignLibrary`, `TutorialSetup`)
 - การ์ดทุกใบต้องได้มาจากด่านหรือเด็คตั้งต้นเสมอ (มีเทสต์ `EveryCollectibleCard_CanBeObtained`) — เพิ่มการ์ดใหม่แล้วอย่าลืมใส่เป็นรางวัลด่านหรือในเด็คตั้งต้น
 

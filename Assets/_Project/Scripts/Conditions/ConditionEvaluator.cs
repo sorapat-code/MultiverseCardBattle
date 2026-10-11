@@ -87,6 +87,30 @@ namespace MultiverseCardBattle.Conditions
                     return context.TargetCard != null &&
                            context.TargetCard.HasStatus(StatusType.Marked);
 
+                case ConditionType.TargetFullHealth:
+                    return context.TargetCard != null &&
+                           context.TargetCard.CurrentHealth > 0 &&
+                           context.TargetCard.CurrentHealth >= context.TargetCard.MaxHealth;
+
+                case ConditionType.AllyCardOnField:
+                    if (string.IsNullOrEmpty(condition.CardID))
+                        return false;
+
+                    foreach (CardInstance ally in player.Field)
+                    {
+                        if (ally != context.SourceCard &&
+                            ally.CurrentHealth > 0 &&
+                            ally.Data != null &&
+                            ally.Data.CardID == condition.CardID)
+                            return true;
+                    }
+
+                    return false;
+
+                case ConditionType.FirstAttackThisTurn:
+                    return context.SourceCard != null &&
+                           context.SourceCard.AttacksThisTurn == 1;
+
                 //Chance
                 case ConditionType.Chance:
                      return Random.Range(0, 100) < condition.Value;

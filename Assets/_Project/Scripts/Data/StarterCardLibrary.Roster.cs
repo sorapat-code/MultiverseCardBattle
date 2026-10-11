@@ -1,4 +1,5 @@
 using MultiverseCardBattle.Cards;
+using MultiverseCardBattle.Conditions;
 using MultiverseCardBattle.Effects;
 using MultiverseCardBattle.Targeting;
 
@@ -167,6 +168,23 @@ namespace MultiverseCardBattle.Data
                 5, 4, 7, Keyword.Taunt,
                 CardTag.Human | CardTag.Elite | CardTag.Tank | CardTag.Earth,
                 Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    FxKeyword(EffectType.AddKeyword, Keyword.Shield))));
+
+            Add(Unit("SUP_027", "Dan Heng",
+                Universe.HonkaiStarRail, Faction.AstralExpress, CardRarity.Rare,
+                4, 4, 4, Keyword.QuickAttack,
+                CardTag.Human | CardTag.Melee | CardTag.Wind,
+                // โจมตียูนิตที่ HP เต็ม: ดาเมจเพิ่ม 2 (ตรวจก่อนโดน) — เป็นการ์ดคู่กับ March 7th (SUP_008)
+                ActWhen(TriggerType.Attack, TargetRule.EventSource, TargetSelection.All,
+                    new[] { Cond(ConditionType.TargetFullHealth) },
+                    Fx(EffectType.DealDamage, 2)),
+                // หลังโจมตีครั้งแรกของเทิร์น ถ้า March 7th อยู่บนสนาม: ได้ Shield
+                ActWhen(TriggerType.AfterAttack, TargetRule.Self, TargetSelection.All,
+                    new[]
+                    {
+                        Cond(ConditionType.FirstAttackThisTurn),
+                        Cond(ConditionType.AllyCardOnField, "SUP_008")
+                    },
                     FxKeyword(EffectType.AddKeyword, Keyword.Shield))));
 
             // ================= เวทมนตร์ =================

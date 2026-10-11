@@ -32,5 +32,8 @@ public enum TriggerType
     Spellburst,
 
     // การ์ดถูกส่งลงสุสานจากทางใดก็ได้ (ตาย / ทิ้ง / ใช้ Spell เสร็จ / ถูกทำลายจากมือหรือกอง)
-    Graveyard
+    Graveyard,
+
+    // หลังยูนิตโจมตีเสร็จ (หลังสู้/ตี Leader แล้ว และยังอยู่บนสนาม)
+    AfterAttack
 }
