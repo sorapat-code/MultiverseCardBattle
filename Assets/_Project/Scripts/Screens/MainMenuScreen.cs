@@ -419,8 +419,7 @@ namespace MultiverseCardBattle.Screens
             leaderDetail.text =
                 "<size=34><b><color=#FFB040>" + leader.Name + "</color></b></size>\n" +
                 "<i>" + leader.Title + "</i>\n\n" +
-                "<b>Skill - " + leader.SkillName + "</b> (" + leader.SkillEnergyCost + " Energy, " +
-                leader.SkillHealthCost + " Leader HP)\n" + leader.SkillText + "\n\n" +
+                "<b>Skill - " + leader.SkillName + "</b> (" + leader.SkillCostText + ")\n" + leader.SkillText + "\n\n" +
                 "<b>Finisher condition - " + leader.PowerName + " " + leader.PowerMax + "</b>\n" +
                 leader.PowerText + "\n\n" + finisherText;
         }

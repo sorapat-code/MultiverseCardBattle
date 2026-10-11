@@ -2974,8 +2974,7 @@ namespace MultiverseCardBattle.Screens
 
             UIFactory.SetButtonLabel(
                 leaderButton,
-                leader.SkillName.ToUpperInvariant() + "\n" +
-                leader.SkillEnergyCost + " Energy, -" + leader.SkillHealthCost + " HP");
+                leader.SkillName.ToUpperInvariant() + "\n" + leader.SkillCostText);
 
             float fraction = leader.PowerMax > 0
                 ? Mathf.Clamp01(Human.LeaderPower / (float)leader.PowerMax)

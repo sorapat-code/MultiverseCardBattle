@@ -261,12 +261,20 @@ card** that joins the hand when the Leader's condition is met. There is no passi
 
 - Data: `LeaderLibrary` / `LeaderData`. Battle side: `BattlePlayer.Leader / LeaderPower / LeaderSkillUsed /
   LeaderFinisherGiven`, `LeaderSystem` (Power from events, grants the finisher), `LeaderSkillCommand` (the skill).
-- Power (all Leaders for now): +1 when your Leader takes damage, +1 when one of your units dies, +1 per skill use.
+- Power: each Leader has a `PowerGain` flag set (`LeaderDamaged`, `UnitDied`, `UnitPlayed`, `SpellPlayed`, `EnemyUnitDied`, `SkillUsed`); every matching event gives +1. The skill itself is picked by `LeaderSkillKind` in `LeaderSkillCommand`.
   At `PowerMax` the finisher is added to the hand once per match (waits if the hand is full).
 - **Son Goku** (`LDR_001`, Dragon Ball): Kaioken - 1 Energy + 2 Leader HP: all your units get +2 Attack until end of
   turn. Ki 10 -> **Spirit Bomb** (`TKN_SPIRIT_BOMB`, cost 4 Spell): 10 damage to the enemy Leader, 5 to every enemy
   unit, heal your Leader 5.
-- Only the player has a Leader for now (the enemy side has none). Known quirk: Kaioken's HP cost goes through
+- **Naruto Uzumaki** (`LDR_002`): Shadow Clone - 2 Energy: summon two 1/1 Shadow Clones. Chakra 8 (+1 per unit played from
+  hand, +1 per skill) -> **Tailed Beast Bomb** (cost 5 Spell): 6 damage to the enemy Leader and every enemy unit.
+- **Satoru Gojo** (`LDR_003`): Infinity - 2 Energy: all your units get a 3-point Barrier until the end of your next turn.
+  Cursed Energy 8 (+1 per spell, +1 per skill) -> **Hollow Purple** (cost 5 Spell): 10 damage to a chosen enemy unit,
+  6 to the enemy Leader.
+- **Tony Stark** (`LDR_004`, `Universe.Original` because there is no Marvel universe): Repulsor - 2 Energy: 1 damage to
+  every enemy unit and the enemy Leader. Arc Reactor 8 (+1 per spell, +1 per enemy unit death) -> **Proton Cannon**
+  (cost 4 Spell): 9 damage to the enemy Leader, 2 to every enemy unit.
+- Skills are not targeted (one button, no target picking). Only the player has a Leader for now (the enemy side has none). Known quirk: Kaioken's HP cost goes through
   `DamageLeader`, so it is counted in `BattleStats.LeaderDamage` of the opponent.
 Not yet compiled/run in Unity.
 

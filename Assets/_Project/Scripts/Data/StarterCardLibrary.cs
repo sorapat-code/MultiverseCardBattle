@@ -52,6 +52,10 @@ namespace MultiverseCardBattle.Data
 
         // การ์ดไม้ตายของ Leader (ได้จากเงื่อนไข Power ของ Leader ไม่ใช่จากแพ็ก)
         public const string SpiritBombId = "TKN_SPIRIT_BOMB";
+        public const string ShadowCloneId = "TKN_002";
+        public const string TailedBeastBombId = "TKN_TAILED_BEAST_BOMB";
+        public const string HollowPurpleId = "TKN_HOLLOW_PURPLE";
+        public const string ProtonCannonId = "TKN_PROTON_CANNON";
 
         private static void Build()
         {
@@ -97,6 +101,51 @@ namespace MultiverseCardBattle.Data
                         Fx(EffectType.DealDamage, 5)),
                     Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
                         Fx(EffectType.Heal, 5))
+                }));
+
+            // ไม้ตายของ Leader Naruto: ถล่มทั้งสนามฝั่งศัตรู
+            Add(Create(
+                TailedBeastBombId, "Tailed Beast Bomb", CardType.Spell,
+                Universe.Naruto, Faction.LeafVillage, CardRarity.Legendary,
+                5, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 6)),
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 6))
+                }));
+
+            // ไม้ตายของ Leader Gojo: ลบยูนิตที่เลือกพร้อมสร้างความเสียหายให้ Leader ศัตรู
+            Add(Create(
+                HollowPurpleId, "Hollow Purple", CardType.Spell,
+                Universe.JujutsuKaisen, Faction.JujutsuHigh, CardRarity.Legendary,
+                5, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                        Fx(EffectType.DealDamage, 10)),
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 6))
+                }));
+
+            // ไม้ตายของ Leader Tony: ยิงหนักใส่ Leader ศัตรู
+            Add(Create(
+                ProtonCannonId, "Proton Cannon", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Legendary,
+                4, 0, 0, Keyword.None,
+                CardTag.Magic | CardTag.Token,
+                CardSource.Token,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyLeader, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 9)),
+                    Act(TriggerType.Play, TargetRule.AllEnemies, TargetSelection.All,
+                        Fx(EffectType.DealDamage, 2))
                 }));
 
             CardData clone = Add(Unit(

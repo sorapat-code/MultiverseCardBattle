@@ -10,10 +10,8 @@ namespace MultiverseCardBattle.Battle
     /// ระบบ Leader ของการต่อสู้: สะสม Power จากเหตุการณ์ และมอบการ์ดไม้ตายเมื่อ Power ครบ
     /// ผูกกับ EventBus ของ BattleManager (สร้างตอนเริ่มแมตช์)
     ///
-    /// กติกา Power (ทุก Leader ใช้ชุดเดียวกันตอนนี้):
-    ///  +1 เมื่อ Leader ของเราโดนความเสียหาย (รวมที่จ่ายเองจากสกิล)
-    ///  +1 เมื่อยูนิตของเราตาย
-    ///  +1 เมื่อใช้สกิล
+    /// Leader แต่ละตัวมี PowerGain (LeaderData) บอกว่าเหตุการณ์ไหนให้ +1:
+    ///  LeaderDamaged / UnitDied / UnitPlayed / SpellPlayed / EnemyUnitDied / SkillUsed
     /// ครบ PowerMax แล้วการ์ดไม้ตายเข้ามือ 1 ครั้ง ถ้ามือเต็มจะรอจนมีที่ว่างตอนต้นเทิร์น
     /// </summary>
     public class LeaderSystem
@@ -50,12 +48,28 @@ namespace MultiverseCardBattle.Battle
                 case TriggerType.DamageTaken:
                     // ความเสียหายต่อ Leader: Card เป็น null และ Player คือเจ้าของ Leader
                     if (e.Card == null && e.Player != null)
-                        AddPower(e.Player, 1);
+                        Gain(e.Player, PowerGain.LeaderDamaged);
                     break;
 
                 case TriggerType.Death:
                     if (e.Card != null && e.Player != null)
-                        AddPower(e.Player, 1);
+                    {
+                        Gain(e.Player, PowerGain.UnitDied);
+                        Gain(battle.GetOpponent(e.Player), PowerGain.EnemyUnitDied);
+                    }
+                    break;
+
+                case TriggerType.Play:
+                    // ลงยูนิตจากมือ (ยูนิตที่ Summon ด้วยเอฟเฟกต์ไม่ผ่านจุดนี้)
+                    if (e.Card != null && e.Player != null && e.Card.Data != null &&
+                        e.Card.Data.Type == CardType.Unit)
+                        Gain(e.Player, PowerGain.UnitPlayed);
+                    break;
+
+                case TriggerType.Spellburst:
+                    // ยิงหนึ่งครั้งต่อ Spell ที่ใช้
+                    if (e.Player != null)
+                        Gain(e.Player, PowerGain.SpellPlayed);
                     break;
 
                 case TriggerType.TurnStart:
@@ -67,6 +81,18 @@ namespace MultiverseCardBattle.Battle
                     }
                     break;
             }
+        }
+
+        /// <summary>Power +1 ถ้า Leader ของผู้เล่นนับเหตุการณ์ชนิดนี้</summary>
+        public void Gain(BattlePlayer player, PowerGain reason)
+        {
+            if (player == null || player.Leader == null)
+                return;
+
+            if ((player.Leader.PowerGain & reason) == 0)
+                return;
+
+            AddPower(player, 1);
         }
 
         public void AddPower(BattlePlayer player, int amount)
@@ -109,11 +135,18 @@ namespace MultiverseCardBattle.Battle
     }
 
     /// <summary>
-    /// กดสกิลของ Leader (เทิร์นละครั้ง) ตอนนี้: Kaioken ของ Goku
-    /// จ่าย Energy + เลือดของ Leader แล้วยูนิตทุกตัวของเรา +2 Attack จนจบเทิร์น
+    /// กดสกิลของ Leader (เทิร์นละครั้ง) การทำงานแยกตาม LeaderData.SkillKind
+    ///  Kaioken     จ่าย Energy + เลือด Leader แล้วยูนิตทุกตัวของเรา +2 Attack จนจบเทิร์น
+    ///  ShadowClone เรียก Shadow Clone 1/1 สองตัว
+    ///  Infinity    ยูนิตทุกตัวของเราได้ Barrier 3 จนจบเทิร์นหน้าของเรา
+    ///  Repulsor    1 ดาเมจใส่ศัตรูทุกตัวและ Leader ศัตรู
     /// </summary>
     public class LeaderSkillCommand : IBattleCommand
     {
+        public const int InfinityBarrier = 3;
+        public const int CloneCount = 2;
+        public const int RepulsorDamage = 1;
+
         public BattlePlayer Player;
 
         public LeaderSkillCommand(BattlePlayer player)
@@ -146,8 +179,22 @@ namespace MultiverseCardBattle.Battle
             if (player.LeaderHealth <= leader.SkillHealthCost)
                 return ActionResult.Fail("Not enough Leader Health for " + leader.SkillName);
 
-            if (player.Field.Count == 0)
-                return ActionResult.Fail("You have no units to empower");
+            switch (leader.SkillKind)
+            {
+                case LeaderSkillKind.Kaioken:
+                case LeaderSkillKind.Infinity:
+                    if (player.Field.Count == 0)
+                        return ActionResult.Fail("You have no units to empower");
+                    break;
+
+                case LeaderSkillKind.ShadowClone:
+                    if (player.Field.Count >= BattlePlayer.MaxFieldSize)
+                        return ActionResult.Fail("Your field is full");
+                    break;
+
+                case LeaderSkillKind.Repulsor:
+                    break;
+            }
 
             return ActionResult.Ok();
         }
@@ -166,14 +213,48 @@ namespace MultiverseCardBattle.Battle
 
             battle.Log(Player.Name + " uses " + leader.SkillName + "!");
 
-            // จ่ายเลือดเป็นความเสียหายจริง (ไม่ผ่านเกราะ/ลดดาเมจ)
-            battle.DamageLeader(null, Player, leader.SkillHealthCost, true);
+            switch (leader.SkillKind)
+            {
+                case LeaderSkillKind.Kaioken:
+                    // จ่ายเลือดเป็นความเสียหายจริง (ไม่ผ่านเกราะ/ลดดาเมจ)
+                    battle.DamageLeader(null, Player, leader.SkillHealthCost, true);
 
-            foreach (CardInstance unit in new List<CardInstance>(Player.Field))
-                unit.AddStatus(StatusType.AttackUp, LeaderSystem.KaiokenAttack, 1);
+                    foreach (CardInstance unit in new List<CardInstance>(Player.Field))
+                        unit.AddStatus(StatusType.AttackUp, LeaderSystem.KaiokenAttack, 1);
+                    break;
+
+                case LeaderSkillKind.ShadowClone:
+                    CardData cloneData = StarterCardLibrary.Get(StarterCardLibrary.ShadowCloneId);
+
+                    for (int i = 0; i < CloneCount && cloneData != null; i++)
+                    {
+                        CardInstance clone = new CardInstance(cloneData);
+
+                        clone.OwnerID = Player.PlayerID;
+
+                        // สนามเต็มกลางทาง: ไม่เรียกตัวที่เหลือ
+                        if (!battle.SummonUnit(clone, Player))
+                            break;
+                    }
+                    break;
+
+                case LeaderSkillKind.Infinity:
+                    foreach (CardInstance unit in new List<CardInstance>(Player.Field))
+                        unit.AddStatus(StatusType.Barrier, InfinityBarrier, 2);
+                    break;
+
+                case LeaderSkillKind.Repulsor:
+                    BattlePlayer enemy = battle.GetOpponent(Player);
+
+                    foreach (CardInstance unit in new List<CardInstance>(enemy.Field))
+                        battle.DamageUnit(null, unit, RepulsorDamage);
+
+                    battle.DamageLeader(null, enemy, RepulsorDamage);
+                    break;
+            }
 
             if (battle.Leaders != null)
-                battle.Leaders.AddPower(Player, 1);
+                battle.Leaders.Gain(Player, PowerGain.SkillUsed);
 
             return ActionResult.Ok();
         }
