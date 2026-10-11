@@ -219,3 +219,12 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 - สกิลโจมตี/ตายของการ์ดลับมี hit-stop (หยุดเวลาสั้นๆ) แสงวาบ และเสาแสงเพิ่ม
 
 **ขอบเขตของเอฟเฟกต์การ์ดลับ:** ใช้กับการ์ดที่ `Rarity = Secret`, การ์ดที่มี Keyword `Unique` ทุกใบ และร่าง Devil Trigger ทั้งหมดนี้อัตโนมัติ รวมการ์ดที่เพิ่มในอนาคต (เช็คที่ `SecretFx.IsSecret`) การ์ดที่ไม่มีสีประจำตัวจะได้สีคงที่จากรหัสการ์ด
+
+## Per-character cutscenes (VergilScene)
+
+`SecretCinematic` normally plays one shared timeline (only tint/epithet differ). Characters can now get
+their own choreography: `SecretCinematic.Play` checks `data.CardID` and hands the backdrop/beats to a
+dedicated scene class. First one: **Vergil** (`VergilScene.cs`, Unlock + Arrival modes; Devil Trigger
+transform still uses the shared timeline) - "Judgment Cut": moon -> eye slit (card art zoomed, red/cyan
+split) -> sheathe click -> accelerating slash cage -> freeze -> shatter + X -> card flips in.
+All timings are constants/`Plan()` entries in `VergilScene.cs`. Not yet compiled/run in Unity.

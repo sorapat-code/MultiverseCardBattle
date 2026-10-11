@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MultiverseCardBattle.Cards;
 using MultiverseCardBattle.Core;
+using MultiverseCardBattle.Data;
 
 namespace MultiverseCardBattle.Screens
 {
@@ -32,6 +33,10 @@ namespace MultiverseCardBattle.Screens
         private const float LetterSeconds = 0.07f;
 
         private Mode mode;
+        private VergilScene vergil;
+        private bool useVergil;
+        private float heroAt = HeroAt;
+        private float titleAt = TitleAt;
         private RectTransform layer;
         private RectTransform shakeTarget;
         private CardData data;
@@ -125,7 +130,25 @@ namespace MultiverseCardBattle.Screens
             cinematic.finalAt = mode == Mode.Unlock ? 5.2f : 0f;
             cinematic.endAt = mode == Mode.Arrival ? 5.2f : (mode == Mode.Transform ? 4.4f : float.MaxValue);
 
+            // ตัวละครที่มีคัตซีนเฉพาะตัว (ตอนนี้: Vergil, เฉพาะโหมด Unlock/Arrival)
+            if (data != null && data.CardID == StarterCardLibrary.VergilId && mode != Mode.Transform)
+            {
+                cinematic.heroAt = VergilScene.HeroTime;
+                cinematic.titleAt = VergilScene.TitleTime;
+
+                if (mode == Mode.Arrival)
+                    cinematic.endAt = 7.6f;
+                else
+                    cinematic.finalAt = 7.0f;
+
+                cinematic.vergil = null;
+                cinematic.useVergil = true;
+            }
+
             cinematic.Build();
+
+            if (cinematic.useVergil)
+                cinematic.vergil = VergilScene.Create(layer, data, shakeTarget);
 
             return cinematic;
         }
@@ -288,11 +311,23 @@ namespace MultiverseCardBattle.Screens
         {
             age += Time.unscaledDeltaTime;
 
-            UpdateBackdrop();
+            if (vergil != null)
+            {
+                vergil.Tick(age, endAt);
+            }
+            else
+            {
+                UpdateBackdrop();
+            }
+
             UpdateHero();
             UpdateTexts();
-            UpdateBeats();
-            UpdateRain();
+
+            if (vergil == null)
+            {
+                UpdateBeats();
+                UpdateRain();
+            }
 
             if (mode == Mode.Unlock && !finalState && age >= finalAt)
                 finalState = true;
@@ -346,7 +381,7 @@ namespace MultiverseCardBattle.Screens
             if (mode == Mode.Transform || data == null)
                 return;
 
-            if (hero == null && age >= HeroAt && !exiting)
+            if (hero == null && age >= heroAt && !exiting)
             {
                 hero = CardView.Create(layer, new Vector2(340f, 476f));
 
@@ -362,7 +397,7 @@ namespace MultiverseCardBattle.Screens
             }
 
             // จังหวะการ์ดลงกระแทก (CardReveal ยิงเอฟเฟกต์เอง) เพิ่มจอสั่นหนักๆ
-            if (hero != null && !heroLanded && age >= HeroAt + 0.75f)
+            if (hero != null && !heroLanded && age >= heroAt + 0.75f)
             {
                 heroLanded = true;
 
@@ -381,9 +416,9 @@ namespace MultiverseCardBattle.Screens
             // ชื่อพิมพ์ทีละตัวอักษร
             if (title.Length > 0)
             {
-                int target = Mathf.Clamp(Mathf.FloorToInt((age - TitleAt) / LetterSeconds) + 1, 0, title.Length);
+                int target = Mathf.Clamp(Mathf.FloorToInt((age - titleAt) / LetterSeconds) + 1, 0, title.Length);
 
-                if (age < TitleAt)
+                if (age < titleAt)
                     target = 0;
 
                 if (target != shownLetters)
@@ -406,7 +441,7 @@ namespace MultiverseCardBattle.Screens
                 SetAlpha(titleText, (shownLetters > 0 ? 1f : 0f) * fade);
             }
 
-            float tagStart = TitleAt + title.Length * LetterSeconds + 0.2f;
+            float tagStart = titleAt + title.Length * LetterSeconds + 0.2f;
 
             SetAlpha(tagText, Mathf.Clamp01((age - tagStart) / 0.7f) * fade);
 
