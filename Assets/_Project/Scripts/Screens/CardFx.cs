@@ -272,7 +272,7 @@ namespace MultiverseCardBattle.Screens
         {
             age += Time.unscaledDeltaTime;
 
-            float t = Mathf.Clamp01(age / Duration);
+            float t = Mathf.Clamp01(age / (Duration / MultiverseCardBattle.Core.GameSettings.AnimSpeed));
 
             // เร่งแล้วชะลอ
             float ease = t * t * (3f - 2f * t);

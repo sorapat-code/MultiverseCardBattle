@@ -62,7 +62,7 @@ namespace MultiverseCardBattle.Core
             AudioClip clip = GetClip(id);
 
             if (clip != null)
-                source.PlayOneShot(clip, Volume);
+                source.PlayOneShot(clip, Volume * GameSettings.Master * GameSettings.Sfx);
         }
 
         /// <summary>
@@ -98,7 +98,21 @@ namespace MultiverseCardBattle.Core
 
             musicFader.FadeTo(
                 GetMusicClip(track),
-                track == MusicTrack.Battle ? BattleVolume : MenuVolume);
+                MusicLevel(track));
+        }
+
+        private static float MusicLevel(MusicTrack track)
+        {
+            float baseVolume = track == MusicTrack.Battle ? BattleVolume : MenuVolume;
+
+            return baseVolume * GameSettings.Master * GameSettings.Music;
+        }
+
+        /// <summary>เรียกหลังเปลี่ยนสไลเดอร์เสียง ให้เพลงปรับระดับตามทันที</summary>
+        public static void RefreshVolumes()
+        {
+            if (musicFader != null && musicStarted)
+                musicFader.SetVolume(MusicLevel(currentTrack));
         }
 
         private static void EnsureMusicSource()

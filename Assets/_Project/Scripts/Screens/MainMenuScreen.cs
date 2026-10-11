@@ -102,6 +102,8 @@ namespace MultiverseCardBattle.Screens
             BuildRewardsMenu();
             BuildOptionsMenu();
 
+            GameSettings.Apply();
+
             Show(mainPanel);
         }
 
@@ -131,6 +133,8 @@ namespace MultiverseCardBattle.Screens
                 rewardsPanel.gameObject.SetActive(panel == rewardsPanel);
             if (optionsPanel != null)
                 optionsPanel.gameObject.SetActive(panel == optionsPanel);
+            if (creditsPanel != null)
+                creditsPanel.gameObject.SetActive(panel == creditsPanel);
 
             RefreshMenuNotices();
             RefreshGold();
@@ -327,45 +331,339 @@ namespace MultiverseCardBattle.Screens
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
         }
 
+        // ---------- Options ----------
+
+        private Button muteButton;
+        private Button fullscreenButton;
+        private Button vsyncButton;
+        private Button fpsButton;
+        private Button animButton;
+        private Button aiButton;
+        private RectTransform creditsPanel;
+
         private void BuildOptionsMenu()
         {
-            UIFactory.CreateTitle(optionsPanel, "HELP & OPTIONS");
+            UIFactory.CreateTitle(optionsPanel, "OPTIONS");
 
-            float y = 0.62f;
-            const float height = 0.09f;
-            const float step = 0.12f;
+            // ซ้าย: เสียง + จอภาพ
+            AddOptionsHeader("AUDIO", 0.06f, 0.48f, 0.82f);
+
+            AddVolumeRow("Master", 0.73f, GameSettings.Master,
+                v => { GameSettings.Master = v; });
+            AddVolumeRow("Music", 0.65f, GameSettings.Music,
+                v => { GameSettings.Music = v; });
+            AddVolumeRow("Effects", 0.57f, GameSettings.Sfx,
+                v => { GameSettings.Sfx = v; });
+
+            muteButton = ScreenKit.AddButton(optionsPanel, "",
+                ToggleSound, UIFactory.Muted, 0.06f, 0.48f, 0.48f, 0.55f, 24);
+
+            AddOptionsHeader("DISPLAY", 0.06f, 0.48f, 0.40f);
+
+            fullscreenButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    GameSettings.Fullscreen = !GameSettings.Fullscreen;
+                    ApplySettings();
+                },
+                UIFactory.Muted, 0.06f, 0.26f, 0.48f, 0.33f, 24);
+
+            vsyncButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    GameSettings.VSync = !GameSettings.VSync;
+                    ApplySettings();
+                },
+                UIFactory.Muted, 0.06f, 0.18f, 0.48f, 0.25f, 24);
+
+            fpsButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    int[] options = GameSettings.FpsOptions;
+                    int index = System.Array.IndexOf(options, GameSettings.FpsLimit);
+
+                    GameSettings.FpsLimit = options[(index + 1) % options.Length];
+                    ApplySettings();
+                },
+                UIFactory.Muted, 0.06f, 0.10f, 0.48f, 0.17f, 24);
+
+            // ขวา: เกมเพลย์ + ข้อมูล
+            AddOptionsHeader("GAMEPLAY", 0.52f, 0.94f, 0.82f);
+
+            animButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    float[] options = GameSettings.AnimOptions;
+                    int index = NearestIndex(options, GameSettings.AnimSpeed);
+
+                    GameSettings.AnimSpeed = options[(index + 1) % options.Length];
+                    ApplySettings();
+                },
+                UIFactory.Muted, 0.52f, 0.73f, 0.94f, 0.80f, 24);
+
+            aiButton = ScreenKit.AddButton(optionsPanel, "",
+                () =>
+                {
+                    GameSettings.AiSpeed =
+                        (GameSettings.AiSpeed + 1) % GameSettings.AiSpeedNames.Length;
+                    ApplySettings();
+                },
+                UIFactory.Muted, 0.52f, 0.65f, 0.94f, 0.72f, 24);
+
+            AddOptionsHeader("INFO", 0.52f, 0.94f, 0.55f);
 
             ScreenKit.AddButton(optionsPanel, "How to Play",
                 () => Show(helpPanel),
-                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
-
-            y -= step;
+                UIFactory.Accent, 0.52f, 0.46f, 0.94f, 0.53f, 24);
 
             ScreenKit.AddButton(optionsPanel, "Keywords & Status",
                 () => Show(glossaryPanel),
-                UIFactory.Accent, 0.3f, y, 0.7f, y + height);
+                UIFactory.Accent, 0.52f, 0.38f, 0.94f, 0.45f, 24);
 
-            y -= step;
+            ScreenKit.AddButton(optionsPanel, "Credits",
+                () => Show(creditsPanel),
+                UIFactory.Accent, 0.52f, 0.30f, 0.94f, 0.37f, 24);
 
-            soundButton = ScreenKit.AddButton(optionsPanel, "",
-                ToggleSound,
-                UIFactory.Muted, 0.3f, y, 0.7f, y + height);
+            ScreenKit.AddButton(optionsPanel, "Defaults",
+                () =>
+                {
+                    GameSettings.ResetToDefaults();
+                    ApplySettings();
+                    RebuildOptionsSliders();
 
-            RefreshSoundLabel();
-
-            y -= step;
+                    optionsMessage.text = "Options restored to defaults.";
+                },
+                UIFactory.Muted, 0.52f, 0.22f, 0.94f, 0.29f, 24);
 
             resetButton = ScreenKit.AddButton(optionsPanel, "Reset Progress",
                 OnResetClicked,
-                UIFactory.Muted, 0.3f, y, 0.7f, y + height);
+                UIFactory.Danger, 0.52f, 0.14f, 0.94f, 0.21f, 24);
 
-            ScreenKit.AddButton(optionsPanel, "Back",
-                () => Show(mainPanel),
-                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+            ScreenKit.AddLabel(
+                optionsPanel, "Version " + Application.version, 20,
+                TextAnchor.MiddleRight, 0.7f, 0.02f, 0.97f, 0.07f).color = UIFactory.GoldDim;
 
             optionsMessage = ScreenKit.AddLabel(
-                optionsPanel, "", 26, TextAnchor.MiddleCenter,
-                0.25f, 0.03f, 0.9f, 0.11f);
+                optionsPanel, "", 24, TextAnchor.MiddleCenter,
+                0.22f, 0.02f, 0.7f, 0.09f);
+
+            ScreenKit.AddButton(optionsPanel, "Back",
+                () =>
+                {
+                    SaveManager.Save();
+
+                    Show(mainPanel);
+                },
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.09f);
+
+            RefreshOptionLabels();
+            BuildCredits();
+        }
+
+        private readonly List<System.Action> sliderRefreshers = new List<System.Action>();
+
+        private void AddOptionsHeader(string title, float x0, float x1, float y)
+        {
+            Text header = ScreenKit.AddLabel(
+                optionsPanel, title, 26, TextAnchor.MiddleLeft,
+                x0, y, x1, y + 0.05f, FontStyle.Bold);
+
+            header.color = UIFactory.Gold;
+
+            UIFactory.CreateDivider(optionsPanel, x0, y - 0.004f, x1, y + 0.001f);
+        }
+
+        private void AddVolumeRow(
+            string label, float y, float value, System.Action<float> setter)
+        {
+            ScreenKit.AddLabel(
+                optionsPanel, label, 24, TextAnchor.MiddleLeft,
+                0.06f, y, 0.16f, y + 0.07f);
+
+            Text valueText = ScreenKit.AddLabel(
+                optionsPanel, "", 24, TextAnchor.MiddleRight,
+                0.42f, y, 0.48f, y + 0.07f);
+
+            Slider slider = CreateSlider(optionsPanel, 0.17f, y, 0.41f, y + 0.07f);
+
+            slider.SetValueWithoutNotify(value);
+
+            valueText.text = Mathf.RoundToInt(value * 100f) + "%";
+
+            slider.onValueChanged.AddListener(v =>
+            {
+                setter(v);
+
+                valueText.text = Mathf.RoundToInt(v * 100f) + "%";
+
+                Sfx.RefreshVolumes();
+                Sfx.RefreshMusicMute();
+            });
+
+            // ปล่อยเมาส์แล้วเล่นเสียงตัวอย่าง + บันทึก
+            slider.gameObject.AddComponent<SliderReleaseHook>().OnRelease = () =>
+            {
+                SaveManager.Save();
+
+                Sfx.Play(SoundId.Click);
+            };
+
+            sliderRefreshers.Add(() =>
+            {
+                float current = setterValue(label);
+
+                slider.SetValueWithoutNotify(current);
+
+                valueText.text = Mathf.RoundToInt(current * 100f) + "%";
+            });
+        }
+
+        private static float setterValue(string label)
+        {
+            if (label == "Master") return GameSettings.Master;
+            if (label == "Music") return GameSettings.Music;
+
+            return GameSettings.Sfx;
+        }
+
+        private void RebuildOptionsSliders()
+        {
+            foreach (System.Action refresh in sliderRefreshers)
+                refresh();
+        }
+
+        private void ApplySettings()
+        {
+            GameSettings.Apply();
+
+            SaveManager.Save();
+
+            RefreshOptionLabels();
+        }
+
+        private void RefreshOptionLabels()
+        {
+            UIFactory.SetButtonLabel(
+                muteButton, Sfx.Muted ? "Mute All: On" : "Mute All: Off");
+
+            UIFactory.SetButtonLabel(
+                fullscreenButton,
+                GameSettings.Fullscreen ? "Fullscreen: On" : "Fullscreen: Off (Windowed)");
+
+            UIFactory.SetButtonLabel(
+                vsyncButton, GameSettings.VSync ? "VSync: On" : "VSync: Off");
+
+            UIFactory.SetButtonLabel(
+                fpsButton,
+                GameSettings.FpsLimit > 0
+                    ? "FPS Limit: " + GameSettings.FpsLimit
+                    : "FPS Limit: None");
+
+            UIFactory.SetButtonLabel(
+                animButton, "Animation Speed: " + GameSettings.AnimSpeed.ToString("0.#") + "x");
+
+            UIFactory.SetButtonLabel(
+                aiButton,
+                "Opponent Speed: " + GameSettings.AiSpeedNames[GameSettings.AiSpeed]);
+        }
+
+        private static int NearestIndex(float[] options, float value)
+        {
+            int best = 0;
+
+            for (int i = 1; i < options.Length; i++)
+            {
+                if (Mathf.Abs(options[i] - value) < Mathf.Abs(options[best] - value))
+                    best = i;
+            }
+
+            return best;
+        }
+
+        private void BuildCredits()
+        {
+            creditsPanel = CreatePanel("CreditsPanel");
+
+            UIFactory.CreateTitle(creditsPanel, "CREDITS");
+
+            Text text = ScreenKit.AddLabel(
+                creditsPanel,
+                "<b>Multiverse Card Battle</b>\n\n" +
+                "A graduation project\n" +
+                "Game design, programming and card design: Sorapat\n" +
+                "Built with Unity\n\n" +
+                "Music and sound effects are generated in code.\n" +
+                "Thank you for playing!",
+                30, TextAnchor.MiddleCenter, 0.2f, 0.2f, 0.8f, 0.85f);
+
+            text.supportRichText = true;
+
+            ScreenKit.AddLabel(
+                creditsPanel, "Version " + Application.version, 22,
+                TextAnchor.MiddleCenter, 0.3f, 0.12f, 0.7f, 0.18f).color = UIFactory.GoldDim;
+
+            ScreenKit.AddButton(creditsPanel, "Back",
+                () => Show(optionsPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+
+            creditsPanel.gameObject.SetActive(false);
+        }
+
+        private static Slider CreateSlider(
+            Transform parent, float x0, float y0, float x1, float y1)
+        {
+            RectTransform root = UIFactory.CreateRect("Slider", parent);
+
+            UIFactory.SetAnchors(root, x0, y0, x1, y1);
+
+            RectTransform track = UIFactory.CreateRect("Track", root);
+
+            UIFactory.SetAnchors(track, 0f, 0.4f, 1f, 0.6f);
+
+            Image trackImage = track.gameObject.AddComponent<Image>();
+
+            trackImage.color = new Color(0f, 0f, 0f, 0.55f);
+
+            RectTransform fillArea = UIFactory.CreateRect("Fill Area", root);
+
+            UIFactory.SetAnchors(fillArea, 0f, 0.4f, 1f, 0.6f);
+
+            RectTransform fill = UIFactory.CreateRect("Fill", fillArea);
+
+            Image fillImage = fill.gameObject.AddComponent<Image>();
+
+            fillImage.color = UIFactory.Gold;
+
+            fill.sizeDelta = Vector2.zero;
+
+            RectTransform handleArea = UIFactory.CreateRect("Handle Slide Area", root);
+
+            UIFactory.Stretch(handleArea);
+
+            handleArea.offsetMin = new Vector2(12f, 0f);
+            handleArea.offsetMax = new Vector2(-12f, 0f);
+
+            RectTransform handle = UIFactory.CreateRect("Handle", handleArea);
+
+            Image handleImage = handle.gameObject.AddComponent<Image>();
+
+            handleImage.color = UIFactory.TextColor;
+
+            handle.anchorMin = new Vector2(0f, 0.1f);
+            handle.anchorMax = new Vector2(0f, 0.9f);
+            handle.sizeDelta = new Vector2(24f, 0f);
+
+            Slider slider = root.gameObject.AddComponent<Slider>();
+
+            slider.fillRect = fill;
+            slider.handleRect = handle;
+            slider.targetGraphic = handleImage;
+            slider.direction = Slider.Direction.LeftToRight;
+            slider.minValue = 0f;
+            slider.maxValue = 1f;
+            slider.value = 1f;
+
+            return slider;
         }
 
         private void StartQuickBattle()
@@ -392,8 +690,7 @@ namespace MultiverseCardBattle.Screens
 
         private void RefreshSoundLabel()
         {
-            UIFactory.SetButtonLabel(
-                soundButton, Sfx.Muted ? "Sound: Off" : "Sound: On");
+            RefreshOptionLabels();
         }
 
         // กดสองครั้งเพื่อยืนยัน กันกดผิด
@@ -408,7 +705,14 @@ namespace MultiverseCardBattle.Screens
                 return;
             }
 
+            // เก็บค่าตั้งค่า (Options) ไว้ ไม่ให้หายตอนรีเซ็ตความคืบหน้า
+            SaveData oldData = SaveManager.Profile.Data;
+
             SaveManager.ResetProgress();
+
+            GameSettings.CopyFrom(oldData);
+
+            SaveManager.Save();
 
             resetArmed = false;
 
@@ -1136,6 +1440,18 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(helpPanel, "Back",
                 () => Show(optionsPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+        }
+    }
+
+    /// <summary>ส่งสัญญาณเมื่อปล่อยเมาส์จากสไลเดอร์ (ใช้บันทึกค่าและเล่นเสียงตัวอย่าง)</summary>
+    public class SliderReleaseHook : MonoBehaviour, UnityEngine.EventSystems.IPointerUpHandler
+    {
+        public System.Action OnRelease;
+
+        public void OnPointerUp(UnityEngine.EventSystems.PointerEventData eventData)
+        {
+            if (OnRelease != null)
+                OnRelease();
         }
     }
 }

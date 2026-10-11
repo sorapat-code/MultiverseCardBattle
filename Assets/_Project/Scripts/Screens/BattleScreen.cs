@@ -24,7 +24,10 @@ namespace MultiverseCardBattle.Screens
         private static readonly Vector2 DiscoverCardSize = new Vector2(220f, 310f);
         private static readonly Vector2 PreviewCardSize = new Vector2(250f, 350f);
 
-        private const float AIActionDelay = 0.6f;
+        private static float AIActionDelay
+        {
+            get { return MultiverseCardBattle.Core.GameSettings.AiActionDelay; }
+        }
 
         private BattleManager battle;
 

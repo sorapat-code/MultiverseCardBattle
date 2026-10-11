@@ -19,6 +19,12 @@ namespace MultiverseCardBattle.Core
             source = audioSource;
         }
 
+        /// <summary>เปลี่ยนระดับเสียงเป้าหมายโดยไม่เปลี่ยนเพลง</summary>
+        public void SetVolume(float volume)
+        {
+            targetVolume = volume;
+        }
+
         public void FadeTo(AudioClip clip, float volume)
         {
             pendingClip = clip;

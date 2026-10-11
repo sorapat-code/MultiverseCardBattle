@@ -75,6 +75,16 @@ namespace MultiverseCardBattle.Data
 
         public bool SoundMuted;
 
+        // ตั้งค่า (Options)
+        public float MasterVolume = 1f;
+        public float MusicVolume = 1f;
+        public float SfxVolume = 1f;
+        public bool Fullscreen = true;
+        public bool VSync = true;
+        public int FpsLimit;        // 0 = ไม่จำกัด
+        public float AnimSpeed = 1f;
+        public int AiSpeed = 1;     // 0 = ช้า, 1 = ปกติ, 2 = เร็ว
+
         // ผงสำหรับคราฟการ์ด ได้จากการย่อยการ์ดและรางวัล Achievement
         public int Dust;
 
