@@ -52,6 +52,23 @@ namespace MultiverseCardBattle.Decks
             return DefaultMaxCopies;
         }
 
+        /// <summary>การ์ดที่มี Keyword Unique ใบแรกในเด็ค (null = ไม่มี) ใส่ Unique ได้ 1 ใบต่อเด็ค</summary>
+        public static CardData FindUnique(DeckList deck)
+        {
+            if (deck == null)
+                return null;
+
+            foreach (string id in deck.CardIDs)
+            {
+                CardData card = CardRegistry.Get(id);
+
+                if (card != null && (card.Keywords & Keyword.Unique) != 0)
+                    return card;
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// คืนรายการปัญหาของเด็ค (ว่าง = ใช้ได้)
         /// profile เป็น null = ไม่ตรวจว่าเป็นเจ้าของการ์ดหรือไม่
@@ -77,13 +94,23 @@ namespace MultiverseCardBattle.Decks
 
             Dictionary<string, int> counts = new Dictionary<string, int>();
 
+            int uniqueCards = 0;
+
             foreach (string id in deck.CardIDs)
             {
                 if (!counts.ContainsKey(id))
                     counts[id] = 0;
 
                 counts[id]++;
+
+                CardData counted = CardRegistry.Get(id);
+
+                if (counted != null && (counted.Keywords & Keyword.Unique) != 0)
+                    uniqueCards++;
             }
+
+            if (uniqueCards > 1)
+                problems.Add("A deck can have only 1 Unique card");
 
             foreach (KeyValuePair<string, int> pair in counts)
             {

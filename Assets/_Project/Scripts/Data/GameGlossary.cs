@@ -33,7 +33,7 @@ namespace MultiverseCardBattle.Data
                 case Keyword.Reborn: return "The first time it dies, it returns to the field with 1 HP.";
                 case Keyword.Backstab: return "Any unit damaged by this unit is destroyed.";
                 case Keyword.Shadowbound: return "While its owner controls a Token, it gains Unstoppable and enemy units cannot attack it (spells and abilities can still target it).";
-                case Keyword.Unique: return "Only 1 copy of this card can be put in a deck.";
+                case Keyword.Unique: return "A deck can contain only 1 Unique card in total (any Unique card, not just this one).";
                 case Keyword.Spellburst: return "Triggers once the first time its owner plays a spell.";
                 case Keyword.Fast: return "Spell only. Can be played in response to your opponent's action, even during their turn, using your leftover Energy. Responses chain: the last card played resolves first.";
                 case Keyword.Enrage: return "Gains +2 Attack while it is damaged.";

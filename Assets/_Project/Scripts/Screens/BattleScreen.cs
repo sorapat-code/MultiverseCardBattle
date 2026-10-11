@@ -2634,10 +2634,44 @@ namespace MultiverseCardBattle.Screens
             return null;
         }
 
+        // ยูนิต Devil Trigger ที่ยังไม่เคยแปลงร่าง (ยังใช้ไม่ได้ตอนนี้ก็ได้)
+        private CardInstance FindDevilTriggerWaiting()
+        {
+            if (battle == null)
+                return null;
+
+            foreach (CardInstance card in Human.Field)
+            {
+                if (card.HasPassive(CardPassive.DevilTrigger) && !card.DevilTriggerUsed)
+                    return card;
+            }
+
+            return null;
+        }
+
         private void RefreshDevilTrigger(bool myTurn)
         {
-            devilRoot.gameObject.SetActive(
-                myTurn && FindDevilTriggerCard() != null);
+            CardInstance ready = myTurn ? FindDevilTriggerCard() : null;
+            CardInstance waiting = ready == null ? FindDevilTriggerWaiting() : null;
+
+            // มี Vergil บนสนามก็แสดงปุ่มเสมอ ใช้ไม่ได้ตอนนี้ = ปุ่มจาง บอกเหตุผลใต้ชื่อ
+            devilRoot.gameObject.SetActive(ready != null || waiting != null);
+
+            if (devilButton != null)
+            {
+                devilButton.interactable = ready != null;
+
+                string label = "DEVIL\nTRIGGER";
+
+                if (ready == null && waiting != null)
+                {
+                    label += waiting.SummonedOnTurn == battle.TurnManager.TotalTurns
+                        ? "\n(next turn)"
+                        : "\n(your turn)";
+                }
+
+                UIFactory.SetButtonLabel(devilButton, label);
+            }
 
             // เพิ่งแปลงร่าง: ไฟสีน้ำเงินลุกที่การ์ดทันที
             if (devilFxInstance != 0)

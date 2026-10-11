@@ -185,6 +185,18 @@ namespace MultiverseCardBattle.Screens
                 return;
             }
 
+            // Unique: ใส่ได้แค่ 1 ใบต่อเด็ค (รวมทุกชื่อ)
+            if ((view.Data.Keywords & Keyword.Unique) != 0)
+            {
+                CardData existing = DeckRules.FindUnique(deck);
+
+                if (existing != null)
+                {
+                    Say("Your deck already has a Unique card (" + existing.CardName + ")");
+                    return;
+                }
+            }
+
             deck.CardIDs.Add(id);
 
             Changed();

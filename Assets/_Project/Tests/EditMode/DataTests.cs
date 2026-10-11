@@ -269,5 +269,25 @@ namespace MultiverseCardBattle.Tests
 
             UnityEngine.Object.DestroyImmediate(data);
         }
+
+        [Test]
+        public void Deck_AllowsOnlyOneUniqueCard()
+        {
+            DeckList deck = new DeckList();
+
+            deck.CardIDs.Add("EVT_001");
+            deck.CardIDs.Add("EVT_002");
+
+            List<string> problems = DeckRules.Validate(deck, null);
+
+            Assert.IsTrue(problems.Exists(p => p.Contains("Unique")));
+            Assert.IsNotNull(DeckRules.FindUnique(deck));
+
+            deck.CardIDs.Remove("EVT_002");
+
+            problems = DeckRules.Validate(deck, null);
+
+            Assert.IsFalse(problems.Exists(p => p.Contains("Unique")));
+        }
     }
 }
