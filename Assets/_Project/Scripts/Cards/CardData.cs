@@ -66,6 +66,17 @@ namespace MultiverseCardBattle.Cards
             get { return ImmuneAmount > 0 ? ImmuneAmount : DefaultImmuneAmount; }
         }
 
+        [Header("Overload (Energy ที่ถูกล็อกในเทิร์นหน้า 0 = ใช้ค่าตั้งต้น)")]
+
+        public const int DefaultOverloadAmount = 1;
+
+        public int OverloadAmount;
+
+        public int EffectiveOverloadAmount
+        {
+            get { return OverloadAmount > 0 ? OverloadAmount : DefaultOverloadAmount; }
+        }
+
         [Header("Aura (ให้ยูนิตพวกเดียวกันตัวอื่นขณะอยู่บนสนาม)")]
 
         public int AuraAttack;

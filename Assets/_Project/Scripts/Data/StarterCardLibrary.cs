@@ -660,6 +660,7 @@ namespace MultiverseCardBattle.Data
                     FxApply(StatusType.DefenseUp, 1, 2))));
 
             BuildRiftSet();
+            BuildChainSet();
         }
 
         // ---------- Rift Pack (50 ใบ: ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ----------
@@ -1045,6 +1046,148 @@ namespace MultiverseCardBattle.Data
                 Fx(EffectType.DrawCard, 1),
                 Fx(EffectType.Heal, 3),
                 Fx(EffectType.GainEnergy, 1));
+        }
+
+        // ---------- Chain Cards (Keyword ใหม่ + Fast spell ตอบโต้ได้ในเทิร์นศัตรู) ----------
+
+        private static CardData FastSpell(
+            string id, string name, CardRarity rarity, int cost,
+            Keyword extraKeywords, params CardActionData[] actions)
+        {
+            return Add(Create(id, name, CardType.Spell,
+                Universe.Original, Faction.Neutral, rarity,
+                cost, 0, 0, Keyword.Fast | extraKeywords, CardTag.Magic,
+                CardSource.Starter, actions));
+        }
+
+        private static CardData OriginalUnit(
+            string id, string name, CardRarity rarity,
+            int cost, int attack, int health,
+            Keyword keywords, CardTag tags, params CardActionData[] actions)
+        {
+            return Add(Unit(id, name, Universe.Original, Faction.Neutral, rarity,
+                cost, attack, health, keywords, tags, actions));
+        }
+
+        private static void BuildChainSet()
+        {
+            // ----- Units: Keyword ใหม่ -----
+
+            OriginalUnit("CHN_001", "Bloodrage Berserker", CardRarity.Common,
+                3, 3, 4, Keyword.Enrage, CardTag.Human | CardTag.Melee);
+
+            OriginalUnit("CHN_002", "Iron Retaliator", CardRarity.Common,
+                3, 2, 5, Keyword.Retaliate, CardTag.Human | CardTag.Tank);
+
+            OriginalUnit("CHN_003", "Thornbark Warden", CardRarity.Common,
+                2, 1, 4, Keyword.Thorns | Keyword.Taunt, CardTag.Beast | CardTag.Tank);
+
+            OriginalUnit("CHN_004", "Frenzied Dire Wolf", CardRarity.Common,
+                2, 2, 3, Keyword.Frenzy, CardTag.Beast | CardTag.Melee);
+
+            OriginalUnit("CHN_005", "Veilstep Dancer", CardRarity.Rare,
+                3, 3, 3, Keyword.Elusive, CardTag.Human | CardTag.Assassin);
+
+            OriginalUnit("CHN_006", "Mossback Troll", CardRarity.Common,
+                4, 4, 5, Keyword.Regenerate, CardTag.Beast | CardTag.Melee);
+
+            OriginalUnit("CHN_007", "Gallows Executioner", CardRarity.Rare,
+                4, 4, 3, Keyword.LethalStrike, CardTag.Human | CardTag.Melee);
+
+            CardData golem = OriginalUnit("CHN_008", "Siege Golem", CardRarity.Rare,
+                4, 7, 6, Keyword.Overload, CardTag.Machine | CardTag.Tank);
+
+            golem.OverloadAmount = 2;
+
+            OriginalUnit("CHN_009", "Mirror Twin", CardRarity.Rare,
+                3, 3, 2, Keyword.Echo, CardTag.Spirit | CardTag.Magic);
+
+            OriginalUnit("CHN_010", "Shade Sentinel", CardRarity.Epic,
+                5, 4, 6, Keyword.Elusive | Keyword.Retaliate, CardTag.Spirit | CardTag.Elite);
+
+            OriginalUnit("CHN_011", "Bleeding Stalker", CardRarity.Rare,
+                3, 3, 2, Keyword.Stealth, CardTag.Human | CardTag.Assassin,
+                Act(TriggerType.Attack, TargetRule.EnemyUnit, TargetSelection.Random,
+                    FxApply(StatusType.Bleed, 1, 3)));
+
+            OriginalUnit("CHN_012", "Colossus of Rage", CardRarity.Epic,
+                6, 6, 7, Keyword.Enrage | Keyword.Frenzy, CardTag.Beast | CardTag.Elite | CardTag.Melee);
+
+            OriginalUnit("CHN_013", "Grave Warden", CardRarity.Epic,
+                5, 4, 5, Keyword.Regenerate | Keyword.Thorns, CardTag.Undead | CardTag.Elite);
+
+            OriginalUnit("CHN_014", "Hex Witch", CardRarity.Rare,
+                3, 2, 3, Keyword.None, CardTag.Human | CardTag.Magic,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Disarm, 0, 2),
+                    FxApply(StatusType.Curse, 0, 3)));
+
+            // ----- Fast spells: เล่นตอบโต้ได้ในเทิร์นศัตรู -----
+
+            FastSpell("CHN_016", "Counter Magic", CardRarity.Rare, 3, Keyword.None,
+                Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    Fx(EffectType.Negate)));
+
+            FastSpell("CHN_017", "Parry", CardRarity.Common, 1, Keyword.None,
+                Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.DefenseUp, 3, 1),
+                    Fx(EffectType.Heal, 2)));
+
+            FastSpell("CHN_018", "Ambush Shot", CardRarity.Common, 2, Keyword.None,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 3)));
+
+            FastSpell("CHN_019", "Flash Heal", CardRarity.Common, 1, Keyword.None,
+                Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.Heal, 4)));
+
+            FastSpell("CHN_020", "Mirror Barrier", CardRarity.Rare, 2, Keyword.None,
+                Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Barrier, 5, 0)));
+
+            CardData fracture = FastSpell("CHN_021", "Time Fracture", CardRarity.Epic, 4,
+                Keyword.Overload,
+                Act(TriggerType.Play, TargetRule.Self, TargetSelection.All,
+                    Fx(EffectType.Negate)),
+                Act(TriggerType.Play, TargetRule.AllyLeader, TargetSelection.All,
+                    Fx(EffectType.DrawCard, 1)));
+
+            fracture.OverloadAmount = 2;
+
+            FastSpell("CHN_022", "Exposing Strike", CardRarity.Rare, 2, Keyword.None,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 2),
+                    FxApply(StatusType.Exposed, 0, 2)));
+
+            FastSpell("CHN_023", "Vengeful Oath", CardRarity.Rare, 3, Keyword.None,
+                Act(TriggerType.Play, TargetRule.AllyUnit, TargetSelection.Chosen,
+                    FxKeyword(EffectType.AddKeyword, Keyword.Retaliate),
+                    Fx(EffectType.GainAttack, 2)));
+
+            FastSpell("CHN_024", "Bloodletting Hex", CardRarity.Common, 2, Keyword.None,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    FxApply(StatusType.Bleed, 2, 3)));
+
+            FastSpell("CHN_025", "Armor Break", CardRarity.Common, 1, Keyword.None,
+                Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                    Fx(EffectType.DealDamage, 1),
+                    FxApply(StatusType.DefenseDown, 2, 3)));
+
+            // ----- Spell ปกติ ที่ใช้ Keyword / Status ใหม่ -----
+
+            Add(Create("CHN_026", "Echo Bolt", CardType.Spell,
+                Universe.Original, Faction.Neutral, CardRarity.Common,
+                3, 0, 0, Keyword.Echo, CardTag.Magic | CardTag.Lightning,
+                CardSource.Starter,
+                new[]
+                {
+                    Act(TriggerType.Play, TargetRule.EnemyUnit, TargetSelection.Chosen,
+                        Fx(EffectType.DealDamage, 3))
+                }));
+
+            Add(Spell("CHN_027", "War Chant", CardRarity.Common, 3,
+                Act(TriggerType.Play, TargetRule.AllAllies, TargetSelection.All,
+                    FxApply(StatusType.AttackUp, 2, 2))));
         }
 
         // ---------- ตัวช่วยสร้างการ์ด ----------

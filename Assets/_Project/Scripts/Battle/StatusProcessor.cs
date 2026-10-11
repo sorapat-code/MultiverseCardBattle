@@ -52,6 +52,12 @@ namespace MultiverseCardBattle.Battle
                 }
 
                 if (card.Zone == CardZone.Field &&
+                    card.HasKeyword(Keyword.Regenerate))
+                {
+                    battle.HealUnit(card, card, BattleManager.RegenerateAmount);
+                }
+
+                if (card.Zone == CardZone.Field &&
                     card.HasStatus(StatusType.Blessed))
                 {
                     Bless(battle, card);

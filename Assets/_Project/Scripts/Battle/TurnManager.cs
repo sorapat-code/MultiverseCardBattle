@@ -46,6 +46,21 @@ namespace MultiverseCardBattle.Battle
             // เติม Energy เต็ม
             player.CurrentEnergy = player.MaxEnergy;
 
+            // Overload: Energy ส่วนหนึ่งถูกล็อกในเทิร์นนี้
+            if (player.OverloadedEnergy > 0)
+            {
+                int locked = Mathf.Min(player.OverloadedEnergy, player.CurrentEnergy);
+
+                player.CurrentEnergy -= locked;
+                player.OverloadedEnergy = 0;
+
+                if (locked > 0)
+                {
+                    battleManager.Log(
+                        player.Name + " has " + locked + " Energy locked (Overload)");
+                }
+            }
+
             // ยูนิตของผู้เล่นกลับมาโจมตีได้อีกครั้ง
             foreach (CardInstance card in player.Field)
                 card.AttacksThisTurn = 0;

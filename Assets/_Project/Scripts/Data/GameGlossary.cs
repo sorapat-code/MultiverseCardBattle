@@ -35,6 +35,16 @@ namespace MultiverseCardBattle.Data
                 case Keyword.Shadowbound: return "While its owner controls a Token, it gains Unstoppable and enemy units cannot attack it (spells and abilities can still target it).";
                 case Keyword.Unique: return "Only 1 copy of this card can be put in a deck.";
                 case Keyword.Spellburst: return "Triggers once the first time its owner plays a spell.";
+                case Keyword.Fast: return "Spell only. Can be played in response to your opponent's action, even during their turn, using your leftover Energy. Responses chain: the last card played resolves first.";
+                case Keyword.Enrage: return "Gains +2 Attack while it is damaged.";
+                case Keyword.Retaliate: return "Always strikes back when attacked by a unit, even if the hit kills it, the attacker has Quick Attack, or it is Stunned, Frozen or Disarmed.";
+                case Keyword.Frenzy: return "The first time it survives damage, it permanently gains +2 Attack.";
+                case Keyword.Elusive: return "Cannot be targeted while its owner controls another unit without Elusive.";
+                case Keyword.Regenerate: return "Heals 2 HP at the start of its owner's turn.";
+                case Keyword.Thorns: return "Deals 2 damage back to a unit that damages it in combat, even if it dies.";
+                case Keyword.LethalStrike: return "A unit damaged by this unit is destroyed if it is left with 3 HP or less.";
+                case Keyword.Overload: return "Playing this card locks some of your Energy next turn (the number shown).";
+                case Keyword.Echo: return "When played, a copy of this card without Echo returns to your hand.";
                 default: return "";
             }
         }
@@ -60,6 +70,7 @@ namespace MultiverseCardBattle.Data
             new[] { "Sleeping", "A unit cannot attack the turn it is played unless it has Charge or Rush." },
             new[] { "True damage", "Damage that ignores Shield, Barrier and Defense." },
             new[] { "Heal", "Restores HP, never above the maximum." },
+            new[] { "Chain", "When a card is played or a unit attacks, the opponent may respond with a Fast spell, and responses can be answered again. When nobody responds, the last card played resolves first. Negate cancels the action it responds to." },
             new[] { "Target", "Some cards need you to click a target. If there is none, a spell cannot be played; a unit can still be played but its effect does nothing." }
         };
 
@@ -99,10 +110,14 @@ namespace MultiverseCardBattle.Data
         {
             new[] { Keyword.Rush, Keyword.Charge, Keyword.Taunt, Keyword.DoubleStrike,
                     Keyword.Lifesteal, Keyword.Pierce, Keyword.QuickAttack,
-                    Keyword.Overwhelm, Keyword.Unstoppable, Keyword.Guard, Keyword.Backstab },
+                    Keyword.Overwhelm, Keyword.Unstoppable, Keyword.Guard, Keyword.Backstab,
+                    Keyword.Enrage, Keyword.Retaliate, Keyword.Frenzy, Keyword.Thorns,
+                    Keyword.LethalStrike },
             new[] { Keyword.Shield, Keyword.Ward, Keyword.Immune,
-                    Keyword.Stealth, Keyword.Reborn, Keyword.Shadowbound },
-            new[] { Keyword.Spellburst, Keyword.Unique }
+                    Keyword.Stealth, Keyword.Reborn, Keyword.Shadowbound,
+                    Keyword.Elusive, Keyword.Regenerate },
+            new[] { Keyword.Spellburst, Keyword.Unique, Keyword.Fast,
+                    Keyword.Overload, Keyword.Echo }
         };
 
         private static readonly string[] KeywordGroupTitles =
@@ -181,7 +196,17 @@ namespace MultiverseCardBattle.Data
                         "). Blocks harmful statuses.";
                 }
 
-                AddTerm(terms, CardTextGenerator.KeywordName(keyword), description);
+                string termName = CardTextGenerator.KeywordName(keyword);
+
+                if (keyword == Keyword.Overload)
+                {
+                    termName += " " + data.EffectiveOverloadAmount;
+
+                    description = "Playing this card locks " + data.EffectiveOverloadAmount +
+                        " Energy next turn.";
+                }
+
+                AddTerm(terms, termName, description);
             }
 
             if (instance != null)
@@ -249,6 +274,10 @@ namespace MultiverseCardBattle.Data
         {
             switch (effect.Type)
             {
+                case EffectType.Negate:
+                    AddTerm(terms, "Negate", "Cancels the action this card responds to. A negated card goes to the Graveyard without effect; a negated attack does nothing.");
+                    break;
+
                 case EffectType.Discover:
                     AddTerm(terms, "Discover", "Shows 3 random cards. Choose 1 and it is added to your hand.");
                     break;

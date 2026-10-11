@@ -160,6 +160,11 @@ namespace MultiverseCardBattle.Effects
                     EquipLeader(context);
                     break;
 
+                case EffectType.Negate:
+                    if (context.Battle != null)
+                        context.Battle.NegateChainTop(context.SourceCard);
+                    break;
+
                 case EffectType.GrantExtraAttack:
                     if (context.TargetCard != null)
                         context.TargetCard.ExtraAttacks += PositiveOr(effect.Value, 1);

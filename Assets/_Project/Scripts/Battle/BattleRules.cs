@@ -44,6 +44,37 @@ namespace MultiverseCardBattle.Battle
             return list;
         }
 
+        // ---------- Fast / Chain ----------
+
+        /// <summary>Fast spell: ตอบโต้การกระทำของศัตรูได้ แม้ในเทิร์นของศัตรู</summary>
+        public static bool IsFastSpell(CardInstance card)
+        {
+            return card != null && card.Data != null &&
+                   card.Data.Type == CardType.Spell &&
+                   card.HasKeyword(Keyword.Fast);
+        }
+
+        /// <summary>การ์ดมี Effect ชนิดนี้อยู่ใน Action ใดๆ หรือไม่</summary>
+        public static bool HasEffect(CardData data, EffectType type)
+        {
+            if (data == null || data.Actions == null)
+                return false;
+
+            foreach (CardActionData action in data.Actions)
+            {
+                if (action == null || action.Effects == null)
+                    continue;
+
+                foreach (EffectData effect in action.Effects)
+                {
+                    if (effect != null && effect.Type == type)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         // ---------- Play ----------
 
         /// <summary>
@@ -155,8 +186,30 @@ namespace MultiverseCardBattle.Battle
             if (battle.HasPendingChoice)
                 return ActionResult.Fail("Make your choice first");
 
-            if (battle.CurrentPlayer != player)
-                return ActionResult.Fail("It is not your turn");
+            if (battle.ChainResponder != null)
+            {
+                // หน้าต่างตอบโต้: เฉพาะผู้ตอบโต้ และเฉพาะ Fast spell
+                if (battle.ChainResponder != player)
+                    return ActionResult.Fail("Wait for your opponent to respond");
+
+                if (!IsFastSpell(card))
+                    return ActionResult.Fail("Only Fast spells can be played in response");
+
+                if (HasEffect(card.Data, EffectType.Negate) &&
+                    battle.ChainStack.Count == 0)
+                    return ActionResult.Fail("Nothing to negate");
+            }
+            else
+            {
+                if (battle.ChainBlocksActions)
+                    return ActionResult.Fail("The chain is resolving");
+
+                if (battle.CurrentPlayer != player)
+                    return ActionResult.Fail("It is not your turn");
+
+                if (HasEffect(card.Data, EffectType.Negate))
+                    return ActionResult.Fail("Nothing to negate");
+            }
 
             if (card.Zone != CardZone.Hand || !player.Hand.Contains(card))
                 return ActionResult.Fail("That card is not in your hand");
@@ -233,6 +286,9 @@ namespace MultiverseCardBattle.Battle
 
             if (battle.HasPendingChoice)
                 return ActionResult.Fail("Make your choice first");
+
+            if (battle.ChainBlocksActions)
+                return ActionResult.Fail("Respond or pass first");
 
             if (battle.CurrentPlayer != player)
                 return ActionResult.Fail("It is not your turn");

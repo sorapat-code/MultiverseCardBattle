@@ -377,6 +377,14 @@ namespace MultiverseCardBattle.Battle
             if (IsOver)
                 return ActionResult.Fail("The battle is over");
 
+            // ระหว่างหน้าต่างตอบโต้ / เชนค้างอยู่ ทำได้แค่ตอบโต้ด้วย Fast spell หรือ Pass
+            if (ChainBlocksActions &&
+                !(command is PlayCardCommand) &&
+                !(command is PassChainCommand))
+            {
+                return ActionResult.Fail("Respond or pass first");
+            }
+
             ActionResult result = command.Execute(this);
 
             if (result.Success)
@@ -385,6 +393,200 @@ namespace MultiverseCardBattle.Battle
             Touch();
 
             return result;
+        }
+
+        // ---------- เชน / หน้าต่างตอบโต้ ----------
+        //
+        // การลงการ์ดหรือโจมตีจะถูกวางลงเชนก่อน คู่ต่อสู้ที่มี Fast spell ใช้ได้จะได้ตอบโต้
+        // (ตอบโต้ซ้อนกันได้) เมื่อไม่มีใครตอบโต้เพิ่ม ใบบนสุดจะทำงานก่อน แล้วไล่ลงมาถึงใบแรก
+
+        /// <summary>ขีดจำกัดความลึกของเชน (กันวนไม่รู้จบ)</summary>
+        public const int MaxChainDepth = 12;
+
+        private readonly List<ChainLink> chain = new List<ChainLink>();
+        private bool resolvingChain;
+
+        public IReadOnlyList<ChainLink> ChainStack
+        {
+            get { return chain; }
+        }
+
+        /// <summary>ผู้เล่นที่ตอนนี้ตอบโต้ได้ (null = ไม่มีหน้าต่างตอบโต้)</summary>
+        public BattlePlayer ChainResponder { get; private set; }
+
+        /// <summary>มีเชนค้างหรือรอตอบโต้อยู่ ทำการกระทำปกติไม่ได้</summary>
+        public bool ChainBlocksActions
+        {
+            get
+            {
+                return ChainResponder != null ||
+                       (chain.Count > 0 && !resolvingChain);
+            }
+        }
+
+        /// <summary>การกระทำที่ผู้เล่นประกาศ (ลงการ์ด / โจมตี) เข้าสู่เชน</summary>
+        public void DeclareToChain(ChainLink link)
+        {
+            if (link == null)
+                return;
+
+            chain.Add(link);
+
+            OpenResponseWindow(GetOpponent(link.Player));
+        }
+
+        private void OpenResponseWindow(BattlePlayer responder)
+        {
+            ChainResponder = null;
+
+            if (IsOver || responder == null ||
+                chain.Count >= MaxChainDepth ||
+                !CanRespond(responder))
+            {
+                ResolveChain();
+                return;
+            }
+
+            if (IsAI(responder))
+            {
+                ChainResponder = responder;
+
+                IBattleCommand response = AIPlanner.NextResponse(this, responder);
+
+                if (response != null)
+                {
+                    ActionResult result = response.Execute(this);
+
+                    // สำเร็จ = ตอบโต้ถูกวางลงเชนและเปิดหน้าต่างต่อไปแล้ว
+                    if (result.Success)
+                        return;
+                }
+
+                ChainResponder = null;
+
+                ResolveChain();
+                return;
+            }
+
+            // ผู้เล่นมนุษย์: รอเลือกตอบโต้หรือ Pass
+            ChainResponder = responder;
+
+            Touch();
+        }
+
+        private bool CanRespond(BattlePlayer responder)
+        {
+            BattlePlayer saved = ChainResponder;
+
+            ChainResponder = responder;
+
+            bool can = false;
+
+            foreach (CardInstance card in new List<CardInstance>(responder.Hand.Cards))
+            {
+                if (BattleRules.IsFastSpell(card) &&
+                    BattleRules.ValidatePlayable(this, responder, card).Success)
+                {
+                    can = true;
+                    break;
+                }
+            }
+
+            ChainResponder = saved;
+
+            return can;
+        }
+
+        /// <summary>ไม่ตอบโต้: ใบบนสุดของเชนทำงาน</summary>
+        public void PassChain(BattlePlayer player)
+        {
+            if (ChainResponder != player)
+                return;
+
+            Log(player.Name + " passes");
+
+            ChainResponder = null;
+
+            ResolveChain();
+        }
+
+        private void ResolveChain()
+        {
+            if (resolvingChain)
+                return;
+
+            resolvingChain = true;
+            ChainResponder = null;
+
+            int guard = 0;
+
+            while (chain.Count > 0 && guard++ < 100)
+            {
+                if (IsOver)
+                {
+                    chain.Clear();
+                    break;
+                }
+
+                // ต้องรอผู้เล่นเลือก (Discover / Adapt / เป้าหมาย) ก่อนทำใบถัดไป
+                if (HasPendingChoice)
+                    break;
+
+                ChainLink link = chain[chain.Count - 1];
+
+                chain.RemoveAt(chain.Count - 1);
+
+                if (link.Cancelled)
+                {
+                    Log(link.Describe() + " is negated");
+
+                    if (link.Play != null)
+                        link.Play.Negated(this);
+                }
+                else if (link.Play != null)
+                {
+                    link.Play.ResolvePlay(this);
+                }
+                else if (link.Attack != null)
+                {
+                    link.Attack.ResolveAttack(this);
+                }
+
+                Resolve();
+            }
+
+            resolvingChain = false;
+
+            Touch();
+        }
+
+        // ทำเชนที่ค้างอยู่ต่อ หลังผู้เล่นเลือก Discover / Adapt / เป้าหมายเสร็จ
+        private void ContinueChain()
+        {
+            if (chain.Count > 0 && !resolvingChain &&
+                ChainResponder == null && !HasPendingChoice)
+            {
+                ResolveChain();
+            }
+        }
+
+        /// <summary>Negate: ยกเลิกใบที่ถูกตอบโต้ (ใบถัดลงไปบนเชน) คืน true ถ้ามี</summary>
+        public bool NegateChainTop(CardInstance source)
+        {
+            if (chain.Count == 0)
+                return false;
+
+            ChainLink top = chain[chain.Count - 1];
+
+            if (top.Cancelled)
+                return false;
+
+            top.Cancelled = true;
+
+            Log((source != null ? source.Data.CardName : "A spell") +
+                " negates " + top.Describe());
+
+            return true;
         }
 
         // ---------- Event / Log ----------
@@ -715,6 +917,16 @@ namespace MultiverseCardBattle.Battle
             if (source != null && source.HasKeyword(Keyword.Backstab))
                 target.CurrentHealth = 0;
 
+            // Lethal Strike: เหลือ HP น้อยพอหลังโดนความเสียหาย จะตายทันที
+            if (source != null && target.CurrentHealth > 0 &&
+                target.CurrentHealth <= LethalStrikeThreshold &&
+                source.HasKeyword(Keyword.LethalStrike))
+            {
+                Log(source.Data.CardName + " executes " + target.Data.CardName);
+
+                target.CurrentHealth = 0;
+            }
+
             // The Undead Overlord: ครั้งแรกที่จะตายจากความเสียหาย เหลือ HP 1 + Unstoppable ชั่วคราว
             // (ไม่กันการถูกทำลายโดยตรง เช่น Doom / Destroy ซึ่งไม่ผ่านที่นี่)
             if (target.CurrentHealth <= 0 &&
@@ -737,6 +949,16 @@ namespace MultiverseCardBattle.Battle
                     TurnManager.TotalTurns + (ownTurn ? 2 : 1);
 
                 Log(target.Data.CardName + " rises again (1 HP)");
+            }
+
+            // Frenzy: รอดจากความเสียหายครั้งแรก ได้ Attack เพิ่มถาวร (ครั้งเดียว)
+            if (target.CurrentHealth > 0 && target.HasKeyword(Keyword.Frenzy))
+            {
+                target.RemoveKeyword(Keyword.Frenzy);
+                target.CurrentAttack += FrenzyBonus;
+
+                Log(target.Data.CardName + " flies into a frenzy (+" +
+                    FrenzyBonus + " Attack)");
             }
 
             // Lifesteal: ฟื้น HP ให้ Leader เจ้าของผู้ทำความเสียหาย
@@ -937,6 +1159,8 @@ namespace MultiverseCardBattle.Battle
             PendingAdapt = null;
 
             Resolve();
+
+            ContinueChain();
 
             return true;
         }
@@ -1161,6 +1385,8 @@ namespace MultiverseCardBattle.Battle
 
             Resolve();
 
+            ContinueChain();
+
             return true;
         }
 
@@ -1254,8 +1480,17 @@ namespace MultiverseCardBattle.Battle
                         auraHealth -= card.Data.AuraHealth;
                     }
 
+                    // Enrage: HP ไม่เต็มแล้วได้ Attack เพิ่ม
+                    int enrage =
+                        card.HasKeyword(Keyword.Enrage) &&
+                        card.CurrentHealth > 0 &&
+                        card.CurrentHealth < card.MaxHealth
+                            ? EnrageBonus
+                            : 0;
+
                     int attackMod =
                         auraAttack +
+                        enrage +
                         card.TurnAttackBonus +
                         card.StatusValue(StatusType.AttackUp) -
                         card.StatusValue(StatusType.AttackDown) -
@@ -1266,6 +1501,7 @@ namespace MultiverseCardBattle.Battle
                 }
 
                 RefreshShadowbound(player);
+                RefreshElusive(player);
 
                 int spellDiscountFirst = 0;
 
@@ -1301,6 +1537,35 @@ namespace MultiverseCardBattle.Battle
                     card.CurrentCost = newCost;
                     card.AppliedCostMod = newCost - baseCost;
                 }
+            }
+        }
+
+        public const int EnrageBonus = 2;
+        public const int FrenzyBonus = 2;
+        public const int RegenerateAmount = 2;
+        public const int ThornsDamage = 2;
+        public const int LethalStrikeThreshold = 3;
+
+        // Elusive: ถูกเลือกเป็นเป้าหมายไม่ได้ ขณะเจ้าของมียูนิตอื่นที่ไม่ใช่ Elusive
+        private static void RefreshElusive(BattlePlayer player)
+        {
+            foreach (CardInstance card in player.Field)
+            {
+                bool active = false;
+
+                if (card.HasKeyword(Keyword.Elusive))
+                {
+                    foreach (CardInstance other in player.Field)
+                    {
+                        if (other != card && !other.HasKeyword(Keyword.Elusive))
+                        {
+                            active = true;
+                            break;
+                        }
+                    }
+                }
+
+                card.ElusiveActive = active;
             }
         }
 
@@ -1430,6 +1695,8 @@ namespace MultiverseCardBattle.Battle
             PendingDiscover = null;
 
             Resolve();
+
+            ContinueChain();
 
             return added;
         }

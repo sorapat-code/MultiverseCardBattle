@@ -68,7 +68,7 @@ Trigger [เงื่อนไข, เงื่อนไข:ค่า] @Target[:
 - **Effect**: `DealDamage`, `DealTrueDamage`, `Heal`, `GainAttack`, `GainHealth`, `SetAttack`, `SetHealth`, `ReduceCost`, `IncreaseCost`, `SetCost`, `DrawCard`, `DiscardCard`, `CreateCard`, `DestroyCard`, `Summon`, `ReturnToHand`, `MoveToDeck`, `Banish`, `AddKeyword`, `RemoveKeyword`, `Silence`, `Stun`, `GainEnergy`, `SpendEnergy`, `Discover`, `Transform`, `Burn`, `Regen`, `ApplyStatus`, `RemoveStatus`, `Adapt`
 - **Condition**: `TurnNumber`, `IsFirstTurn`, `SelfHealthLessThan`, `SelfHealthGreaterThan`, `EnergyGreaterThan`, `EnergyLessThan`, `HandCount`, `DeckCount`, `GraveyardCount`, `AllyUnitCount`, `EnemyUnitCount`, `HasTag`, `HasFaction`, `HasUniverse`, `Chance`, `Combo`, `TargetMarked`
 - **Status**: `Stun`, `Silence`, `Burn`, `Regen`, `Freeze`, `Root`, `Disarm`, `Confusion`, `Poison`, `Bleed`, `Curse`, `Marked`, `AttackUp`, `AttackDown`, `DefenseUp`, `DefenseDown`, `Vulnerable`, `Weakness`, `Barrier`, `CostUp`, `CostDown`, `Exposed`, `Protected`, `Blessed`, `Transformed`, `TemporaryTransformation`, `TransformationLock`, `TransformationFatigue`
-- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Backstab`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`, `Shadowbound`
+- **Keyword**: `Taunt`, `Charge`, `Rush`, `Shield`, `Lifesteal`, `Backstab`, `Stealth`, `DoubleStrike`, `Pierce`, `QuickAttack`, `Overwhelm`, `Unstoppable`, `Guard`, `Ward`, `Immune`, `Reborn`, `Spellburst`, `Shadowbound`, `Fast`, `Enrage`, `Retaliate`, `Frenzy`, `Elusive`, `Regenerate`, `Thorns`, `LethalStrike`, `Overload`, `Echo`
 - **Tag**: `Human`, `Beast`, `Machine`, `Spirit`, `Undead`, `God`, `Demon`, `Dragon`, `Melee`, `Ranged`, `Magic`, `Support`, `Tank`, `Assassin`, `Leader`, `Elite`, `Boss`, `Summon`, `Token`, `Fire`, `Water`, `Wind`, `Earth`, `Lightning`, `Ice`, `Dark`, `Light`
 
 ## ตัวอย่าง
@@ -152,3 +152,29 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 - แทนที่หน้า Campaign: 5 บท บทละ 2 ด่าน (ใช้ด่าน `stage_01`–`stage_10` และเซฟเดิม) เนื้อเรื่องอยู่ที่ `StoryLibrary` (Intro ก่อนสู้ครั้งแรก, Outro หลังชนะครั้งแรก, Epilogue ท้ายบท)
 - รางวัลจบบทแจกครั้งเดียวต่อบท (`SaveData.StoryChaptersRewarded`) ด่านที่ผ่านแล้วกดปุ่ม "Story" เพื่ออ่านซ้ำได้
+
+## Keyword ใหม่และระบบเชน (Chain)
+
+| Keyword | ผล |
+|---|---|
+| `Fast` | เฉพาะ Spell: เล่นตอบโต้การกระทำของศัตรูได้แม้ในเทิร์นศัตรู ใช้ Energy ที่เหลือของตัวเอง |
+| `Enrage` | HP ไม่เต็ม = +2 Attack |
+| `Retaliate` | สวนกลับเสมอเมื่อโดนยูนิตโจมตี แม้ตายจากการโจมตีนั้น / ผู้โจมตีมี Quick Attack / ถูก Stun, Freeze, Disarm |
+| `Frenzy` | รอดจากความเสียหายครั้งแรก = +2 Attack ถาวร (ครั้งเดียว) |
+| `Elusive` | ศัตรูเลือกเป็นเป้าหมายไม่ได้ ขณะเจ้าของมียูนิตอื่นที่ไม่ใช่ Elusive |
+| `Regenerate` | ฟื้น 2 HP ตอนเริ่มเทิร์นเจ้าของ |
+| `Thorns` | ถูกยูนิตโจมตี = สะท้อน 2 ดาเมจกลับ แม้ตาย |
+| `LethalStrike` | ทำดาเมจแล้วเป้าหมายเหลือ HP ไม่เกิน 3 = ตายทันที |
+| `Overload` | ลงการ์ดแล้ว Energy เทิร์นหน้าถูกล็อก (`CardData.OverloadAmount`, 0 = 1) |
+| `Echo` | ใช้แล้วได้สำเนา (ไม่มี Echo) กลับเข้ามือ 1 ใบ |
+
+เอฟเฟกต์ใหม่: `Negate` (ใช้กับ Target `Self`) ยกเลิกการกระทำที่กำลังถูกตอบโต้ ใช้ได้เฉพาะตอนตอบโต้
+
+### เชน (Chain)
+
+1. ผู้เล่นลงการ์ดหรือประกาศโจมตี: จ่าย Energy แล้วการกระทำถูกวางลงเชน
+2. คู่ต่อสู้ที่มี Fast spell ที่เล่นได้จะได้ตอบโต้ (มนุษย์เลือกเล่นหรือ PASS, AI ตัดสินเอง) ตอบโต้ซ้อนกันได้ไม่จำกัด (ขีดจำกัดความปลอดภัย `BattleManager.MaxChainDepth` = 12)
+3. เมื่อไม่มีใครตอบโต้เพิ่ม ใบหลังสุดทำงานก่อน แล้วไล่ลงมาถึงการกระทำแรก (LIFO) ถ้าเป้าหมายหายไปแล้วการกระทำนั้นจะ fizzle
+4. ถ้าคู่ต่อสู้ไม่มี Fast spell ที่เล่นได้ การกระทำทำงานทันทีเหมือนเดิม
+
+การ์ดตัวอย่าง: `CHN_001`-`CHN_027` (ใน Core Pack)

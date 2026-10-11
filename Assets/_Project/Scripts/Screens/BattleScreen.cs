@@ -391,6 +391,10 @@ namespace MultiverseCardBattle.Screens
             if (battle.IsOver || battle.HasPendingChoice)
                 return;
 
+            // รอผู้เล่นตอบโต้ / เชนยังค้างอยู่
+            if (battle.ChainBlocksActions)
+                return;
+
             if (battle.CurrentPlayer != Ai)
             {
                 aiTimer = 0f;
@@ -809,6 +813,13 @@ namespace MultiverseCardBattle.Screens
             bool myTurn =
                 battle.CurrentPlayer == Human &&
                 !battle.IsOver &&
+                !battle.HasPendingChoice &&
+                !battle.ChainBlocksActions;
+
+            // หน้าต่างตอบโต้: เล่นได้เฉพาะ Fast spell หรือกด Pass
+            bool responding =
+                battle.ChainResponder == Human &&
+                !battle.IsOver &&
                 !battle.HasPendingChoice;
 
             turnText.text =
@@ -830,6 +841,9 @@ namespace MultiverseCardBattle.Screens
             if (battle.HasPendingTarget && battle.PendingTarget.Player == Human)
                 hintText.text = "<color=#FF6070>" + battle.PendingTarget.Prompt + "</color>";
 
+            if (responding)
+                hintText.text = "<color=#FFD060>" + BuildResponseHint() + "</color>";
+
             RefreshLeader(enemyWidget, Ai);
             RefreshLeader(playerWidget, Human);
             RefreshPileButtons();
@@ -838,7 +852,7 @@ namespace MultiverseCardBattle.Screens
 
             RefreshField(enemyField, Ai, myTurn);
             RefreshField(playerField, Human, myTurn);
-            RefreshHand(myTurn);
+            RefreshHand(myTurn || responding);
 
             // ต้องคำนวณ Layout ก่อน จึงจะรู้ตำแหน่งการ์ดสำหรับตัวเลขลอย
             LayoutRebuilder.ForceRebuildLayoutImmediate(enemyField);
@@ -850,13 +864,16 @@ namespace MultiverseCardBattle.Screens
 
             RefreshDevilTrigger(myTurn);
 
-            endTurnButton.interactable = myTurn;
+            endTurnButton.interactable = myTurn || responding;
 
             UIFactory.SetButtonLabel(
-                endTurnButton, myTurn ? "END TURN" : "...");
+                endTurnButton,
+                responding ? "PASS" : (myTurn ? "END TURN" : "..."));
 
             endTurnButton.GetComponent<Image>().color =
-                myTurn && !HasMovesLeft() ? UIFactory.Gold : UIFactory.Success;
+                responding
+                    ? UIFactory.Accent
+                    : (myTurn && !HasMovesLeft() ? UIFactory.Gold : UIFactory.Success);
 
             cancelButton.gameObject.SetActive(
                 selectedHand != null || selectedAttacker != null);
@@ -865,6 +882,24 @@ namespace MultiverseCardBattle.Screens
 
             RefreshOverlay();
             RefreshPile();
+        }
+
+        // ข้อความบอกว่าตอนนี้ต้องตอบโต้อะไร
+        private string BuildResponseHint()
+        {
+            IReadOnlyList<ChainLink> stack = battle.ChainStack;
+
+            if (stack.Count == 0)
+                return "Respond with a Fast spell, or PASS";
+
+            ChainLink top = stack[stack.Count - 1];
+
+            string who = top.Player == Human ? "You" : top.Player.Name;
+
+            string text = who + (top.IsAttack ? ": " : " plays: ") + top.Describe();
+
+            return text + "  -  play a Fast spell or PASS" +
+                (stack.Count > 1 ? "  (chain " + stack.Count + ")" : "");
         }
 
         private bool HasMovesLeft()
@@ -2081,10 +2116,14 @@ namespace MultiverseCardBattle.Screens
 
         private bool CanAct()
         {
-            return battle != null &&
-                !battle.IsOver &&
-                !battle.HasPendingChoice &&
-                battle.CurrentPlayer == Human;
+            if (battle == null || battle.IsOver || battle.HasPendingChoice)
+                return false;
+
+            // หน้าต่างตอบโต้ของเรา: เล่น Fast spell ได้แม้ไม่ใช่เทิร์นเรา
+            if (battle.ChainResponder == Human)
+                return true;
+
+            return battle.CurrentPlayer == Human && !battle.ChainBlocksActions;
         }
 
         // ---------- ลากการ์ด ----------
@@ -2649,6 +2688,13 @@ namespace MultiverseCardBattle.Screens
                 return;
 
             ClearSelection();
+
+            // ระหว่างหน้าต่างตอบโต้ ปุ่มนี้คือ PASS
+            if (battle.ChainResponder == Human)
+            {
+                Report(battle.Submit(new PassChainCommand(Human)));
+                return;
+            }
 
             Report(battle.Submit(new EndTurnCommand(Human)));
         }

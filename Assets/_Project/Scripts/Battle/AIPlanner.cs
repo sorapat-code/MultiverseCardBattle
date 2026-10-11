@@ -13,6 +13,10 @@ namespace MultiverseCardBattle.Battle
     /// </summary>
     public static class AIPlanner
     {
+        // ใช้สุ่มตัดสินใจตอบโต้ (เทสต์ตั้งให้คงที่ได้)
+        public static System.Func<float> RandomValue =
+            () => UnityEngine.Random.value;
+
         public static IBattleCommand NextCommand(
             BattleManager battle,
             BattlePlayer player)
@@ -29,6 +33,69 @@ namespace MultiverseCardBattle.Battle
                 return play;
 
             return PlanAttack(battle, player);
+        }
+
+        // ---------- ตอบโต้ (Fast spell) ----------
+
+        /// <summary>
+        /// AI ตอบโต้การกระทำบนเชนด้วย Fast spell (null = Pass)
+        /// ต้องเรียกตอนที่ battle.ChainResponder เป็น player
+        /// </summary>
+        public static IBattleCommand NextResponse(
+            BattleManager battle,
+            BattlePlayer player)
+        {
+            if (battle == null || player == null || battle.IsOver ||
+                battle.ChainStack.Count == 0)
+                return null;
+
+            ChainLink top = battle.ChainStack[battle.ChainStack.Count - 1];
+
+            // บางครั้งก็ปล่อยผ่าน ไม่ตอบโต้ทุกอย่าง
+            if (RandomValue() > 0.8f)
+                return null;
+
+            List<CardInstance> hand = new List<CardInstance>(player.Hand.Cards);
+
+            hand.Sort((a, b) => b.CurrentCost.CompareTo(a.CurrentCost));
+
+            foreach (CardInstance card in hand)
+            {
+                if (!BattleRules.IsFastSpell(card))
+                    continue;
+
+                if (!BattleRules.ValidateBasicPlay(battle, player, card).Success)
+                    continue;
+
+                // Negate: ใช้กับการโจมตี หรือการ์ดที่แพงพอ ที่ศัตรูเป็นคนลง
+                if (BattleRules.HasEffect(card.Data, EffectType.Negate))
+                {
+                    bool worthIt =
+                        top.Player != player &&
+                        (top.IsAttack || top.Card.CurrentCost >= 3);
+
+                    if (!worthIt)
+                        continue;
+                }
+
+                List<TargetCandidate> options =
+                    BattleRules.GetPlayTargets(battle, player, card);
+
+                TargetCandidate chosen = null;
+
+                if (options.Count > 0)
+                {
+                    chosen = PickPlayTarget(card, player, options);
+
+                    if (chosen == null)
+                        continue;
+                }
+
+                if (BattleRules.ValidatePlay(battle, player, card, chosen).Success)
+                    return new PlayCardCommand(player, card, chosen);
+            }
+
+            return null;
         }
 
         // ---------- ลงการ์ด ----------

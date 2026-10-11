@@ -26,6 +26,9 @@ namespace MultiverseCardBattle.Battle
             TargetLeader = targetLeader;
         }
 
+        /// <summary>
+        /// ประกาศโจมตี: วางลงเชนให้คู่ต่อสู้ตอบโต้ได้ แล้วค่อยโจมตีจริงเมื่อถึงคิว
+        /// </summary>
         public ActionResult Execute(BattleManager battle)
         {
             ActionResult check =
@@ -34,6 +37,25 @@ namespace MultiverseCardBattle.Battle
 
             if (!check.Success)
                 return check;
+
+            battle.DeclareToChain(ChainLink.ForAttack(this));
+
+            return ActionResult.Ok();
+        }
+
+        /// <summary>โจมตีจริง (เรียกเมื่อถึงคิวบนเชน) ตรวจกติกาซ้ำเพราะสนามอาจเปลี่ยนไปแล้ว</summary>
+        public void ResolveAttack(BattleManager battle)
+        {
+            ActionResult check =
+                BattleRules.ValidateAttack(
+                    battle, Player, Attacker, TargetUnit, TargetLeader);
+
+            if (!check.Success)
+            {
+                battle.Log(Attacker.Data.CardName + "'s attack fizzles");
+
+                return;
+            }
 
             CardInstance targetUnit = TargetUnit;
             BattlePlayer targetLeader = TargetLeader;
@@ -68,8 +90,6 @@ namespace MultiverseCardBattle.Battle
             // ยูนิตเดียวกันโจมตีครบ 3 ครั้งโดยไม่ตาย (ปลดล็อก Vergil)
             if (Attacker.Zone == CardZone.Field && Attacker.CurrentHealth > 0)
                 battle.Stats.NoteSurvivingAttacks(Player.PlayerID, Attacker.TotalAttacks);
-
-            return ActionResult.Ok();
         }
 
         // หลังต่อสู้ระหว่างยูนิต: Abysswalker (ATK +1 จนจบเทิร์น) และนับชัยชนะสำหรับปลดล็อกการ์ดลับ
@@ -173,8 +193,11 @@ namespace MultiverseCardBattle.Battle
                 return;
 
             int attackerDamage = Attacker.CurrentAttack;
+            // Retaliate: สวนกลับเสมอ แม้ถูกควบคุมอยู่ (ยกเว้นโดนซุ่มโจมตี)
+            bool retaliates = targetUnit.HasKeyword(Keyword.Retaliate);
+
             int counterDamage =
-                ambush || !CanCounter(targetUnit)
+                ambush || (!CanCounter(targetUnit) && !retaliates)
                     ? 0
                     : targetUnit.CurrentAttack;
             int healthBefore = targetUnit.CurrentHealth;
@@ -198,7 +221,8 @@ namespace MultiverseCardBattle.Battle
                 // ผู้โจมตีตีก่อน ถ้าเป้าหมายตายก็ไม่โดนตีกลับ
                 dealt = battle.DamageUnit(Attacker, targetUnit, attackerDamage);
 
-                if (targetUnit.CurrentHealth > 0)
+                // Retaliate: ตายจากการโจมตีนี้แล้วก็ยังสวนกลับ
+                if (targetUnit.CurrentHealth > 0 || retaliates)
                     battle.DamageUnit(targetUnit, Attacker, counterDamage);
             }
             else
@@ -206,6 +230,17 @@ namespace MultiverseCardBattle.Battle
                 dealt = battle.DamageUnit(Attacker, targetUnit, attackerDamage);
 
                 battle.DamageUnit(targetUnit, Attacker, counterDamage);
+            }
+
+            // Thorns: สะท้อนความเสียหายกลับ ไม่ว่าเป้าหมายจะตายหรือไม่
+            if (dealt > 0 &&
+                targetUnit.HasKeyword(Keyword.Thorns) &&
+                Attacker.Zone == CardZone.Field &&
+                Attacker.CurrentHealth > 0)
+            {
+                battle.Log(targetUnit.Data.CardName + "'s thorns hurt " + Attacker.Data.CardName);
+
+                battle.DamageUnit(targetUnit, Attacker, BattleManager.ThornsDamage, false);
             }
 
             int excess = dealt - healthBefore;

@@ -27,7 +27,8 @@ namespace MultiverseCardBattle.Data
             if (!string.IsNullOrEmpty(data.Description))
                 return data.Description;
 
-            string keywords = KeywordText(data.Keywords, data.EffectiveImmuneAmount);
+            string keywords = KeywordText(
+                data.Keywords, data.EffectiveImmuneAmount, data.EffectiveOverloadAmount);
             string actions = ActionsText(data);
 
             if (keywords.Length > 0 && actions.Length > 0)
@@ -109,7 +110,8 @@ namespace MultiverseCardBattle.Data
 
         public static string KeywordText(
             Keyword keywords,
-            int immuneAmount = CardData.DefaultImmuneAmount)
+            int immuneAmount = CardData.DefaultImmuneAmount,
+            int overloadAmount = CardData.DefaultOverloadAmount)
         {
             if (keywords == Keyword.None)
                 return "";
@@ -128,7 +130,9 @@ namespace MultiverseCardBattle.Data
                 names.Add(
                     keyword == Keyword.Immune
                         ? KeywordName(keyword) + " " + immuneAmount
-                        : KeywordName(keyword));
+                        : (keyword == Keyword.Overload
+                            ? KeywordName(keyword) + " " + overloadAmount
+                            : KeywordName(keyword)));
             }
 
             return string.Join(", ", names.ToArray());
@@ -366,6 +370,9 @@ namespace MultiverseCardBattle.Data
 
                 case EffectType.EquipLeader:
                     return "equip to your Leader";
+
+                case EffectType.Negate:
+                    return "negate the action this responds to";
 
                 default:
                     return "";

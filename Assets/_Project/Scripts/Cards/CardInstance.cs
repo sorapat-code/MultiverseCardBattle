@@ -263,6 +263,12 @@ namespace MultiverseCardBattle.Cards
         // โจมตีเพิ่มได้อีกกี่ครั้งในเทิร์นนี้ (ล้างตอนจบเทิร์น)
         public int ExtraAttacks;
 
+        // สำเนาจาก Echo (ไม่ Echo ซ้ำอีก แม้การ์ดถูกรีเซ็ตค่า)
+        public bool IsEchoCopy;
+
+        // Elusive ที่กำลังทำงานอยู่ (BattleManager.RefreshModifiers เป็นผู้ตั้งค่า)
+        public bool ElusiveActive;
+
         // ใช้ Devil Trigger ไปแล้วในแมตช์นี้
         public bool DevilTriggerUsed;
 
@@ -301,9 +307,11 @@ namespace MultiverseCardBattle.Cards
         {
             get
             {
-                return HasKeyword(Keyword.Stealth) &&
-                       !HasStatus(StatusType.Marked) &&
-                       !HasStatus(StatusType.Exposed);
+                if (HasStatus(StatusType.Marked) || HasStatus(StatusType.Exposed))
+                    return false;
+
+                return HasKeyword(Keyword.Stealth) ||
+                       (ElusiveActive && HasKeyword(Keyword.Elusive));
             }
         }
 

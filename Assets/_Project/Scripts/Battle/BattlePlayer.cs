@@ -33,6 +33,9 @@ namespace MultiverseCardBattle.Battle
         public CardInstance LeaderGear;
         public int LeaderGearTurns;
 
+        // Energy ที่ถูก Overload ล็อกไว้ในเทิร์นหน้าของผู้เล่นนี้
+        public int OverloadedEnergy;
+
         public Deck Deck;
         public Hand Hand;
 

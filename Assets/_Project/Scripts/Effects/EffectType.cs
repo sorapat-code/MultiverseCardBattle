@@ -68,6 +68,8 @@ namespace MultiverseCardBattle.Effects
         Equip,
 
         // อุปกรณ์ Leader: วางในช่อง Leader ของผู้เล่น มี Durability (เทิร์น)
-        EquipLeader
+        EquipLeader,
+        // Negate: ยกเลิกการกระทำที่ถูกตอบโต้ (ใบถัดลงไปบนเชน) ใช้ได้เฉพาะตอนตอบโต้
+        Negate
     }
 }
