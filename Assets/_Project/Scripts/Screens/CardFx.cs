@@ -21,6 +21,17 @@ namespace MultiverseCardBattle.Screens
         private Vector2 lungeDir;
         private Vector3 lungeBase;
 
+        // ออร่าลุกโชน (Kaioken): ชั้นสีเต้นเป็นจังหวะ + ประกายลอยขึ้น จนหมดเวลาแล้วจางหาย
+        private const float AuraFade = 0.7f;
+        private const float AuraSparkEvery = 0.1f;
+
+        private float auraAge = -1f;
+        private float auraTime;
+        private float auraSpark;
+        private Color auraColor;
+        private Image aura;
+        private Transform auraLayer;
+
         private float popAge = -1f;
         private float flashAge = -1f;
         private Image flash;
@@ -79,6 +90,43 @@ namespace MultiverseCardBattle.Screens
             fx.flash.transform.SetAsLastSibling();
         }
 
+        /// <summary>
+        /// ออร่าไฟรอบการ์ดนาน seconds วินาที (ใช้กับ Kaioken: ยูนิตทุกตัวลุกเป็นสีแดงจนจบเทิร์น)
+        /// sparkLayer = ชั้นที่วางประกายลอยขึ้น (ชั้นเอฟเฟกต์ของหน้าจอ)
+        /// </summary>
+        public static void Aura(Component target, Transform sparkLayer, Color color, float seconds)
+        {
+            if (target == null)
+                return;
+
+            CardFx fx = Get(target);
+
+            if (fx.aura == null)
+            {
+                Image image = UIFactory.CreatePanel(
+                    fx.transform, "Aura", new Color(1f, 1f, 1f, 0f));
+
+                UIShapes.MakeRounded(image, 10f);
+
+                UIFactory.Stretch(image.rectTransform);
+
+                // ใหญ่กว่าการ์ดนิดหน่อยให้ดูเหมือนแสงเรืองรอบๆ
+                image.rectTransform.offsetMin = new Vector2(-8f, -8f);
+                image.rectTransform.offsetMax = new Vector2(8f, 8f);
+
+                image.raycastTarget = false;
+
+                fx.aura = image;
+            }
+
+            fx.auraColor = color;
+            fx.auraTime = Mathf.Max(AuraFade + 0.1f, seconds);
+            fx.auraAge = 0f;
+            fx.auraSpark = 0f;
+            fx.auraLayer = sparkLayer;
+            fx.aura.transform.SetAsLastSibling();
+        }
+
         private static CardFx Get(Component target)
         {
             CardFx fx = target.GetComponent<CardFx>();
@@ -127,6 +175,40 @@ namespace MultiverseCardBattle.Screens
                 {
                     lungeAge = -1f;
                     transform.localPosition = lungeBase;
+                }
+            }
+
+            if (auraAge >= 0f && aura != null)
+            {
+                auraAge += dt;
+
+                // เต้นเป็นจังหวะเร็ว แล้วจางหายช่วงท้าย
+                float pulse = 0.55f + 0.45f * Mathf.Sin(auraAge * 11f);
+                float fade = Mathf.Clamp01((auraTime - auraAge) / AuraFade);
+
+                Color c = auraColor;
+
+                c.a = 0.38f * pulse * fade;
+
+                aura.color = c;
+
+                auraSpark -= dt;
+
+                if (auraSpark <= 0f && fade > 0.15f && auraLayer != null)
+                {
+                    auraSpark = AuraSparkEvery;
+
+                    Vector3 origin =
+                        UiFx.ScreenOf(transform) +
+                        new Vector3(Random.Range(-60f, 60f), Random.Range(-90f, 20f), 0f);
+
+                    UiFx.Burst(auraLayer, origin, auraColor, 2, 90f, 20f, 0.8f, -260f);
+                }
+
+                if (auraAge >= auraTime)
+                {
+                    auraAge = -1f;
+                    aura.color = new Color(auraColor.r, auraColor.g, auraColor.b, 0f);
                 }
             }
 

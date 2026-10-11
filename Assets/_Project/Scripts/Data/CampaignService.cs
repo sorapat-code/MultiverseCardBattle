@@ -94,7 +94,7 @@ namespace MultiverseCardBattle.Data
 
             BattleSetup.PlayerName = "You";
             BattleSetup.EnemyName = "Training Dummy";
-            BattleSetup.PlayerLeaderId = SaveManager.Profile.Data.LeaderId;
+            BattleSetup.PlayerLeaderId = LeaderLibrary.UsableId(SaveManager.Profile);
             BattleSetup.EnemyLeaderId = null;
             BattleSetup.EnemyHealth = MultiverseCardBattle.Battle.TutorialSetup.EnemyHealth;
 
@@ -128,7 +128,7 @@ namespace MultiverseCardBattle.Data
 
             BattleSetup.PlayerDeck = StarterDecks.ToCards(deck.CardIDs);
             BattleSetup.PlayerName = "You";
-            BattleSetup.PlayerLeaderId = profile.Data.LeaderId;
+            BattleSetup.PlayerLeaderId = LeaderLibrary.UsableId(profile);
 
             return null;
         }

@@ -66,6 +66,9 @@ namespace MultiverseCardBattle.Data
 
         public string FinisherId;
 
+        // ว่าง = ใช้ได้ตั้งแต่เริ่มเกม / ใส่ ID ด่าน = ต้องชนะด่านนั้นในโหมด Story ก่อนถึงจะเลือกได้
+        public string UnlockStageId;
+
         // false = Leader ของบอสในโหมดเนื้อเรื่อง (ผู้เล่นเลือกไม่ได้)
         public bool PlayerSelectable = true;
 
@@ -129,6 +132,53 @@ namespace MultiverseCardBattle.Data
             return null;
         }
 
+        /// <summary>
+        /// Leader ตัวนี้ผู้เล่นเลือกใช้ได้แล้วหรือยัง
+        /// เริ่มเกมมีแค่ Goku (กับ No Leader) ตัวอื่นปลดด้วยการชนะด่านใน Story (UnlockStageId)
+        /// </summary>
+        public static bool IsUnlocked(PlayerProfile profile, LeaderData leader)
+        {
+            if (leader == null || !leader.PlayerSelectable)
+                return false;
+
+            if (string.IsNullOrEmpty(leader.UnlockStageId))
+                return true;
+
+            if (DevCheats.Enabled)
+                return true;
+
+            return profile != null && profile.IsStageCompleted(leader.UnlockStageId);
+        }
+
+        /// <summary>ข้อความบอกวิธีปลดล็อก เช่น Clear "Bandit Road" in Story mode</summary>
+        public static string UnlockHint(LeaderData leader)
+        {
+            if (leader == null || string.IsNullOrEmpty(leader.UnlockStageId))
+                return "";
+
+            CampaignStage stage = CampaignLibrary.Get(leader.UnlockStageId);
+
+            return "Clear \"" + (stage != null ? stage.Name : leader.UnlockStageId) +
+                   "\" in Story mode to unlock.";
+        }
+
+        /// <summary>
+        /// Leader ที่ใช้เข้าแมตช์จริง: ถ้าที่เซฟไว้ยังล็อกอยู่ (เช่น เซฟเก่า) ให้ใช้ Goku แทน
+        /// ว่าง = No Leader
+        /// </summary>
+        public static string UsableId(PlayerProfile profile)
+        {
+            if (profile == null)
+                return GokuId;
+
+            string id = profile.Data.LeaderId;
+
+            if (string.IsNullOrEmpty(id))
+                return "";
+
+            return IsUnlocked(profile, Get(id)) ? id : GokuId;
+        }
+
         private static void Build()
         {
             if (all != null)
@@ -170,6 +220,7 @@ namespace MultiverseCardBattle.Data
                 Title = "Hokage-to-be of the Leaf",
                 Universe = Universe.Naruto,
                 Theme = new Color(1f, 0.55f, 0.1f, 1f),
+                UnlockStageId = "stage_02",
 
                 SkillKind = LeaderSkillKind.SummonTokens,
                 SkillCount = 2,
@@ -198,6 +249,7 @@ namespace MultiverseCardBattle.Data
                 Title = "The Strongest Sorcerer",
                 Universe = Universe.JujutsuKaisen,
                 Theme = new Color(0.45f, 0.7f, 1f, 1f),
+                UnlockStageId = "stage_04",
 
                 SkillKind = LeaderSkillKind.Barrier,
                 SkillValue = 3,
@@ -225,6 +277,7 @@ namespace MultiverseCardBattle.Data
                 Title = "Genius, Billionaire, Iron Man",
                 Universe = Universe.Original,
                 Theme = new Color(1f, 0.35f, 0.25f, 1f),
+                UnlockStageId = "stage_06",
 
                 SkillKind = LeaderSkillKind.DamageEnemies,
                 SkillValue = 1,

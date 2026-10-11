@@ -1764,6 +1764,8 @@ namespace MultiverseCardBattle.Screens
                 view.HoverEntered += ShowPreview;
                 view.HoverExited += HidePreview;
 
+                ApplyKaiokenAura(owner, card, view);
+
                 CardHighlight highlight = CardHighlight.None;
 
                 if (card == selectedAttacker)
@@ -3544,9 +3546,28 @@ namespace MultiverseCardBattle.Screens
             Report(result);
         }
 
+        // Kaioken ที่ยังมีผลอยู่ (ใช้สกิลในเทิร์นนี้ และยูนิตยังมี Attack Up): ออร่าแดงเต้นค้างจนจบเทิร์น
+        private void ApplyKaiokenAura(BattlePlayer owner, CardInstance card, CardView view)
+        {
+            if (owner == null || owner.Leader == null || view == null ||
+                owner.Leader.Id != LeaderLibrary.GokuId ||
+                owner.Leader.SkillKind != LeaderSkillKind.BuffAttack ||
+                !owner.LeaderSkillUsed ||
+                card.StatusValue(StatusType.AttackUp) < owner.Leader.SkillValue)
+                return;
+
+            CardFx.Aura(view, fxLayer, KaiokenRed, 1000000f);
+        }
+
+        // Kaioken: สีแดงเข้มของพลังเพิ่มร่าง (ใช้กับสกิลเพิ่ม ATK ของ Goku)
+        private static readonly Color KaiokenRed = new Color(1f, 0.16f, 0.1f, 1f);
+
         private void PlayLeaderSkillFx()
         {
-            Color theme = Human.Leader.Theme;
+            bool kaioken = Human.Leader.Id == LeaderLibrary.GokuId &&
+                           Human.Leader.SkillKind == LeaderSkillKind.BuffAttack;
+
+            Color theme = kaioken ? KaiokenRed : Human.Leader.Theme;
 
             Vector3 origin = playerLeader != null
                 ? UiFx.ScreenOf(playerLeader.transform)
@@ -3572,6 +3593,14 @@ namespace MultiverseCardBattle.Screens
                     CardFx.Flash(view, theme);
 
                     UiFx.Burst(fxLayer, UiFx.ScreenOf(view.transform), theme, 12, 300f, 22f, 0.8f, -40f);
+
+                    // Kaioken: วงแหวนกระแทก + ประกายไฟพุ่งขึ้น (ออร่าแดงค้างตลอดเทิร์นอยู่ใน RefreshField
+                    // เพราะสนามถูกสร้างใหม่ทุกครั้งที่หน้าจอรีเฟรช)
+                    if (kaioken)
+                    {
+                        UiFx.Ring(fxLayer, UiFx.ScreenOf(view.transform), theme, 60f, 320f, 0.6f);
+                        UiFx.Burst(fxLayer, UiFx.ScreenOf(view.transform), theme, 18, 380f, 26f, 1.1f, -300f);
+                    }
                 }
             }
         }

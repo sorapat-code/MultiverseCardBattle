@@ -476,7 +476,10 @@ namespace MultiverseCardBattle.Screens
             const float height = 0.08f;
             const float step = 0.095f;
 
-            AddLeaderChoice("", "No Leader", y, height);
+            // เซฟเก่าอาจเลือก Leader ที่ยังล็อกไว้ ให้กลับเป็น Goku
+            SaveManager.Profile.Data.LeaderId = LeaderLibrary.UsableId(SaveManager.Profile);
+
+            AddLeaderChoice("", "No Leader", y, height, true);
 
             y -= step;
 
@@ -485,7 +488,12 @@ namespace MultiverseCardBattle.Screens
                 if (!leader.PlayerSelectable)
                     continue;
 
-                AddLeaderChoice(leader.Id, leader.Name, y, height);
+                bool unlocked = LeaderLibrary.IsUnlocked(SaveManager.Profile, leader);
+
+                AddLeaderChoice(
+                    leader.Id,
+                    unlocked ? leader.Name : leader.Name + "  [Locked]",
+                    y, height, unlocked);
 
                 y -= step;
             }
@@ -507,6 +515,8 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(leaderPanel, "Back",
                 () =>
                 {
+                    leaderPreviewId = null;
+
                     SaveManager.Save();
 
                     RefreshLeaderMenuButton();
@@ -518,20 +528,33 @@ namespace MultiverseCardBattle.Screens
             RefreshLeaderMenu();
         }
 
-        private void AddLeaderChoice(string id, string label, float y, float height)
+        // Leader ที่ล็อกอยู่: คลิกดูรายละเอียด/วิธีปลดล็อกได้ แต่เลือกใช้ไม่ได้
+        private string leaderPreviewId;
+
+        private void AddLeaderChoice(string id, string label, float y, float height, bool unlocked)
         {
             string captured = id;
 
             Button button = ScreenKit.AddButton(leaderPanel, label,
                 () =>
                 {
-                    SaveManager.Profile.Data.LeaderId = captured;
+                    if (unlocked)
+                    {
+                        leaderPreviewId = null;
 
-                    SaveManager.Save();
+                        SaveManager.Profile.Data.LeaderId = captured;
+
+                        SaveManager.Save();
+                    }
+                    else
+                    {
+                        leaderPreviewId = captured;
+                    }
 
                     RefreshLeaderMenu();
                 },
-                UIFactory.Muted, 0.05f, y, 0.33f, y + height, 24);
+                unlocked ? UIFactory.Muted : new Color(0.2f, 0.2f, 0.22f, 1f),
+                0.05f, y, 0.33f, y + height, 24);
 
             leaderChoiceButtons.Add(button);
             leaderChoiceIds.Add(id);
@@ -545,11 +568,26 @@ namespace MultiverseCardBattle.Screens
             {
                 bool on = leaderChoiceIds[i] == selected;
 
+                LeaderData choice = LeaderLibrary.Get(leaderChoiceIds[i]);
+
+                bool locked =
+                    choice != null &&
+                    !LeaderLibrary.IsUnlocked(SaveManager.Profile, choice);
+
                 leaderChoiceButtons[i].GetComponent<Image>().color =
-                    on ? UIFactory.Success : UIFactory.Muted;
+                    on ? UIFactory.Success
+                    : (locked ? new Color(0.2f, 0.2f, 0.22f, 1f) : UIFactory.Muted);
             }
 
-            LeaderData leader = LeaderLibrary.Get(selected);
+            // ล็อกอยู่: โชว์รายละเอียดของตัวที่กดดู พร้อมวิธีปลดล็อก
+            string shown = leaderPreviewId ?? selected;
+
+            LeaderData leader = LeaderLibrary.Get(shown);
+
+            string lockLine =
+                leader != null && !LeaderLibrary.IsUnlocked(SaveManager.Profile, leader)
+                    ? "<color=#FF8080><b>LOCKED</b> - " + LeaderLibrary.UnlockHint(leader) + "</color>\n\n"
+                    : "";
 
             if (leader == null)
             {
@@ -568,6 +606,7 @@ namespace MultiverseCardBattle.Screens
                 : "";
 
             leaderDetail.text =
+                lockLine +
                 "<size=34><b><color=#FFB040>" + leader.Name + "</color></b></size>\n" +
                 "<i>" + leader.Title + "</i>\n\n" +
                 "<b>Skill - " + leader.SkillName + "</b> (" + leader.SkillCostText + ")\n" + leader.SkillText + "\n\n" +
@@ -577,7 +616,7 @@ namespace MultiverseCardBattle.Screens
 
         private void RefreshLeaderMenuButton()
         {
-            LeaderData leader = LeaderLibrary.Get(SaveManager.Profile.Data.LeaderId);
+            LeaderData leader = LeaderLibrary.Get(LeaderLibrary.UsableId(SaveManager.Profile));
 
             UIFactory.SetButtonLabel(
                 leaderMenuButton,
