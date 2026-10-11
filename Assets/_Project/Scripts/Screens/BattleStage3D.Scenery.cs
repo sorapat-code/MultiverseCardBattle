@@ -277,7 +277,6 @@ namespace MultiverseCardBattle.Screens
 
             BuildPillars(folder);
             BuildRuneCircle(folder);
-            BuildSlots(folder);
             BuildBeams(folder);
             BuildAmbientParticles();
         }
