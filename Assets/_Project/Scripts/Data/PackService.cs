@@ -20,6 +20,11 @@ namespace MultiverseCardBattle.Data
     public static class PackService
     {
         public const int PackPrice = 100;
+
+        public static int PriceOf(CardSet set)
+        {
+            return CardSetInfo.PackPrice(set);
+        }
         public const int CardsPerPack = 5;
 
         // น้ำหนักความหายาก (รวม 100)
@@ -37,6 +42,16 @@ namespace MultiverseCardBattle.Data
             Random rng,
             out string error)
         {
+            return Buy(profile, rng, CardSet.Core, out error);
+        }
+
+        /// <summary>ซื้อซองของชุดที่ระบุ (ราคาตามชุด)</summary>
+        public static List<PackPull> Buy(
+            PlayerProfile profile,
+            Random rng,
+            CardSet set,
+            out string error)
+        {
             error = null;
 
             if (profile == null)
@@ -45,13 +60,15 @@ namespace MultiverseCardBattle.Data
                 return null;
             }
 
-            if (profile.Gold < PackPrice)
+            int price = PriceOf(set);
+
+            if (profile.Gold < price)
             {
-                error = "Not enough gold (" + PackPrice + " needed)";
+                error = "Not enough gold (" + price + " needed)";
                 return null;
             }
 
-            List<CardData> cards = RollCards(rng);
+            List<CardData> cards = RollCards(rng, set);
 
             if (cards.Count == 0)
             {
@@ -59,7 +76,7 @@ namespace MultiverseCardBattle.Data
                 return null;
             }
 
-            profile.TrySpendGold(PackPrice);
+            profile.TrySpendGold(price);
 
             profile.Data.StatPacks++;
 
@@ -87,6 +104,33 @@ namespace MultiverseCardBattle.Data
         /// </summary>
         public static List<CardData> RollCards(Random rng)
         {
+            return RollCards(rng, CardSet.Core);
+        }
+
+        /// <summary>การ์ดทั้งหมดที่ออกจากซองของชุดนี้ (ใช้ดู Card Pool)</summary>
+        public static List<CardData> PoolOf(CardSet set)
+        {
+            List<CardData> pool = new List<CardData>();
+
+            foreach (CardData card in CardRegistry.All)
+            {
+                if (!CardRegistry.IsCollectible(card))
+                    continue;
+
+                if (card.Rarity == CardRarity.Secret)
+                    continue;
+
+                if (card.Set != set)
+                    continue;
+
+                pool.Add(card);
+            }
+
+            return pool;
+        }
+
+        public static List<CardData> RollCards(Random rng, CardSet set)
+        {
             if (rng == null)
                 rng = new Random();
 
@@ -95,15 +139,8 @@ namespace MultiverseCardBattle.Data
 
             List<CardData> all = new List<CardData>();
 
-            foreach (CardData card in CardRegistry.All)
+            foreach (CardData card in PoolOf(set))
             {
-                if (!CardRegistry.IsCollectible(card))
-                    continue;
-
-                // Secret ไม่ออกจากแพ็ค
-                if (card.Rarity == CardRarity.Secret)
-                    continue;
-
                 all.Add(card);
 
                 if (!byRarity.ContainsKey(card.Rarity))

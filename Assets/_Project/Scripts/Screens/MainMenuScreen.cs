@@ -43,6 +43,10 @@ namespace MultiverseCardBattle.Screens
         private RectTransform glossaryPanel;
         private RectTransform achievementPanel;
         private RectTransform achievementList;
+        private RectTransform poolPanel;
+        private RectTransform poolGrid;
+        private Text poolTitle;
+        private Text poolSummary;
         private RectTransform dailyPanel;
         private RectTransform dailyContent;
         private RectTransform milestonePanel;
@@ -105,6 +109,8 @@ namespace MultiverseCardBattle.Screens
             glossaryPanel.gameObject.SetActive(panel == glossaryPanel);
             achievementPanel.gameObject.SetActive(panel == achievementPanel);
             dailyPanel.gameObject.SetActive(panel == dailyPanel);
+            if (poolPanel != null)
+                poolPanel.gameObject.SetActive(panel == poolPanel);
             milestonePanel.gameObject.SetActive(panel == milestonePanel);
 
             RefreshMenuNotices();
@@ -214,7 +220,7 @@ namespace MultiverseCardBattle.Screens
 
                     shopMessage.text =
                         "A pack has " + PackService.CardsPerPack +
-                        " cards with at least one Rare or better";
+                        " cards. Choose a pack and check its Card Pool.";
 
                     Show(shopPanel);
                 },
@@ -355,22 +361,21 @@ namespace MultiverseCardBattle.Screens
 
             shopGoldText = ScreenKit.AddLabel(
                 shopPanel, "", 34, TextAnchor.MiddleCenter,
-                0.3f, 0.80f, 0.7f, 0.88f, FontStyle.Bold);
+                0.3f, 0.82f, 0.7f, 0.89f, FontStyle.Bold);
 
             shopGoldText.color = UIFactory.Gold;
 
-            ScreenKit.AddButton(shopPanel,
-                "Buy Pack  (" + PackService.PackPrice + " Gold)",
-                BuyPack,
-                UIFactory.Success, 0.35f, 0.68f, 0.65f, 0.78f, 30);
+            // ซองคู่: Core (ซ้าย) และ Rift (ขวา) แต่ละซองมีปุ่มดู Card Pool
+            BuildPackColumn(CardSet.Core, 0.08f, 0.46f, UIFactory.Success);
+            BuildPackColumn(CardSet.Rift, 0.54f, 0.92f, new Color(0.35f, 0.3f, 0.7f, 1f));
 
             ScreenKit.AddLabel(
                 shopPanel,
-                "Odds: Common 68%   Rare 22%   Epic 8%   Legendary 2%",
-                22, TextAnchor.MiddleCenter, 0.2f, 0.62f, 0.8f, 0.67f);
+                "Odds: Common 68%   Rare 22%   Epic 8%   Legendary 2%   -   every pack has at least one Rare or better",
+                20, TextAnchor.MiddleCenter, 0.1f, 0.585f, 0.9f, 0.625f);
 
             packRow = UIFactory.CreateZone(
-                shopPanel, "PackRow", 0.03f, 0.2f, 0.97f, 0.6f);
+                shopPanel, "PackRow", 0.03f, 0.2f, 0.97f, 0.58f);
 
             UIFactory.AddHorizontalRow(packRow, 14f);
 
@@ -381,6 +386,25 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddButton(shopPanel, "Back",
                 () => Show(mainPanel),
                 UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+
+            BuildPool();
+        }
+
+        private void BuildPackColumn(CardSet set, float x0, float x1, Color color)
+        {
+            ScreenKit.AddLabel(
+                shopPanel, CardSetInfo.Description(set), 20, TextAnchor.MiddleCenter,
+                x0, 0.715f, x1, 0.77f).color = UIFactory.GoldDim;
+
+            ScreenKit.AddButton(shopPanel,
+                "Buy " + CardSetInfo.Name(set) + "  (" + PackService.PriceOf(set) + " Gold)",
+                () => BuyPack(set),
+                color, x0, 0.775f, x1, 0.855f, 28);
+
+            ScreenKit.AddButton(shopPanel,
+                "View Card Pool (" + PackService.PoolOf(set).Count + " cards)",
+                () => ShowPool(set),
+                UIFactory.Muted, x0 + 0.04f, 0.64f, x1 - 0.04f, 0.71f, 22);
         }
 
         private void ClearPackRow()
@@ -388,12 +412,12 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.ClearNow(packRow);
         }
 
-        private void BuyPack()
+        private void BuyPack(CardSet set)
         {
             string error;
 
             List<PackPull> pulls =
-                PackService.Buy(SaveManager.Profile, rng, out error);
+                PackService.Buy(SaveManager.Profile, rng, set, out error);
 
             if (pulls == null)
             {
@@ -429,6 +453,77 @@ namespace MultiverseCardBattle.Screens
                 : "No new cards this time - extra copies added.";
 
             RefreshGold();
+        }
+
+        // ---------- Card Pool ----------
+
+        private void BuildPool()
+        {
+            poolPanel = CreatePanel("PoolPanel");
+
+            poolTitle = UIFactory.CreateTitle(poolPanel, "CARD POOL");
+
+            poolSummary = ScreenKit.AddLabel(
+                poolPanel, "", 26, TextAnchor.MiddleCenter,
+                0.2f, 0.84f, 0.8f, 0.9f, FontStyle.Bold);
+
+            poolSummary.color = UIFactory.Gold;
+
+            ScreenKit.AddScroll(
+                poolPanel, "PoolScroll", 0.03f, 0.14f, 0.97f, 0.84f, out poolGrid);
+
+            UIFactory.AddGrid(poolGrid, new Vector2(210f, 294f), 14f, 14);
+
+            ScreenKit.AddButton(poolPanel, "Back",
+                () => Show(shopPanel),
+                UIFactory.Muted, 0.03f, 0.03f, 0.2f, 0.11f);
+
+            poolPanel.gameObject.SetActive(false);
+        }
+
+        // แสดงการ์ดทั้งหมดที่ออกจากซองนี้ เรียงจากหายากสุด การ์ดที่ยังไม่มีจะมืด
+        private void ShowPool(CardSet set)
+        {
+            ScreenKit.ClearNow(poolGrid);
+
+            PlayerProfile profile = SaveManager.Profile;
+
+            List<CardData> pool = PackService.PoolOf(set);
+
+            pool.Sort((a, b) =>
+            {
+                int byRarity = b.Rarity.CompareTo(a.Rarity);
+
+                if (byRarity != 0)
+                    return byRarity;
+
+                int byCost = a.Cost.CompareTo(b.Cost);
+
+                return byCost != 0 ? byCost : string.CompareOrdinal(a.CardID, b.CardID);
+            });
+
+            int owned = 0;
+
+            foreach (CardData card in pool)
+            {
+                int count = profile.GetOwnedCount(card.CardID);
+
+                if (count > 0)
+                    owned++;
+
+                CardView view = CardView.Create(poolGrid, new Vector2(210f, 294f));
+
+                view.ShowData(card, count > 0 ? "x" + count : "");
+                view.SetDimmed(count == 0);
+            }
+
+            poolTitle.text = CardSetInfo.Name(set).ToUpperInvariant() + " - CARD POOL";
+
+            poolSummary.text = pool.Count == 0
+                ? "No cards in this pack yet"
+                : "Owned " + owned + " / " + pool.Count + " different cards";
+
+            Show(poolPanel);
         }
 
         private void ShowUnlocked(List<AchievementDef> list)

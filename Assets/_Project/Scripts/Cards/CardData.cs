@@ -36,6 +36,9 @@ namespace MultiverseCardBattle.Cards
         // ความสามารถพิเศษที่ทำงานในโค้ด (เช่น การ์ดลับ)
         public CardPassive Passives;
 
+        // ชุดการ์ด (ใช้แยกซอง) ค่าเริ่มต้น = Core
+        public CardSet Set;
+
         [Header("Stats")]
 
         public int Cost;
