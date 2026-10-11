@@ -1054,7 +1054,7 @@ namespace MultiverseCardBattle.Screens
 
             shopGoldText = ScreenKit.AddLabel(
                 shopPanel, "", 34, TextAnchor.MiddleCenter,
-                0.3f, 0.82f, 0.7f, 0.89f, FontStyle.Bold);
+                0.3f, 0.81f, 0.7f, 0.885f, FontStyle.Bold);
 
             shopGoldText.color = UIFactory.Gold;
 
@@ -1073,10 +1073,10 @@ namespace MultiverseCardBattle.Screens
             ScreenKit.AddLabel(
                 shopPanel,
                 "Odds: Common 68%   Rare 22%   Epic 8%   Legendary 2%   -   every pack has at least one Rare or better",
-                20, TextAnchor.MiddleCenter, 0.1f, 0.585f, 0.9f, 0.625f);
+                20, TextAnchor.MiddleCenter, 0.1f, 0.53f, 0.9f, 0.57f);
 
             packRow = UIFactory.CreateZone(
-                shopPanel, "PackRow", 0.03f, 0.2f, 0.97f, 0.58f);
+                shopPanel, "PackRow", 0.03f, 0.2f, 0.97f, 0.525f);
 
             UIFactory.AddHorizontalRow(packRow, 14f);
 
@@ -1095,17 +1095,17 @@ namespace MultiverseCardBattle.Screens
         {
             ScreenKit.AddLabel(
                 shopPanel, CardSetInfo.Description(set), 20, TextAnchor.MiddleCenter,
-                x0, 0.715f, x1, 0.77f).color = UIFactory.GoldDim;
+                x0, 0.66f, x1, 0.71f).color = UIFactory.GoldDim;
 
             ScreenKit.AddButton(shopPanel,
                 "Buy " + CardSetInfo.Name(set) + "  (" + PackService.PriceOf(set) + " Gold)",
                 () => BuyPack(set),
-                color, x0, 0.775f, x1, 0.855f, 28);
+                color, x0, 0.72f, x1, 0.80f, 28);
 
             ScreenKit.AddButton(shopPanel,
                 "View Card Pool (" + PackService.PoolOf(set).Count + " cards)",
                 () => ShowPool(set),
-                UIFactory.Muted, x0 + 0.04f, 0.64f, x1 - 0.04f, 0.71f, 22);
+                UIFactory.Muted, x0 + 0.04f, 0.58f, x1 - 0.04f, 0.65f, 22);
         }
 
         private void ClearPackRow()
