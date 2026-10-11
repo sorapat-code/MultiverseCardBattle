@@ -703,7 +703,9 @@ namespace MultiverseCardBattle.Screens
 
             canvas.renderMode = RenderMode.WorldSpace;
             canvas.worldCamera = camera;
-            canvas.dynamicPixelsPerUnit = 1.5f;
+            UnityEngine.UI.CanvasScaler scaler = canvasObject.AddComponent<UnityEngine.UI.CanvasScaler>();
+
+            scaler.dynamicPixelsPerUnit = 1.5f;
 
             canvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
