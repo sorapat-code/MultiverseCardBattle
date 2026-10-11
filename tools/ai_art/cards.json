@@ -1,0 +1,330 @@
+{
+  "style": {
+    "common": "High-quality anime key-art illustration for a fantasy trading card game. Landscape 4:3 composition, bold clean line art, cel shading with soft gradients, vivid saturated colors, dramatic lighting, large swirling painterly energy slashes and glowing particles in the background, strong focal subject in the center. Absolutely no text, letters, numbers, logos, watermarks, card frames or borders.",
+    "unit": "Character portrait, bust or three-quarter view, expressive large eyes, detailed hair and clothing.",
+    "spell": "Pure magic effect scene with no people and no characters.",
+    "equipment": "A single item shown as a hero object with no people and no characters, centered, with a magical swirl behind it."
+  },
+  "cards": [
+    {
+      "id": "SUP_001",
+      "name": "Konohamaru",
+      "kind": "unit",
+      "ref": "Konohamaru (Naruto)",
+      "desc": "an energetic young ninja boy with spiky dark hair, a cheeky grin, a long blue scarf and an orange-and-navy outfit, holding a kunai, dawn sky"
+    },
+    {
+      "id": "SUP_002",
+      "name": "Rock Lee",
+      "kind": "unit",
+      "ref": "Rock Lee (Naruto)",
+      "desc": "a martial artist with a black bowl-cut hairstyle, very thick eyebrows, big round eyes and a green jumpsuit with orange leg warmers, fast fighting stance, green and orange energy trails"
+    },
+    {
+      "id": "SUP_003",
+      "name": "Usopp",
+      "kind": "unit",
+      "ref": "Usopp (One Piece)",
+      "desc": "a lanky sniper with curly black hair, a long nose, goggles on his forehead and a tan outfit, aiming a big slingshot, ocean backdrop"
+    },
+    {
+      "id": "SUP_004",
+      "name": "Chopper",
+      "kind": "unit",
+      "ref": "Tony Tony Chopper (One Piece)",
+      "desc": "a small cute reindeer doctor in a pink hat marked with a white cross, with antlers and a blue nose, red outfit, holding a medical bag, forest backdrop"
+    },
+    {
+      "id": "SUP_005",
+      "name": "Krillin",
+      "kind": "unit",
+      "ref": "Krillin (Dragon Ball)",
+      "desc": "a bald monk fighter with six dots on his forehead and an orange martial-arts gi, holding a spinning disc of glowing energy above his palm"
+    },
+    {
+      "id": "SUP_006",
+      "name": "Connie Springer",
+      "kind": "unit",
+      "ref": "Connie Springer (Attack on Titan)",
+      "desc": "a cheerful short-haired boy in a green scout jacket with a buzz cut, holding a blade, ruined stone city behind him"
+    },
+    {
+      "id": "SUP_007",
+      "name": "Sasha Blouse",
+      "kind": "unit",
+      "ref": "Sasha Blouse (Attack on Titan)",
+      "desc": "a girl with a brown ponytail in a scout jacket, drawing a hunting bow, forest backdrop"
+    },
+    {
+      "id": "SUP_008",
+      "name": "March 7th",
+      "kind": "unit",
+      "ref": "March 7th (Honkai: Star Rail)",
+      "desc": "a cheerful pink twin-tail girl with ice-blue eyes and hair ribbons, holding a shield made of ice crystals, frosty background"
+    },
+    {
+      "id": "SUP_009",
+      "name": "Chixia",
+      "kind": "unit",
+      "ref": "Chixia (Wuthering Waves)",
+      "desc": "a red-haired ponytail gunslinger girl in a red outfit with gold accents, firing a pair of pistols, embers in the air"
+    },
+    {
+      "id": "SUP_010",
+      "name": "Kobeni",
+      "kind": "unit",
+      "ref": "Kobeni Higashiyama (Chainsaw Man)",
+      "desc": "a nervous young woman with a short black bob and a black suit, sweating and frightened but bracing herself, night city backdrop"
+    },
+    {
+      "id": "SUP_011",
+      "name": "Crestfallen Warrior",
+      "kind": "unit",
+      "ref": "Crestfallen Warrior (Dark Souls)",
+      "desc": "a weary knight in worn grey armor with a dented helmet, slumped posture, dim ruins and a faint bonfire glow, melancholy mood"
+    },
+    {
+      "id": "SUP_012",
+      "name": "Nami",
+      "kind": "unit",
+      "ref": "Nami (One Piece)",
+      "desc": "an orange-haired young woman in a blue top holding a weather staff that crackles with lightning, storm clouds behind her"
+    },
+    {
+      "id": "SUP_013",
+      "name": "Uryu",
+      "kind": "unit",
+      "ref": "Uryu Ishida (Bleach)",
+      "desc": "a serious dark-haired young man with glasses in a white outfit, drawing a glowing blue spirit bow, night sky"
+    },
+    {
+      "id": "SUP_014",
+      "name": "Nobara",
+      "kind": "unit",
+      "ref": "Nobara Kugisaki (Jujutsu Kaisen)",
+      "desc": "a confident girl with a brown bob and orange eyes in a dark jacket, holding a hammer and nails, smirking, sunset glow"
+    },
+    {
+      "id": "SUP_015",
+      "name": "Mash",
+      "kind": "unit",
+      "ref": "Mash Kyrielight (Fate/Grand Order)",
+      "desc": "a gentle girl with short lavender hair and purple eyes, bracing behind a huge ornate shield that glows with starlight, cosmic background"
+    },
+    {
+      "id": "SUP_016",
+      "name": "Zenitsu",
+      "kind": "unit",
+      "ref": "Zenitsu Agatsuma (Demon Slayer)",
+      "desc": "a blond boy with a yellow haori, eyes shut, mid draw of a katana with a bright yellow lightning slash"
+    },
+    {
+      "id": "SUP_017",
+      "name": "Power",
+      "kind": "unit",
+      "ref": "Power (Chainsaw Man)",
+      "desc": "a wild girl with long pale blonde hair, red horns and sharp fangs, grinning, with blood-red weapons forming around her hands, crimson sky"
+    },
+    {
+      "id": "SUP_018",
+      "name": "Lady",
+      "kind": "unit",
+      "ref": "Lady (Devil May Cry)",
+      "desc": "a tough dark-haired woman in a black outfit with red accents, aiming two heavy guns, red demonic sparks"
+    },
+    {
+      "id": "SUP_019",
+      "name": "Solaire",
+      "kind": "unit",
+      "ref": "Solaire of Astora (Dark Souls)",
+      "desc": "a knight in white-and-gold armor with a sun emblem, holding a sword and shield, warm golden sunlight beams"
+    },
+    {
+      "id": "SUP_020",
+      "name": "Cha Hae-In",
+      "kind": "unit",
+      "ref": "Cha Hae-In (Solo Leveling)",
+      "desc": "a elegant swordswoman with a blonde ponytail in white and blue, holding a glowing blue sword, moonlit night"
+    },
+    {
+      "id": "SUP_021",
+      "name": "Polnareff",
+      "kind": "unit",
+      "ref": "Jean Pierre Polnareff (JoJo's Bizarre Adventure)",
+      "desc": "a confident knight with a tall silver pompadour, a cape and a rapier, dramatic sunset, flashy pose"
+    },
+    {
+      "id": "SUP_022",
+      "name": "Igris",
+      "kind": "unit",
+      "ref": "Igris (Solo Leveling)",
+      "desc": "a towering crimson knight in full red armor and helmet with glowing red eyes, wielding a huge glowing red greatsword, dark abyss"
+    },
+    {
+      "id": "SUP_023",
+      "name": "Albedo",
+      "kind": "unit",
+      "ref": "Albedo (Overlord)",
+      "desc": "a beautiful woman with long black hair, golden eyes, black horns and a white gown, with a faint purple halo, gentle smile, dark abyss backdrop"
+    },
+    {
+      "id": "SUP_024",
+      "name": "Shalltear",
+      "kind": "unit",
+      "ref": "Shalltear Bloodfallen (Overlord)",
+      "desc": "a pale vampire girl with silver twin tails, red eyes and fangs in a crimson gothic dress, holding a spear, blood-red sky"
+    },
+    {
+      "id": "SUP_025",
+      "name": "Rengoku",
+      "kind": "unit",
+      "ref": "Kyojuro Rengoku (Demon Slayer)",
+      "desc": "a fiery swordsman with spiky golden-red flame-colored hair, intense eyes and a white haori, wielding a katana wreathed in flames"
+    },
+    {
+      "id": "SUP_026",
+      "name": "Gaara",
+      "kind": "unit",
+      "ref": "Gaara (Naruto)",
+      "desc": "a stoic young man with short red hair, teal eyes with dark rings, a small red mark on his forehead, swirling sand around him, desert backdrop"
+    },
+    {
+      "id": "MAG_001",
+      "name": "Spark",
+      "kind": "spell",
+      "desc": "a crackling bolt of lightning arcing through a dark stormy sky, bright white-yellow core, blue sparks"
+    },
+    {
+      "id": "MAG_002",
+      "name": "Frost Shard",
+      "kind": "spell",
+      "desc": "a cluster of large glowing ice shards flying forward in a freezing blue vortex"
+    },
+    {
+      "id": "MAG_003",
+      "name": "Healing Rain",
+      "kind": "spell",
+      "desc": "warm green-gold rain with glowing droplets falling over wilted flowers that bloom back to life, soft healing light"
+    },
+    {
+      "id": "MAG_004",
+      "name": "Gale Slash",
+      "kind": "spell",
+      "desc": "giant crescent wind blades slashing across the frame, swirling green-white air currents and flying leaves"
+    },
+    {
+      "id": "MAG_005",
+      "name": "Stone Wall",
+      "kind": "spell",
+      "desc": "huge rough stone slabs bursting upward from the ground to form a defensive wall, dust and debris"
+    },
+    {
+      "id": "MAG_006",
+      "name": "Scholar's Notes",
+      "kind": "spell",
+      "desc": "a floating open spellbook with glowing runes and pages fluttering, blue-gold light, magical library mood"
+    },
+    {
+      "id": "MAG_007",
+      "name": "Chain Lightning",
+      "kind": "spell",
+      "desc": "branching lightning jumping between several dark silhouettes, electric blue and violet"
+    },
+    {
+      "id": "MAG_008",
+      "name": "Shadow Bind",
+      "kind": "spell",
+      "desc": "black-violet chains of shadow wrapping around an unseen target, glowing purple eyes in the darkness"
+    },
+    {
+      "id": "MAG_009",
+      "name": "Blessing of Dawn",
+      "kind": "spell",
+      "desc": "sunrise rays breaking through clouds with floating white-gold feathers, warm holy light"
+    },
+    {
+      "id": "MAG_010",
+      "name": "Spellbreaker",
+      "kind": "spell",
+      "desc": "a glowing magic circle shattering into fragments, shockwave and cracked light"
+    },
+    {
+      "id": "MAG_011",
+      "name": "Emergency Ward",
+      "kind": "spell",
+      "desc": "a glowing translucent barrier dome with rune patterns snapping into place, blue-white light"
+    },
+    {
+      "id": "MAG_012",
+      "name": "Inferno",
+      "kind": "spell",
+      "desc": "a huge roaring firestorm of orange and red flames swallowing the whole scene, embers"
+    },
+    {
+      "id": "MAG_013",
+      "name": "Rewind Fate",
+      "kind": "spell",
+      "desc": "a giant clock face with reversed spiral time ripples, golden gears and sand flowing backwards, purple light"
+    },
+    {
+      "id": "MAG_014",
+      "name": "World's End",
+      "kind": "spell",
+      "desc": "an apocalyptic black-purple sky splitting over a cracked ruined world, a giant sphere of dark energy"
+    },
+    {
+      "id": "MAG_015",
+      "name": "Flame Dart",
+      "kind": "spell",
+      "desc": "a single blazing fire dart streaking forward with a trail of sparks and flames"
+    },
+    {
+      "id": "EQP_001",
+      "name": "Iron Katana",
+      "kind": "equipment",
+      "desc": "a plain but sharp iron katana with a dark wrapped hilt, resting in a swirl of silver light"
+    },
+    {
+      "id": "EQP_002",
+      "name": "Guardian Plate",
+      "kind": "equipment",
+      "desc": "a heavy steel chest plate with a golden sun emblem, glowing protective aura"
+    },
+    {
+      "id": "EQP_003",
+      "name": "Windrunner Boots",
+      "kind": "equipment",
+      "desc": "a pair of leather boots with small white wings on the heels, green wind swirling around them"
+    },
+    {
+      "id": "EQP_004",
+      "name": "Crimson Fang",
+      "kind": "equipment",
+      "desc": "a curved crimson blade shaped like a fang, red energy swirling around it, dark red background"
+    },
+    {
+      "id": "EQP_005",
+      "name": "Moonlit Blade",
+      "kind": "equipment",
+      "desc": "an elegant silver sword with a crescent moon on the guard, glowing blue-white moonlight, night sky"
+    },
+    {
+      "id": "EQP_006",
+      "name": "Healer's Charm",
+      "kind": "equipment",
+      "desc": "a green gem amulet in a gold setting on a chain, soft healing glow and floating leaves"
+    },
+    {
+      "id": "EQP_007",
+      "name": "Scholar's Monocle",
+      "kind": "equipment",
+      "desc": "a golden monocle with a glowing rune lens on a chain, floating runes and a blue-gold glow"
+    },
+    {
+      "id": "EQP_008",
+      "name": "Arcane Brazier",
+      "kind": "equipment",
+      "desc": "a metal brazier burning with purple-orange arcane fire on a tripod, magic embers and swirling energy"
+    }
+  ]
+}
