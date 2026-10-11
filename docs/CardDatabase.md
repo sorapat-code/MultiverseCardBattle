@@ -335,3 +335,10 @@ board (light rays, a passing breeze, drifting fog, fireflies, falling leaves). A
 
 - โมเดลต้นไม้/พุ่ม/หิน/ดอกไม้ใน `Assets/_Project/Resources/Nature` มาจาก **Quaternius – Ultimate Stylized Nature Pack** (CC0 1.0, สาธารณสมบัติ) ดึงจาก repo `tilakpatell/tilakverse-assets` (texture ย่อเหลือ 512px) ใช้เชดเดอร์ `MCB/FoliageCutout`; ไม่ต้องใส่เครดิตแต่ใส่ไว้เพื่อให้เกียรติ: https://quaternius.com
 - `BattleStage3D.Nature.cs` วางต้นสน/ต้นไม้/พุ่ม/หินสองข้างและหลังโต๊ะ (ถ้าหาโมเดลไม่เจอจะถอยไปใช้ทรงกลมแบบเดิม)
+
+### ธีมโต๊ะตามด่าน (StageTheme)
+
+`Screens/StageTheme.cs` กำหนดแสง หมอก สีพื้นสนาม/โต๊ะ ละออง และโทนสีโพสต์เอฟเฟกต์ ตามด่านใน Campaign
+(Quick Battle / ด่าน 1 = ป่ายามสาย): 2 Bandit Road ฝุ่นทองบ่ายแก่, 3 Shadow Alley กลางคืนนีออน, 4 Temple Siege หินทรายเรืองทอง,
+5 Mage Tower ม่วงอาร์เคน, 6 Titan Gate หินเทาหมอกหนา, 7 Dragon Peak ภูเขาไฟประกายไฟ, 8 Grand Line ดาดฟ้าเรือทะเลสด,
+9 Soul Reaper's Trial จันทร์ซีดกลีบซากุระ, 10 Multiverse จักรวาลม่วงทอง ธีมที่ไม่มีต้นไม้ (8, 10) จะไม่วางโมเดลธรรมชาติ

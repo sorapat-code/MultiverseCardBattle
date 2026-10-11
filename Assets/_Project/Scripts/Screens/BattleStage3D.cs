@@ -30,6 +30,8 @@ namespace MultiverseCardBattle.Screens
         private readonly Vector3 camLook = new Vector3(0f, 0f, -0.8f);
         private readonly Vector3 camBase = new Vector3(0f, 14f, -10.5f);
 
+        private StageTheme theme;
+
         private int fitWidth;
         private int fitHeight;
 
@@ -124,6 +126,8 @@ namespace MultiverseCardBattle.Screens
 
         private void Build()
         {
+            theme = StageTheme.Current;
+
             BuildCamera();
             BuildPostFx();
             BuildLights();
@@ -160,7 +164,7 @@ namespace MultiverseCardBattle.Screens
             Cam.nearClipPlane = 0.3f;
             Cam.farClipPlane = 90f;
             Cam.clearFlags = CameraClearFlags.SolidColor;
-            Cam.backgroundColor = new Color(0.02f, 0.05f, 0.05f, 1f);
+            Cam.backgroundColor = theme.Fog;
             Cam.depth = -1f;
             Cam.allowMSAA = true;
         }
@@ -168,26 +172,26 @@ namespace MultiverseCardBattle.Screens
         private void BuildLights()
         {
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.36f, 0.43f, 0.41f, 1f);
+            RenderSettings.ambientLight = theme.Ambient;
 
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
-            RenderSettings.fogDensity = 0.016f;
-            RenderSettings.fogColor = new Color(0.025f, 0.06f, 0.06f, 1f);
+            RenderSettings.fogDensity = theme.FogDensity;
+            RenderSettings.fogColor = theme.Fog;
 
             // แสงหลัก: อุ่น เอียงจากบนซ้ายหน้า เงานุ่ม
             GameObject sun = new GameObject("Sun");
 
             sun.transform.SetParent(transform, false);
-            sun.transform.rotation = Quaternion.Euler(52f, -28f, 0f);
+            sun.transform.rotation = Quaternion.Euler(theme.SunEuler);
 
             Light light = sun.AddComponent<Light>();
 
             light.type = LightType.Directional;
-            light.color = new Color(1f, 0.93f, 0.8f, 1f);
-            light.intensity = 1.05f;
+            light.color = theme.SunColor;
+            light.intensity = theme.SunIntensity;
             light.shadows = LightShadows.Soft;
-            light.shadowStrength = 0.75f;
+            light.shadowStrength = 0.6f;
 
             // แสงสีรายฝั่ง: ชมพูฝั่งศัตรู ฟ้าฝั่งเรา สว่างขึ้นตอนเป็นเทิร์นของฝั่งนั้น
             enemyLight = PointLight("EnemyLight", new Vector3(0f, 2.6f, 3.4f), new Color(1f, 0.3f, 0.5f, 1f));
@@ -214,7 +218,7 @@ namespace MultiverseCardBattle.Screens
 
         private void BuildTable()
         {
-            Material stone = Lit(new Color(0.28f, 0.34f, 0.33f, 1f), 0.1f, 0f, BoardArt.StoneTexture);
+            Material stone = Lit(theme.TableTint, 0.1f, 0f, BoardArt.StoneTexture);
 
             stone.mainTextureScale = new Vector2(7f, 5f);
 
@@ -223,7 +227,7 @@ namespace MultiverseCardBattle.Screens
                 new Vector3(0f, -0.6f, 0f), new Vector3(34f, 0.6f, 24f), stone, false);
 
             // สนามหญ้ายกขึ้นจากโต๊ะเล็กน้อย
-            Material grass = Lit(Color.white, 0.02f, 0f, BoardArt.Grass.texture);
+            Material grass = Lit(theme.BoardTint, 0.02f, 0f, BoardArt.Grass.texture);
 
             Prim(PrimitiveType.Cube, "Board", transform,
                 new Vector3(0f, -0.15f, 0f),
@@ -442,7 +446,9 @@ namespace MultiverseCardBattle.Screens
             Texture glow = UIShapes.Glow.texture;
 
             BuildFireflies(glow);
-            BuildLeaves(UIShapes.Circle.texture);
+
+            if (theme.Leaves)
+                BuildLeaves(UIShapes.Circle.texture);
         }
 
         private void BuildFireflies(Texture glow)
@@ -465,12 +471,12 @@ namespace MultiverseCardBattle.Screens
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.25f);
             main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.24f);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.startColor = new ParticleSystem.MinMaxGradient(
-                new Color(1f, 0.9f, 0.45f, 1f), new Color(0.7f, 1f, 0.5f, 1f));
+            main.startColor = new ParticleSystem.MinMaxGradient(theme.MoteA, theme.MoteB);
+            main.gravityModifier = theme.MoteGravity;
 
             ParticleSystem.EmissionModule emission = system.emission;
 
-            emission.rateOverTime = 5f;
+            emission.rateOverTime = theme.MoteRate;
 
             ParticleSystem.ShapeModule shape = system.shape;
 
@@ -533,8 +539,7 @@ namespace MultiverseCardBattle.Screens
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
             main.gravityModifier = 0.025f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.startColor = new ParticleSystem.MinMaxGradient(
-                new Color(0.45f, 0.75f, 0.3f, 1f), new Color(0.9f, 0.55f, 0.2f, 1f));
+            main.startColor = new ParticleSystem.MinMaxGradient(theme.LeafA, theme.LeafB);
 
             ParticleSystem.EmissionModule emission = system.emission;
 

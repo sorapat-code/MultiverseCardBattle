@@ -292,6 +292,13 @@ namespace MultiverseCardBattle.Screens
 
             if (postFx == null)
                 postFx = Cam.gameObject.AddComponent<StagePostFx>();
+
+            postFx.Saturation = theme.Saturation;
+            postFx.Contrast = theme.Contrast;
+            postFx.Exposure = theme.Exposure;
+            postFx.Vignette = theme.Vignette;
+            postFx.LightTint = theme.LightTint;
+            postFx.ShadowTint = theme.ShadowTint;
         }
 
         private GameObject Halo(Transform parent, Vector3 position, float size, Color color)
@@ -395,7 +402,7 @@ namespace MultiverseCardBattle.Screens
             quad.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             quad.transform.localScale = new Vector3(4.4f, 4.4f, 1f);
 
-            Material material = GlowMaterial(Hdr(new Color(1f, 0.78f, 0.35f, 1f), 1.7f, 0.5f), BuildRuneTexture(), true);
+            Material material = GlowMaterial(Hdr(theme.Rune, 1.7f, 0.5f), BuildRuneTexture(), true);
 
             Renderer renderer = quad.GetComponent<Renderer>();
 
@@ -449,7 +456,7 @@ namespace MultiverseCardBattle.Screens
         {
             Texture2D beam = BuildBeamTexture();
 
-            Vector3 toSun = -(Quaternion.Euler(52f, -28f, 0f) * Vector3.forward);
+            Vector3 toSun = -(Quaternion.Euler(theme.SunEuler) * Vector3.forward);
 
             Vector3[] targets =
             {
@@ -479,7 +486,7 @@ namespace MultiverseCardBattle.Screens
                 quad.transform.localRotation = Quaternion.LookRotation(toCamera, toSun);
                 quad.transform.localScale = new Vector3(widths[i], length, 1f);
 
-                Material material = GlowMaterial(Hdr(new Color(1f, 0.86f, 0.55f, 1f), 1.2f, 0.09f), beam, true);
+                Material material = GlowMaterial(Hdr(Color.Lerp(theme.SunColor, Color.white, 0.2f), 1.2f, 0.09f), beam, true);
 
                 Renderer renderer = quad.GetComponent<Renderer>();
 
@@ -576,16 +583,16 @@ namespace MultiverseCardBattle.Screens
                 "Mist", new Vector3(0f, 0.45f, 0f),
                 new Vector3(BoardHalfWidth * 2.2f, 0.2f, BoardHalfDepth * 2.2f),
                 16, 1.1f, new Vector2(12f, 16f), new Vector2(0.05f, 0.2f), new Vector2(5f, 8f),
-                GlowMaterial(Hdr(new Color(0.5f, 0.78f, 0.85f, 1f), 1f, 0.07f), glow, true),
-                new Color(0.7f, 0.9f, 1f, 1f), new Color(0.6f, 1f, 0.85f, 1f),
+                GlowMaterial(Hdr(theme.MistColor, 1f, theme.MistAlpha), glow, true),
+                Color.Lerp(theme.MistColor, Color.white, 0.5f), theme.MistColor,
                 0.3f, 0f, ParticleSystemRenderMode.HorizontalBillboard);
 
             MakeParticles(
                 "Motes", new Vector3(0f, 0.6f, 0f),
                 new Vector3(BoardHalfWidth * 2.2f, 3f, BoardHalfDepth * 2.2f),
                 70, 7f, new Vector2(5f, 9f), new Vector2(0.03f, 0.14f), new Vector2(0.05f, 0.11f),
-                GlowMaterial(Hdr(new Color(1f, 0.92f, 0.7f, 1f), 3f, 1f), glow, true),
-                new Color(1f, 0.95f, 0.75f, 1f), new Color(0.8f, 1f, 0.9f, 1f),
+                GlowMaterial(Hdr(theme.DustColor, 3f, 1f), glow, true),
+                theme.DustColor, Color.Lerp(theme.DustColor, Color.white, 0.5f),
                 0.35f, -0.01f, ParticleSystemRenderMode.Billboard);
         }
 

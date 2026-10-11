@@ -51,7 +51,7 @@ namespace MultiverseCardBattle.Screens
             if (texture != null)
             {
                 material.mainTexture = texture;
-                material.color = leafy ? new Color(0.62f, 0.78f, 0.68f, 1f) : new Color(0.7f, 0.7f, 0.76f, 1f);
+                material.color = (leafy ? new Color(0.62f, 0.78f, 0.68f, 1f) : new Color(0.7f, 0.7f, 0.76f, 1f)) * theme.FoliageTint;
             }
             else
             {
@@ -74,12 +74,18 @@ namespace MultiverseCardBattle.Screens
             if (source == null)
                 return null;
 
+            string key = (source.name + "|" + model).ToLowerInvariant();
+
             bool white = source.HasProperty("_Color") && source.color.r > 0.93f && source.color.g > 0.93f && source.color.b > 0.93f;
 
-            if (source.mainTexture != null || !white)
-                return source;
+            // ใบไม้ที่สีไม่ใช่เขียว (เช่นออกน้ำตาล) บังคับย้อมเขียวตามชื่อ
+            bool leafName = key.Contains("leaf") || key.Contains("leaves") || key.Contains("foliage") ||
+                            key.Contains("canopy") || key.Contains("crown");
 
-            string key = (source.name + "|" + model).ToLowerInvariant();
+            bool wrongLeaf = leafName && source.HasProperty("_Color") && source.color.g <= source.color.r * 1.05f;
+
+            if (source.mainTexture != null || (!white && !wrongLeaf))
+                return source;
 
             Material cached;
 
@@ -101,6 +107,8 @@ namespace MultiverseCardBattle.Screens
                 color = Color.Lerp(new Color(0.9f, 0.45f, 0.65f), new Color(0.95f, 0.8f, 0.35f), variation);
             else
                 color = Color.Lerp(new Color(0.14f, 0.36f, 0.2f), new Color(0.3f, 0.5f, 0.2f), variation);
+
+            color *= theme.FoliageTint;
 
             Material tinted = new Material(source);
 
@@ -251,6 +259,9 @@ namespace MultiverseCardBattle.Screens
             string[] models, Transform parent, float xMin, float xMax, float zMin, float zMax,
             float heightMin, float heightMax, float radius, float sink)
         {
+            if (theme.Nature == 1 && Random.value > 0.5f)
+                return true; // ธีมเบาบาง: ข้ามครึ่งหนึ่ง
+
             for (int attempt = 0; attempt < 12; attempt++)
             {
                 float x = Random.Range(xMin, xMax);
@@ -309,6 +320,9 @@ namespace MultiverseCardBattle.Screens
             string[] flowers;
 
             string[] packTrees = PackPaths("Trees");
+
+            if (theme.Nature == 2)
+                return true; // ธีมนี้ไม่มีต้นไม้ (ทะเล/จักรวาล) ไม่ต้องใช้ฉากพุ่มทรงกลมแทน
 
             if (packTrees.Length > 0)
             {

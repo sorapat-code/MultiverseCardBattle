@@ -135,7 +135,12 @@ namespace MultiverseCardBattle.Editor
                 }
             }
 
-            Debug.Log("[CollectNaturePrefabs] materials:\n" + string.Join("\n", report));
+            string reportText = string.Join("\n", report);
+
+            // คัดลอกรายงานเข้าคลิปบอร์ดด้วย (Console แสดงแค่บรรทัดแรก) วางส่งให้ผู้ช่วยได้เลย
+            EditorGUIUtility.systemCopyBuffer = reportText;
+
+            Debug.Log("[CollectNaturePrefabs] materials (คัดลอกไว้ในคลิปบอร์ดแล้ว):\n" + reportText);
 
             string summary = "";
 
