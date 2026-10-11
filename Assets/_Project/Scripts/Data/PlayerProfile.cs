@@ -107,6 +107,9 @@ namespace MultiverseCardBattle.Data
 
         // Collection Milestone ที่รับรางวัลแล้ว
         public List<string> ClaimedMilestones = new List<string>();
+
+        // Story Mode: บทที่รับรางวัลจบบทแล้ว ("chapter_1" ...)
+        public List<string> StoryChaptersRewarded = new List<string>();
     }
 
     /// <summary>

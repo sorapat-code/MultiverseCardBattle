@@ -147,3 +147,8 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 - `Core` (ซองละ 100 Gold) และ `Rift` (ซองละ 150 Gold) แยกกันที่ `CardData.Set`
 - `Rift`: 50 ใบ (ยูนิต 30 / เวทมนตร์ 12 / อุปกรณ์ 8) ID `RFT_001`–`RFT_050` และ Token `TKN_007`–`TKN_013`
 - ดูรายชื่อทั้งหมดได้ใน `docs/CardRework_Draft.md` และปุ่ม "View Card Pool" ในร้านค้า
+
+## Story Mode
+
+- แทนที่หน้า Campaign: 5 บท บทละ 2 ด่าน (ใช้ด่าน `stage_01`–`stage_10` และเซฟเดิม) เนื้อเรื่องอยู่ที่ `StoryLibrary` (Intro ก่อนสู้ครั้งแรก, Outro หลังชนะครั้งแรก, Epilogue ท้ายบท)
+- รางวัลจบบทแจกครั้งเดียวต่อบท (`SaveData.StoryChaptersRewarded`) ด่านที่ผ่านแล้วกดปุ่ม "Story" เพื่ออ่านซ้ำได้

@@ -203,7 +203,7 @@ namespace MultiverseCardBattle.Screens
             const float height = 0.07f;
             const float step = 0.082f;
 
-            ScreenKit.AddButton(mainPanel, "Campaign",
+            ScreenKit.AddButton(mainPanel, "Story Mode",
                 () => SceneLoader.Go(GameScene.Campaign),
                 UIFactory.Accent, 0.22f, y, 0.49f, y + height);
 

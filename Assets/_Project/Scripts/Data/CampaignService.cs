@@ -146,6 +146,9 @@ namespace MultiverseCardBattle.Data
 
                 lines.Add("Stage cleared: " + stage.Name);
 
+                if (firstClear)
+                    StoryService.OnStageFirstCleared(profile, stage.Id, lines);
+
                 if (firstClear && stage.RewardCardIds != null)
                 {
                     foreach (string cardId in stage.RewardCardIds)

@@ -1736,7 +1736,7 @@ namespace MultiverseCardBattle.Screens
 
             ScreenKit.AddButton(
                 overlay,
-                fromCampaign ? "Back to Campaign" : "Main Menu",
+                fromCampaign ? "Back to Story" : "Main Menu",
                 () => SceneLoader.Go(
                     fromCampaign ? GameScene.Campaign : GameScene.MainMenu),
                 UIFactory.Accent, 0.35f, 0.18f, 0.65f, 0.28f);

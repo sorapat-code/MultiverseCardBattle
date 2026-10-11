@@ -219,10 +219,10 @@ namespace MultiverseCardBattle.Data
             Add("battles_25", "Seasoned Duelist", "Play 25 battles",
                 p => p.Data.StatBattles, () => 25, 150, 0);
 
-            Add("clear_3", "Adventurer", "Clear 3 campaign stages",
+            Add("clear_3", "Adventurer", "Clear 3 story stages",
                 p => p.Data.CompletedStages.Count, () => 3, 150, 0);
 
-            Add("clear_all", "Conqueror", "Clear every campaign stage",
+            Add("clear_all", "Conqueror", "Clear every story stage",
                 p => p.Data.CompletedStages.Count,
                 () => CampaignLibrary.Stages.Count, 1000, 200);
 
