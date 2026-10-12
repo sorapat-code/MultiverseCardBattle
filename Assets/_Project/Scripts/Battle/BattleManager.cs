@@ -975,6 +975,153 @@ namespace MultiverseCardBattle.Battle
             EffectExecutor.TransformCard(killer, data.KillTransformForm, 0, this);
         }
 
+        // ---------- Aemeath — Guiding Starlance ----------
+
+        public const float AemeathBaseChance = 0.01f;
+        public const float AemeathMaxChance = 0.03f;
+
+        /// <summary>ตัวสุ่ม 0-1 ของ Aemeath (เทสต์แทนค่าได้)</summary>
+        public static Func<float> AemeathRandom = () => UnityEngine.Random.value;
+
+        /// <summary>การ์ดลับ Aemeath ปรากฏในแมตช์นี้แล้ว (ชนะแมตช์นี้จึงปลดล็อก)</summary>
+        public bool AemeathAppeared { get; set; }
+
+        /// <summary>จำนวนครั้งที่ Starlance รีเซ็ตกระดาน (UI ใช้จับว่าต้องเล่นเอฟเฟกต์)</summary>
+        public int StarlanceResets { get; private set; }
+
+        /// <summary>
+        /// โอกาสที่การ์ดที่ศัตรูเล่นจะกลายเป็น Aemeath: ด่านแรก 1% เพิ่มเป็นเส้นตรงถึงด่านสุดท้าย 3%
+        /// (โหมดที่ไม่ใช่ด่าน = 1%, Tutorial = 0)
+        /// </summary>
+        public static float AemeathChance()
+        {
+            if (BattleSetup.Tutorial)
+                return 0f;
+
+            CampaignStage stage = BattleSetup.Stage;
+
+            if (stage == null)
+                return AemeathBaseChance;
+
+            IReadOnlyList<CampaignStage> all = CampaignLibrary.Stages;
+
+            int index = 0;
+
+            for (int i = 0; i < all.Count; i++)
+            {
+                if (all[i] == stage || all[i].Id == stage.Id)
+                    index = i;
+            }
+
+            float t = all.Count > 1 ? index / (float)(all.Count - 1) : 0f;
+
+            return Mathf.Lerp(AemeathBaseChance, AemeathMaxChance, t);
+        }
+
+        /// <summary>
+        /// ศัตรู (AI) เล่นการ์ด: มีโอกาสน้อยมากที่การ์ดใบนั้นจะกลายเป็น Aemeath (ครั้งเดียวต่อแมตช์)
+        /// คืน true ถ้าการ์ดถูกเปลี่ยนแล้ว
+        /// </summary>
+        public bool TryAemeathReplace(BattlePlayer player, CardInstance card)
+        {
+            if (player == null || card == null || card.Data == null)
+                return false;
+
+            if (!IsAI(player) || AemeathAppeared)
+                return false;
+
+            CardData aemeath = StarterCardLibrary.Get(StarterCardLibrary.AemeathId);
+
+            if (aemeath == null || card.Data.CardID == aemeath.CardID)
+                return false;
+
+            // สนามเต็ม Aemeath จะลงไม่ได้
+            if (player.Field.Count >= BattlePlayer.MaxFieldSize)
+                return false;
+
+            if (AemeathRandom() >= AemeathChance())
+                return false;
+
+            string from = card.Data.CardName;
+
+            card.TransformTo(aemeath);
+
+            AemeathAppeared = true;
+
+            Log("Starlight falls... " + from + " becomes " + aemeath.CardName + "!");
+
+            return true;
+        }
+
+        /// <summary>
+        /// Starlance Reset: ทั้งสองฝ่ายนำการ์ดบนสนาม (ยกเว้น source) และในมือลงสุสาน
+        /// นำการ์ดในสุสานกลับเข้ากองแล้วสับ (Token หายไป) จั่ว draw ใบ ฟื้น HP Leader เต็ม
+        /// และเริ่มนับ Max Energy ใหม่จาก 1 (Energy ปัจจุบัน = 1)
+        /// </summary>
+        public void StarlanceReset(CardInstance source, int draw)
+        {
+            BattlePlayer[] players = { Player1, Player2 };
+
+            Log("Starlance resets the battlefield!");
+
+            foreach (BattlePlayer player in players)
+            {
+                foreach (CardInstance card in new List<CardInstance>(player.Field))
+                {
+                    if (card == source)
+                        continue;
+
+                    if (player.RemoveCard(card))
+                        player.AddToZone(card, CardZone.Graveyard);
+                }
+
+                foreach (CardInstance card in new List<CardInstance>(player.Hand.Cards))
+                {
+                    if (player.Hand.Remove(card))
+                        player.AddToZone(card, CardZone.Graveyard);
+                }
+
+                // สุสานทั้งหมดกลับเข้ากอง (ร่างเดิม ค่าเริ่มต้น) Token ไม่กลับ
+                foreach (CardInstance card in new List<CardInstance>(player.Graveyard))
+                {
+                    player.Graveyard.Remove(card);
+
+                    if (card.Data == null ||
+                        card.Data.Source == CardSource.Token ||
+                        card.Data.Source == CardSource.Debug)
+                        continue;
+
+                    card.RestoreOriginalForm();
+                    card.ApplyBaseStats(card.Data);
+                    card.LastGuardianUsed = false;
+                    card.DevilTriggerUsed = false;
+                    card.UndeadOverlordUsed = false;
+
+                    player.AddToZone(card, CardZone.Deck);
+                }
+
+                player.Deck.Shuffle();
+
+                player.LeaderHealth = player.MaxLeaderHealth;
+
+                // นับ Max Energy ใหม่: เทิร์นนี้ = 1 แล้วเพิ่มทีละ 1
+                player.EnergyTurnBase = TurnManager.TurnNumber - 1;
+                player.MaxEnergy = 1;
+                player.CurrentEnergy = 1;
+                player.OverloadedEnergy = 0;
+            }
+
+            foreach (BattlePlayer player in players)
+            {
+                for (int i = 0; i < draw; i++)
+                    DrawCard(player);
+            }
+
+            StarlanceResets++;
+
+            Touch();
+        }
+
         /// <summary>
         /// Trident: หลังยูนิตที่สวมอุปกรณ์โจมตีเสร็จ ถ้ายังรอดอยู่บนสนาม
         /// ยูนิตและอุปกรณ์ที่สวมอยู่กลับขึ้นมือ (ถ้าตายระหว่างต่อสู้ จะไม่กลับ)
@@ -1743,6 +1890,22 @@ namespace MultiverseCardBattle.Battle
                 ApplyGraspHeart(player, source, target);
         }
 
+        // เหตุการณ์ Geass ล่าสุด (UI ใช้เล่นเอฟเฟกต์: GeassSeq เพิ่มทุกครั้ง)
+        public int GeassSeq { get; private set; }
+        public CardInstance GeassSource { get; private set; }
+        public CardInstance GeassTarget { get; private set; }
+        public bool GeassBlocked { get; private set; }
+
+        public void NoteGeass(CardInstance source, CardInstance target, bool blocked)
+        {
+            GeassSource = source;
+            GeassTarget = target;
+            GeassBlocked = blocked;
+            GeassSeq++;
+
+            Touch();
+        }
+
         // Geass: เป้าหมาย Stun 1 เทิร์น (โจมตี / ใช้ความสามารถไม่ได้ และสวนกลับไม่ได้) Ward กันได้
         private void ApplyGeass(
             BattlePlayer player,
@@ -1760,12 +1923,16 @@ namespace MultiverseCardBattle.Battle
                 target.RemoveKeyword(Keyword.Ward);
 
                 Log(target.Data.CardName + "'s ward blocks the effect");
+
+                NoteGeass(source, target, true);
             }
             else
             {
                 Log(source.Data.CardName + " commands " + target.Data.CardName + " with Geass");
 
                 target.AddStatus(StatusType.Stun, 0, 1);
+
+                NoteGeass(source, target, false);
             }
 
             ActiveEffectSource = previousSource;

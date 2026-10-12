@@ -45,6 +45,9 @@ namespace MultiverseCardBattle.Screens
                 case StarterCardLibrary.DevilTriggerId:
                     return new Color(0.27f, 0.62f, 1f, 1f);       // น้ำเงิน Yamato
 
+                case StarterCardLibrary.AemeathId:
+                    return new Color(1f, 0.6f, 0.82f, 1f);        // ชมพูแสงดาว
+
                 default:
                     return AutoTint(data.CardID);
             }
@@ -151,6 +154,7 @@ namespace MultiverseCardBattle.Screens
                 case StarterCardLibrary.AinzId: return "The Supreme One takes the stage";
                 case StarterCardLibrary.VergilId: return "The Yamato is drawn";
                 case StarterCardLibrary.DevilTriggerId: return "Power beyond limits";
+                case StarterCardLibrary.AemeathId: return "The starlight answers her song";
                 default:
                     return data.Rarity == CardRarity.Secret
                         ? "A secret awakens"
@@ -184,6 +188,13 @@ namespace MultiverseCardBattle.Screens
             if (fx == null || data == null)
                 return;
 
+            // Aemeath มีฉากลงสนามของตัวเอง (รีเซ็ตกระดานทั้งสองฝ่าย)
+            if (data.CardID == StarterCardLibrary.AemeathId)
+            {
+                ArriveAemeath(fx, shakeTarget, pos, data);
+                return;
+            }
+
             Color c = Tint(data);
 
             Flash(fx, c, 0.5f, 0.6f);
@@ -214,6 +225,76 @@ namespace MultiverseCardBattle.Screens
                     UiFx.Ring(fx, pos, c, 40f, 1100f, 1.0f);
                     UiFx.Burst(fx, pos, Color.Lerp(c, Color.white, 0.5f), 36, 380f, 30f, 1.0f, -160f);
                 }));
+        }
+
+        /// <summary>
+        /// Aemeath ลงสนาม: คลื่นแสงดาวกวาดทั้งกระดาน (การ์ดบนสนาม/ในมือถูกรีเซ็ต) หอกแสง หลายชั้นของคลื่นกระแทก
+        /// และฝนประกายดาวตกต่อเนื่อง พร้อมข้อความ STARLANCE RESET
+        /// </summary>
+        public static void ArriveAemeath(
+            Transform fx, RectTransform shakeTarget, Vector3 pos, CardData data)
+        {
+            Color pink = Tint(data);
+            Color gold = new Color(1f, 0.88f, 0.55f, 1f);
+            Color ice = new Color(0.62f, 0.92f, 1f, 1f);
+
+            Flash(fx, Color.white, 0.85f, 0.9f);
+            Flash(fx, pink, 0.45f, 1.4f);
+
+            Shake(shakeTarget, 30f, 0.9f);
+
+            UiFx.Beam(fx, pos, new Color(pink.r, pink.g, pink.b, 0.9f), 320f, 1600f, 1.3f);
+            UiFx.Beam(fx, pos, new Color(1f, 1f, 1f, 1f), 120f, 1500f, 1.0f);
+
+            UiFx.Ring(fx, pos, Color.white, 60f, 900f, 0.8f);
+            UiFx.Ring(fx, pos, pink, 60f, 1500f, 1.1f);
+            UiFx.Ring(fx, pos, gold, 60f, 2100f, 1.4f);
+            UiFx.Ring(fx, pos, ice, 60f, 2700f, 1.7f);
+
+            UiFx.Burst(fx, pos, pink, 70, 760f, 34f, 1.6f, -40f);
+            UiFx.Burst(fx, pos, gold, 56, 620f, 28f, 1.5f, -30f);
+            UiFx.Burst(fx, pos, Color.white, 30, 900f, 18f, 1.1f);
+
+            Title(fx, pos + new Vector3(0f, 240f, 0f), "STARLANCE RESET", gold, 64);
+
+            Sfx.Play(SoundId.Win);
+            Sfx.Play(SoundId.Pack);
+
+            // คลื่นดาวกวาดออกเป็นระลอก + ฝนประกายตกต่อเนื่อง ~3 วินาที
+            Timeline(fx,
+                At(0.18f, () =>
+                {
+                    UiFx.Ring(fx, pos, Color.white, 40f, 1300f, 0.9f);
+
+                    for (int i = 0; i < 6; i++)
+                        UiFx.Slash(fx, pos, pink, 700f, 22f, 0.45f);
+
+                    UiFx.Burst(fx, pos, ice, 40, 700f, 24f, 1.4f, -120f);
+                }),
+                At(0.45f, () => StarRain(fx, pos, pink, gold, ice)),
+                At(0.9f, () => StarRain(fx, pos, pink, gold, ice)),
+                At(1.35f, () => StarRain(fx, pos, pink, gold, ice)),
+                At(1.8f, () => StarRain(fx, pos, pink, gold, ice)),
+                At(2.25f, () => StarRain(fx, pos, pink, gold, ice)),
+                At(2.7f, () => StarRain(fx, pos, pink, gold, ice)));
+        }
+
+        // ประกายดาวตกจากขอบบนของพื้นที่เอฟเฟกต์ (ใช้ตำแหน่งจุดกำเนิดเป็นแนวอ้างอิงความสูง)
+        private static void StarRain(Transform fx, Vector3 origin, Color a, Color b, Color c)
+        {
+            if (fx == null)
+                return;
+
+            for (int i = 0; i < 26; i++)
+            {
+                Vector3 p = origin + new Vector3(
+                    UnityEngine.Random.Range(-900f, 900f),
+                    UnityEngine.Random.Range(260f, 620f), 0f);
+
+                Color tint = i % 3 == 0 ? a : (i % 3 == 1 ? b : c);
+
+                UiFx.Burst(fx, p, tint, 1, 40f, UnityEngine.Random.Range(14f, 30f), 2.2f, 300f);
+            }
         }
 
         // ---------- ใช้สกิล ----------
@@ -292,6 +373,20 @@ namespace MultiverseCardBattle.Screens
                     Timeline(fx, At(0.15f, () => UiFx.Ring(fx, to, c, 40f, 860f, 0.8f)));
 
                     UiFx.Burst(fx, to, c, 36, 300f, 32f, 1.1f, -120f);
+                    break;
+
+                case StarterCardLibrary.AemeathId:
+                    // หอกแสงดาว: เสาแสงชมพู-ทองพุ่งลงเป้า ประกายดาวและรอยแสงไขว้
+                    Shake(shakeTarget, 12f, 0.4f);
+
+                    UiFx.Beam(fx, to, new Color(1f, 1f, 1f, 0.9f), 120f, 1300f, 0.7f);
+                    UiFx.Beam(fx, to, new Color(1f, 0.88f, 0.55f, 0.8f), 220f, 1200f, 0.9f);
+
+                    for (int i = 0; i < 4; i++)
+                        UiFx.Slash(fx, to, i % 2 == 0 ? c : new Color(1f, 0.88f, 0.55f, 1f), 640f, 14f, 0.4f);
+
+                    UiFx.Ring(fx, to, c, 40f, 560f, 0.6f);
+                    UiFx.Burst(fx, to, c, 40, 360f, 26f, 1.2f, -140f);
                     break;
 
                 default:

@@ -76,6 +76,10 @@ namespace MultiverseCardBattle.Effects
         LookTop,
 
         // สั่งให้ Burn บนเป้าหมายทำงานทันที 1 ครั้ง โดยไม่ลดจำนวนเทิร์นของ Burn (Kiana)
-        TriggerBurn
+        TriggerBurn,
+
+        // Aemeath: ทั้งสองฝ่ายนำการ์ดบนสนาม (ยกเว้นตัวต้นทาง) และในมือลงสุสาน คืนสุสานเข้ากอง จั่ว 5
+        // ฟื้น HP Leader เต็ม และรีเซ็ต Max Energy เหลือ 1 (Value = จำนวนใบที่จั่ว)
+        ResetBoard
     }
 }

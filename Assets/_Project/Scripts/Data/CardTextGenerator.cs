@@ -445,6 +445,11 @@ namespace MultiverseCardBattle.Data
                 case EffectType.TriggerBurn:
                     return "trigger Burn on " + target + " now (its duration is unchanged)";
 
+                case EffectType.ResetBoard:
+                    return "reset the battlefield: both sides send all other cards on the field and in hand to the Graveyard, " +
+                           "shuffle their Graveyard into their deck, draw " + (value > 0 ? value : 5) +
+                           ", fully restore both Leaders and reset Max Energy to 1";
+
                 case EffectType.DrawCard:
                     if (effect.DrawnSpellDiscount > 0)
                     {

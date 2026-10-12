@@ -128,6 +128,9 @@ namespace MultiverseCardBattle.Screens
         private Dictionary<int, int> lastHealth = new Dictionary<int, int>();
         private Dictionary<int, int> lastAttacks = new Dictionary<int, int>();
 
+        // Geass ล่าสุดที่เล่นเอฟเฟกต์ไปแล้ว (เทียบกับ battle.GeassSeq)
+        private int lastGeassSeq;
+
         // CardID ล่าสุดของยูนิตแต่ละใบ (ใช้จับการแปลงร่างเพื่อเล่นเอฟเฟกต์)
         private readonly Dictionary<int, string> lastForms = new Dictionary<int, string>();
         private Dictionary<int, Vector3> lastPositions = new Dictionary<int, Vector3>();
@@ -2204,6 +2207,8 @@ namespace MultiverseCardBattle.Screens
                 }
             }
 
+            PlayGeassEvent();
+
             PlaySecretEvents();
 
             lastHealth = now;
@@ -3586,6 +3591,42 @@ namespace MultiverseCardBattle.Screens
                 return;
 
             CardFx.Aura(view, fxLayer, KaiokenRed, 1000000f);
+        }
+
+        // Geass ของ Lelouch: ตราปีกนกที่ตาของ Lelouch เส้นพลังไปหาเป้าหมาย ตราล็อกเป้าหมาย
+        private void PlayGeassEvent()
+        {
+            if (battle.GeassSeq == lastGeassSeq)
+                return;
+
+            lastGeassSeq = battle.GeassSeq;
+
+            CardInstance source = battle.GeassSource;
+            CardInstance target = battle.GeassTarget;
+
+            if (source == null || target == null)
+                return;
+
+            Vector3 from;
+            Vector3 to;
+
+            CardView sourceView;
+            CardView targetView;
+
+            if (viewsByInstance.TryGetValue(source.InstanceID, out sourceView) && sourceView != null)
+                from = UiFx.ScreenOf(sourceView.transform);
+            else if (!lastPositions.TryGetValue(source.InstanceID, out from))
+                return;
+
+            if (viewsByInstance.TryGetValue(target.InstanceID, out targetView) && targetView != null)
+                to = UiFx.ScreenOf(targetView.transform);
+            else if (!lastPositions.TryGetValue(target.InstanceID, out to))
+                return;
+
+            GeassFx.Play(fxLayer, root, from, to, battle.GeassBlocked);
+
+            if (targetView != null)
+                CardFx.Flash(targetView, new Color(1f, 0.1f, 0.2f, 0.7f));
         }
 
         // แปลงร่าง: แสงวาบ วงแหวน เสาแสง และประกายจากการ์ด (Bankai ใช้สีแดงเข้ม + ข้อความ BANKAI!)

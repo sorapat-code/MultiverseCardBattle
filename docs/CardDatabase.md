@@ -117,6 +117,14 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
   (destroys at the start of the caster's next turn), `CardPassive` flags (Grasp Heart / Dark Wisdom / Supreme Magic Caster /
   Undead Overlord) and `BattleManager.PendingTarget` (the player clicks the Grasp Heart target at turn start). Kill causes are
   tracked via `BattleManager.ActiveEffectSource` and `CardInstance.LastEffectSource`.
+- `Aemeath, Guiding Starlance` (`EVT_005`, Secret/Unique, Cost 10, ATK 5 / HP 5) is unlocked by "The Starlance Has Answered": every time the
+  **enemy (AI) plays a card** there is a small chance the card turns into Aemeath instead (`BattleManager.TryAemeathReplace`, called from
+  `PlayCardCommand` after the cost is paid; once per match, not for chain responses, skipped when the enemy field is full). Chance =
+  `BattleManager.AemeathChance()`: campaign stage 1 = 1%, rising linearly to stage 10 = 3%; other modes 1%; Tutorial 0%. Win that match to
+  unlock (`SecretCardService`, `BattleManager.AemeathAppeared`) -> banner, 1 copy in the Collection and the hidden achievement "Guiding Starlance".
+  Effect (Summon, `EffectType.ResetBoard`, `BattleManager.StarlanceReset`): both players send every card on the field (except Aemeath) and in hand
+  to the Graveyard, shuffle the whole Graveyard back into the deck (Tokens are discarded, units return in their base form), restore both Leaders to
+  full HP, restart Max Energy from 1 (`BattlePlayer.EnergyTurnBase`, current Energy = 1) and each draw 5 cards. Aemeath stays on the field.
 - `Vergil, The Alpha and the Omega` (`EVT_004`) is unlocked by "The Power of the Yamato": win a match without playing any
   Spell in which one unit attacks 3 times in total without dying. Judgment Cut uses the `GrantExtraAttack` effect; Concentration,
   Devil Trigger, Sin Devil's Regeneration and Overwhelming Power are `CardPassive` flags. The **DEVIL TRIGGER** button
@@ -132,7 +140,7 @@ Universe และ Faction เป็น enum ในโค้ด (`Scripts/Cards/
 
 Put card images in `Assets/_Project/Resources/CardArt/{CardID}.png` (loaded by `Data/CardArtLoader.cs`, no Sprite import
 settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Artorias, `EVT_003` Ainz Ooal Gown,
-`EVT_004` Vergil, `TKN_006` Vergil Devil Trigger form (Ainz/Vergil cards are not implemented yet).
+`EVT_004` Vergil, `EVT_005` Aemeath, `TKN_006` Vergil Devil Trigger form.
 
 ## Equipment (อุปกรณ์)
 
@@ -237,7 +245,7 @@ settings needed). Reserved secret-card art: `EVT_001` Sung Jin-Woo, `EVT_002` Ar
 
 ## เอฟเฟกต์การ์ดลับ (SecretFx)
 
-โค้ดอยู่ที่ `Scripts/Screens/SecretFx.cs` ใช้กับการ์ดที่ `Rarity = Secret` และร่าง Devil Trigger (`TKN_006`) แต่ละใบมีสีประจำตัว (Jin-Woo ม่วง / Artorias ทอง / Ainz แดง / Vergil น้ำเงิน)
+โค้ดอยู่ที่ `Scripts/Screens/SecretFx.cs` ใช้กับการ์ดที่ `Rarity = Secret` และร่าง Devil Trigger (`TKN_006`) แต่ละใบมีสีประจำตัว (Jin-Woo ม่วง / Artorias ทอง / Ainz แดง / Vergil น้ำเงิน / Aemeath ชมพู)
 
 - **ปลดล็อก:** แสงวาบเต็มจอ + เวทวงกลม และตัวการ์ดพลิกหมุนเข้ามากระแทกกลางจอพร้อมเสาแสง คลื่น อนุภาค (`CardReveal`)
 - **ลงสนาม:** แสงวาบ เสาแสง คลื่นกระแทก รอยฟัน จอสั่น และชื่อการ์ดเด้งขึ้นกลางจอ (`SecretFx.Arrive`)
@@ -266,10 +274,17 @@ scene by card ID and mode; returns null -> shared timeline is used.
 | Sung Jin-Woo `EVT_001` | `JinWooScene` | Shadow army eyes open faster and faster, ARISE slam, eyes flare, ground rings + smoke, soldiers bow, violet pillar |
 | Artorias `EVT_002` | `ArtoriasScene` | Fog + embers, greatsword drops and plants, golden shaft, single wide sweep, sword dissolves |
 | Ainz `EVT_003` | `AinzScene` | Counter-rotating red magic circles with orbiting lights, red eyes, three domination pulses, collapse, explosion + red pillars |
+| Aemeath `EVT_005` | `AemeathScene` | Twinkling starfield, curtain reveal of the art, orbiting orbs + layered rings, meteors, collapse, 3-beam Starlance with radial rays, "STARLANCE" slam, star rain |
 | Devil Trigger `TKN_006` (Transform mode) | `DevilTriggerScene` | Accelerating heartbeat + lightning, freeze, radial speed-line explosion, title |
 
 Shared parts: `RingAnim`, `SlamText`, `EyePair`, `VergilCut` (slash line, optional palette), `SwordDrop`.
 Not yet compiled/run in Unity.
+
+### Geass FX (Lelouch)
+
+`Screens/GeassFx.cs`: whenever Lelouch's Geass stuns a unit (`BattleManager.NoteGeass`, also from his Battlecry Stun) the UI plays the Geass sigil
+(ring + feather wings) on Lelouch, link lines to the target, then a lock sigil + "OBEY" on the target; if a Ward blocks it the sigil shatters with
+"RESISTED". Played from `BattleScreen.PlayGeassEvent` using `GeassSeq/GeassSource/GeassTarget/GeassBlocked`.
 
 ## Coin toss (CoinToss)
 

@@ -41,7 +41,7 @@ namespace MultiverseCardBattle.Battle
             TotalTurns++;
 
             // เพิ่ม Max Energy ทีละ 1 ทุกเทิร์น
-            player.MaxEnergy = Mathf.Min(TurnNumber, MaxEnergy);
+            player.MaxEnergy = Mathf.Clamp(TurnNumber - player.EnergyTurnBase, 1, MaxEnergy);
 
             // เติม Energy เต็ม
             player.CurrentEnergy = player.MaxEnergy;

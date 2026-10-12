@@ -41,6 +41,10 @@ namespace MultiverseCardBattle.Battle
             if (Card.HasKeyword(Keyword.Overload))
                 Player.OverloadedEnergy += Card.Data.EffectiveOverloadAmount;
 
+            // ศัตรูเล่นการ์ด: โอกาสน้อยมากที่การ์ดใบนี้จะกลายเป็น Aemeath
+            if (!responding && battle.TryAemeathReplace(Player, Card))
+                Target = null;
+
             battle.Log(Player.Name + (responding ? " responds with " : " plays ") +
                 Card.Data.CardName);
 

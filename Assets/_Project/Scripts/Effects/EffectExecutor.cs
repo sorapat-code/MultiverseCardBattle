@@ -126,6 +126,15 @@ namespace MultiverseCardBattle.Effects
                 case EffectType.Stun:
                     ApplyStatus(context, StatusType.Stun, 0,
                         PositiveOr(effect.Duration, PositiveOr(effect.Value, 1)));
+
+                    // Geass ตอนลงสนาม (Battlecry ของ Lelouch): ให้ UI เล่นเอฟเฟกต์เหมือน Geass ต้นเทิร์น
+                    if (context.Battle != null &&
+                        context.SourceCard != null &&
+                        context.TargetCard != null &&
+                        context.SourceCard.HasPassive(CardPassive.Geass))
+                    {
+                        context.Battle.NoteGeass(context.SourceCard, context.TargetCard, false);
+                    }
                     break;
 
                 case EffectType.Burn:
@@ -136,6 +145,11 @@ namespace MultiverseCardBattle.Effects
 
                 case EffectType.TriggerBurn:
                     TriggerBurn(context);
+                    break;
+
+                case EffectType.ResetBoard:
+                    if (context.Battle != null)
+                        context.Battle.StarlanceReset(context.SourceCard, PositiveOr(effect.Value, 5));
                     break;
 
                 case EffectType.Regen:

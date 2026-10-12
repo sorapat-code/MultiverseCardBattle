@@ -18,6 +18,9 @@ namespace MultiverseCardBattle.Battle
         public int CurrentEnergy;
         public int MaxEnergy;
 
+        // Max Energy ของเทิร์นนี้ = เลขเทิร์น - EnergyTurnBase (Aemeath รีเซ็ตให้เริ่มนับใหม่จาก 1)
+        public int EnergyTurnBase;
+
         // นับจำนวนครั้งที่จั่วจากเด็คว่าง (ความเสียหาย Fatigue เพิ่มขึ้นเรื่อยๆ)
         public int FatigueCounter;
 

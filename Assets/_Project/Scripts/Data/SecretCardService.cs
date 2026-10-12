@@ -18,7 +18,8 @@ namespace MultiverseCardBattle.Data
     {
         Gold,
         Nazarick,
-        Yamato
+        Yamato,
+        Starlance
     }
 
     /// <summary>
@@ -86,6 +87,21 @@ namespace MultiverseCardBattle.Data
                 unlock.Subtitle = "Devil Trigger awakened";
                 unlock.Tint = new Color(0.25f, 0.6f, 1f, 1f);
                 unlock.Style = BannerStyle.Yamato;
+
+                list.Add(unlock);
+            }
+
+            // Aemeath: การ์ดที่ศัตรูเล่นกลายเป็น Aemeath ในแมตช์นี้ และเราชนะแมตช์นั้น
+            if (battle.AemeathAppeared &&
+                profile.GetOwnedCount(StarterCardLibrary.AemeathId) == 0)
+            {
+                SecretUnlock unlock = new SecretUnlock();
+
+                unlock.CardId = StarterCardLibrary.AemeathId;
+                unlock.Title = "THE STARLANCE HAS ANSWERED";
+                unlock.Subtitle = "Guiding Starlance awakened";
+                unlock.Tint = new Color(1f, 0.6f, 0.82f, 1f);
+                unlock.Style = BannerStyle.Starlance;
 
                 list.Add(unlock);
             }

@@ -280,6 +280,11 @@ namespace MultiverseCardBattle.Data
                 p => p.GetOwnedCount(StarterCardLibrary.VergilId) > 0 ? 1 : 0,
                 () => 1, 500, 300, true);
 
+            Add("starlance", "Guiding Starlance",
+                "A rare star falls on the enemy's side... win the battle to claim it.",
+                p => p.GetOwnedCount(StarterCardLibrary.AemeathId) > 0 ? 1 : 0,
+                () => 1, 500, 300, true);
+
             Add("nazarick", "The Throne of Nazarick",
                 "Cast many spells and let the dead pile up... something watches.",
                 p => p.GetOwnedCount(StarterCardLibrary.AinzId) > 0 ? 1 : 0,

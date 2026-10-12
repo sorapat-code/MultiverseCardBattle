@@ -77,6 +77,7 @@ namespace MultiverseCardBattle.Screens
                     case StarterCardLibrary.SecretId: type = typeof(JinWooScene); break;
                     case StarterCardLibrary.ArtoriasId: type = typeof(ArtoriasScene); break;
                     case StarterCardLibrary.AinzId: type = typeof(AinzScene); break;
+                    case StarterCardLibrary.AemeathId: type = typeof(AemeathScene); break;
                 }
             }
 

@@ -48,6 +48,9 @@ namespace MultiverseCardBattle.Data
         public const string ArtoriasId = "EVT_002";
         public const string AinzId = "EVT_003";
         public const string VergilId = "EVT_004";
+
+        // Aemeath: ศัตรูเล่นการ์ดแล้วมีโอกาส 1-3% (ตามด่าน) ที่การ์ดนั้นกลายเป็น Aemeath ชนะแมตช์นั้นจึงปลดล็อก
+        public const string AemeathId = "EVT_005";
         public const string DevilTriggerId = "TKN_006";
 
         // การ์ดไม้ตายของ Leader (ได้จากเงื่อนไข Power ของ Leader ไม่ใช่จากแพ็ก)
@@ -362,6 +365,27 @@ namespace MultiverseCardBattle.Data
                 "Devil Trigger: Once per match during your turn (not the turn he is summoned), press the DEVIL TRIGGER button to transform for free for 2 of your turns.";
 
             Add(vergil);
+
+            // Aemeath: ปลดล็อกจากโอกาสตอนศัตรูเล่นการ์ด (ดู BattleManager.TryAemeathReplace)
+            CardData aemeath = Create(
+                AemeathId, "Aemeath, Guiding Starlance", CardType.Unit,
+                Universe.WutheringWaves, Faction.Fractsidus, CardRarity.Secret,
+                10, 5, 5, Keyword.Unique,
+                CardTag.Human | CardTag.Elite | CardTag.Boss | CardTag.Magic | CardTag.Light,
+                CardSource.Event,
+                new[]
+                {
+                    Act(TriggerType.Summon, TargetRule.Self, TargetSelection.All,
+                        Fx(EffectType.ResetBoard, 5))
+                });
+
+            aemeath.Description =
+                "Unique\n" +
+                "Starlance Reset: When this card enters the field, both sides send every other card on the field " +
+                "and in hand to the Graveyard, shuffle their Graveyard into their deck, then draw 5 new cards. " +
+                "Both Leaders are fully restored and Max Energy resets to 1.";
+
+            Add(aemeath);
 
             // ---------- การ์ดทั่วไป (ตัวประกอบ + เวทมนตร์) ----------
             // อยู่ในไฟล์ StarterCardLibrary.Roster.cs
