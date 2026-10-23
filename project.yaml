@@ -32,3 +32,33 @@ project:
 modes:
   rigor: minimal
   automation: guided
+
+engine:
+  name: "Unity"
+  version: "6000.5.7f1"
+  language: "C#"
+  rendering: "Built-in"
+  physics: "PhysX"
+  path: "C:/Program Files/Unity/Hub/Editor/6000.5.7f1/Editor/Unity.exe"
+
+specialists:
+  code: "unity-specialist"
+  shader: "unity-shader-specialist"
+  ui: "unity-ui-specialist"
+  additional: ["unity-dots-specialist", "unity-addressables-specialist"]
+
+naming:
+  classes: PascalCase
+  variables: camelCase
+  constants: SCREAMING_SNAKE   # UNVERIFIED — not sourceable from
+                               # docs/engine-reference/unity/; confirm before relying on it
+  signals: OnEventName
+  files: PascalCase
+  scenes: PascalCase
+
+commands:
+  # TODO: the editor path is the Unity Hub default for Windows, not probed — confirm via /settings
+  build: '"C:/Program Files/Unity/Hub/Editor/6000.5.7f1/Editor/Unity.exe" -batchmode -quit -projectPath . -buildTarget Win64 -buildWindows64Player Builds/Win64/MultiverseCardBattle.exe'
+  test: '"C:/Program Files/Unity/Hub/Editor/6000.5.7f1/Editor/Unity.exe" -batchmode -runTests -projectPath . -testPlatform EditMode -testResults test-results/editmode.xml'
+  run: 'Builds/Win64/MultiverseCardBattle.exe -screen-width 1280 -screen-height 720 -screen-fullscreen 0'
+  smoke: '"C:/Program Files/Unity/Hub/Editor/6000.5.7f1/Editor/Unity.exe" -batchmode -quit -projectPath . -logFile -'
