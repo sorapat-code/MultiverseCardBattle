@@ -44,6 +44,14 @@ after it runs `project.yaml` holds the real values.
 
 @.claude/docs/coordination-rules.md
 
+## Language
+
+Talk to the user in Thai. Every question (question-tool prompts, option labels
+and descriptions, and plain-text questions), card, summary and handoff line a
+skill or agent shows the user is written in Thai, even when the skill gives the
+wording in English. Keep slash commands, file paths, setting keys and their
+values (e.g. `/setup-engine`, `modes.rigor`, `minimal`) as they are.
+
 ## Collaboration Protocol
 
 **User-driven collaboration, not autonomous execution.**
