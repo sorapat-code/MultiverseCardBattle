@@ -17,6 +17,9 @@ namespace MultiverseCardBattle.Screens
         public static readonly Color Background = new Color(0.08f, 0.06f, 0.05f, 1f);
         public static readonly Color Panel = new Color(0.17f, 0.12f, 0.09f, 0.95f);
         public static readonly Color Accent = new Color(0.66f, 0.46f, 0.16f, 1f);
+
+        // ปุ่มหลักที่ต้องเด่นที่สุดในหน้า (เช่น Story Mode)
+        public static readonly Color Primary = new Color(0.88f, 0.58f, 0.16f, 1f);
         public static readonly Color Danger = new Color(0.66f, 0.2f, 0.18f, 1f);
         public static readonly Color Success = new Color(0.27f, 0.52f, 0.28f, 1f);
         public static readonly Color Muted = new Color(0.34f, 0.3f, 0.27f, 1f);
@@ -308,6 +311,12 @@ namespace MultiverseCardBattle.Screens
 
             AddRing(rect, GoldDim, 10f);
 
+            // เงาใต้ปุ่มให้ลอยจากพื้นหลัง
+            Shadow drop = rect.gameObject.AddComponent<Shadow>();
+
+            drop.effectColor = new Color(0f, 0f, 0f, 0.45f);
+            drop.effectDistance = new Vector2(0f, -4f);
+
             Button button = rect.gameObject.AddComponent<Button>();
 
             button.targetGraphic = image;
@@ -315,10 +324,15 @@ namespace MultiverseCardBattle.Screens
             // ปุ่มที่ปิดใช้งานจะจางลง ปุ่มที่กดอยู่จะเข้มขึ้น
             ColorBlock colors = button.colors;
 
+            colors.highlightedColor = new Color(1.12f, 1.12f, 1.12f, 1f);
+            colors.selectedColor = new Color(1.05f, 1.05f, 1.05f, 1f);
             colors.pressedColor = new Color(0.8f, 0.8f, 0.8f, 1f);
             colors.disabledColor = new Color(0.6f, 0.6f, 0.6f, 0.7f);
+            colors.colorMultiplier = 1.2f;
 
             button.colors = colors;
+
+            ButtonHoverFx.Attach(button);
 
             button.onClick.AddListener(() => Sfx.Play(SoundId.Click));
 

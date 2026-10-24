@@ -159,13 +159,21 @@ namespace MultiverseCardBattle.Screens
         // สนามหญ้า: ไล่สีเข้ม-อ่อน + ลายใบหญ้า + แถบตัดหญ้าแนวตั้งจางๆ + แสงนวลตรงกลาง
         private static Sprite BuildGrass()
         {
-            const int width = 384;
-            const int height = 160;
+            // ละเอียดพอที่สนามกว้างเกือบเต็มจอจะไม่ถูกยืดจนเบลอ มี mipmap + anisotropic ให้คมเมื่อมองเฉียง
+            const int width = 1024;
+            const int height = 576;
 
-            Texture2D texture = NewTexture(width, height, TextureFormat.RGB24);
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGB24, true);
 
-            Color dark = new Color(0.07f, 0.24f, 0.10f, 1f);
-            Color light = new Color(0.24f, 0.50f, 0.17f, 1f);
+            texture.filterMode = FilterMode.Trilinear;
+            texture.anisoLevel = 8;
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.hideFlags = HideFlags.HideAndDontSave;
+
+            // โทนเขียวมรกตเข้ม ไม่สว่างจนแย่งสายตาจากการ์ด
+            Color dark = new Color(0.035f, 0.13f, 0.075f, 1f);
+            Color mid = new Color(0.09f, 0.27f, 0.12f, 1f);
+            Color light = new Color(0.2f, 0.42f, 0.16f, 1f);
 
             for (int y = 0; y < height; y++)
             {
@@ -174,25 +182,36 @@ namespace MultiverseCardBattle.Screens
                     float u = (x + 0.5f) / width;
                     float v = (y + 0.5f) / height;
 
-                    float patch = Fbm(u * 5f, v * 3f);
-                    float blades = Mathf.PerlinNoise(u * 140f, v * 18f);
+                    float patch = Fbm(u * 6f, v * 3.4f);
+                    float clumps = Mathf.PerlinNoise(u * 60f + 3.1f, v * 34f + 7.9f);
+                    float blades = Mathf.PerlinNoise(u * 520f, v * 70f);
 
-                    float t = Mathf.Clamp01(0.25f + patch * 0.7f + (blades - 0.5f) * 0.28f);
+                    float t = Mathf.Clamp01(
+                        0.18f + patch * 0.62f + (clumps - 0.5f) * 0.22f + (blades - 0.5f) * 0.32f);
 
-                    // แถบตัดหญ้าสลับสี
-                    float stripe = (Mathf.Floor(u * 12f) % 2f == 0f) ? 0.05f : -0.03f;
+                    // แถบตัดหญ้าแนวตั้งขอบนุ่ม
+                    float stripe = Mathf.Sin(u * Mathf.PI * 14f) * 0.045f;
 
                     t = Mathf.Clamp01(t + stripe);
 
-                    Color color = Color.Lerp(dark, light, t);
+                    Color color = t < 0.5f
+                        ? Color.Lerp(dark, mid, t * 2f)
+                        : Color.Lerp(mid, light, (t - 0.5f) * 2f);
 
-                    // แสงนวลตรงกลาง มืดลงที่ขอบ
+                    // แสงนวลกลางสนาม ขอบมืดลงแบบวงรี (เหมือนไฟส่องโต๊ะ)
                     float dx = u * 2f - 1f;
                     float dy = v * 2f - 1f;
 
-                    float glow = 1.18f - (dx * dx * 0.45f + dy * dy * 0.55f);
+                    float falloff = dx * dx * 0.55f + dy * dy * 0.75f;
+                    float glow = Mathf.Lerp(1.08f, 0.45f, Mathf.SmoothStep(0f, 1f, falloff));
 
-                    color *= Mathf.Clamp(glow, 0.55f, 1.15f);
+                    color *= glow;
+
+                    // เส้นกลางสนามเป็นแถบหญ้าสว่างจางๆ ใต้เส้นทอง
+                    float centre = Mathf.Abs(dy);
+
+                    if (centre < 0.03f)
+                        color *= 1f + (0.03f - centre) * 4f;
 
                     texture.SetPixel(x, y, new Color(color.r, color.g, color.b, 1f));
                 }

@@ -19,3 +19,4 @@
 | 004 | AI opponent and Story Mode | Integration | Done (retroactive) | N/A |
 | 005 | Deck builder, collection, shop and craft | UI | Done (retroactive) | N/A |
 | 006 | Save profile and tutorial | Integration | Done (retroactive) | N/A |
+| 007 | Visual polish pass | Visual/Feel | In Review | N/A |
