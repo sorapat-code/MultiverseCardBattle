@@ -146,7 +146,7 @@ namespace MultiverseCardBattle.Screens
 
             // ชื่อ (แถบโปร่งแสงด้านบน)
             Image nameBox = UIFactory.CreateRoundedPanel(
-                root, "NameBox", new Color(0f, 0f, 0f, 0.5f), 5f * scale);
+                root, "NameBox", new Color(0f, 0f, 0f, 0.72f), 5f * scale);
 
             UIFactory.SetAnchors(nameBox.rectTransform, 0.2f, 0.9f, 0.96f, 0.975f);
 
@@ -210,7 +210,7 @@ namespace MultiverseCardBattle.Screens
 
             // กล่องข้อความด้านล่าง
             Image bodyBox = UIFactory.CreateRoundedPanel(
-                root, "BodyBox", new Color(0f, 0f, 0f, 0.58f), 6f * scale);
+                root, "BodyBox", new Color(0.02f, 0.02f, 0.05f, 0.8f), 6f * scale);
 
             UIFactory.SetAnchors(bodyBox.rectTransform, 0.06f, 0.16f, 0.94f, 0.44f);
 

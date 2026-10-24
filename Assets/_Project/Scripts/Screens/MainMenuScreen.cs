@@ -252,7 +252,7 @@ namespace MultiverseCardBattle.Screens
 
             ScreenKit.AddButton(mainPanel, "Story Mode",
                 () => SceneLoader.Go(GameScene.Campaign),
-                UIFactory.Accent, 0.28f, y, 0.72f, y + height, 36);
+                UIFactory.Primary, 0.28f, y, 0.72f, y + height, 36);
 
             y -= step;
 

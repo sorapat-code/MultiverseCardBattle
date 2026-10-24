@@ -22,7 +22,10 @@ namespace MultiverseCardBattle.Editor
 
             importer.textureType = TextureImporterType.Default;
             importer.spriteImportMode = SpriteImportMode.None;
-            importer.mipmapEnabled = false;
+            // การ์ดบนมือ/สนามแสดงเล็กกว่ารูปจริงมาก: เปิด mipmap + trilinear เพื่อลดรอยหยักและภาพสั่นเมื่อย่อ
+            importer.mipmapEnabled = true;
+            importer.filterMode = FilterMode.Trilinear;
+            importer.anisoLevel = 4;
             importer.maxTextureSize = 2048;
         }
 

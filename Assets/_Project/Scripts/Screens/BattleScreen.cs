@@ -825,6 +825,13 @@ namespace MultiverseCardBattle.Screens
             // ปุ่มยอมแพ้ย้ายเข้าไปอยู่ในหน้าตั้งค่า (Settings -> Surrender)
             settings = BattleSettingsPanel.Create(root, Concede);
 
+            // แผงพื้นเข้มรวมปุ่มคอลัมน์ขวาเป็นกลุ่มเดียว (สร้างก่อนปุ่มเพื่อให้อยู่ด้านหลัง)
+            Image rightRail = ScreenKit.AddPanel(
+                root, "RightRail", new Color(0.03f, 0.03f, 0.04f, 0.62f),
+                0.903f, 0.15f, 1.002f, 0.997f);
+
+            rightRail.raycastTarget = false;
+
             ScreenKit.AddButton(root, "Settings", () => settings.Open(),
                 UIFactory.Muted, 0.91f, 0.945f, 0.995f, 0.99f, 20);
 
@@ -2281,6 +2288,11 @@ namespace MultiverseCardBattle.Screens
 
                 if (stage != null)
                     stage.Shake(0.05f + power * 0.014f, 0.22f + power * 0.02f);
+
+                // แสงวาบสีขาวตรงจุดกระทบ ให้การโจมตีรู้สึกมีน้ำหนัก
+                UiFx.Ring(
+                    fxLayer, position, new Color(1f, 0.95f, 0.85f, 0.9f),
+                    30f, 160f + power * 20f, 0.3f);
 
                 UiFx.Slash(
                     fxLayer, position, new Color(1f, 0.35f, 0.3f, 0.95f),

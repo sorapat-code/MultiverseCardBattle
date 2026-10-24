@@ -290,10 +290,11 @@ namespace MultiverseCardBattle.Screens
             float w = BoardHalfWidth;
             float d = BoardHalfDepth;
 
-            enemyGlowMaterial = GlowMaterial(new Color(1.4f, 0.4f, 0.7f, 0.2f), BoardArt.FadeDown.texture, true);
-            playerGlowMaterial = GlowMaterial(new Color(0.4f, 1.1f, 1.5f, 0.2f), BoardArt.FadeUp.texture, true);
-            enemyLineMaterial = GlowMaterial(new Color(2.2f, 0.5f, 1f, 0.5f), null, true);
-            playerLineMaterial = GlowMaterial(new Color(0.5f, 1.6f, 2.2f, 0.5f), null, true);
+            // ความสว่างต่ำกว่า 1 เพื่อไม่ให้ bloom ฟุ้งเป็นแถบจ้าทับการ์ดแถวหน้า
+            enemyGlowMaterial = GlowMaterial(new Color(0.9f, 0.3f, 0.55f, 0.2f), BoardArt.FadeDown.texture, true);
+            playerGlowMaterial = GlowMaterial(new Color(0.3f, 0.7f, 0.95f, 0.2f), BoardArt.FadeUp.texture, true);
+            enemyLineMaterial = GlowMaterial(new Color(1.6f, 0.45f, 0.85f, 0.5f), null, true);
+            playerLineMaterial = GlowMaterial(new Color(0.45f, 1.2f, 1.7f, 0.5f), null, true);
 
             Quaternion flat = Quaternion.Euler(90f, 0f, 0f);
 
@@ -324,9 +325,9 @@ namespace MultiverseCardBattle.Screens
             if (enemyGlowMaterial == null)
                 return;
 
-            SetAlpha(enemyGlowMaterial, enemyTurn ? 0.85f : 0.2f);
+            SetAlpha(enemyGlowMaterial, enemyTurn ? 0.45f : 0.12f);
             SetAlpha(enemyLineMaterial, enemyTurn ? 1f : 0.4f);
-            SetAlpha(playerGlowMaterial, playerTurn ? 0.85f : 0.2f);
+            SetAlpha(playerGlowMaterial, playerTurn ? 0.45f : 0.12f);
             SetAlpha(playerLineMaterial, playerTurn ? 1f : 0.4f);
 
             enemyBoostTarget = enemyTurn ? 1.25f : 0.55f;

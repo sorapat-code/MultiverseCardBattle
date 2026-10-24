@@ -243,11 +243,18 @@ namespace MultiverseCardBattle.Screens
                     {
                         float v = (float)y / (RoundedSize - 1);
 
-                        gray = Mathf.Lerp(0.6f, 0.95f, v);
+                        // ไล่เฉดเข้มขึ้นด้านล่าง ครึ่งบนมีแสงเงาวาว (gloss) ให้ปุ่มดูนูน
+                        gray = Mathf.Lerp(0.5f, 0.92f, v);
 
-                        // เส้นสะท้อนแสงบางๆ ใต้ขอบบน
+                        if (v > 0.55f)
+                            gray = Mathf.Min(1f, gray + 0.06f);
+
+                        // เส้นสะท้อนแสงใต้ขอบบน และขอบล่างมืดเป็นเงาหนา
                         if (distance > -4f && distance < -2f && y > RoundedSize / 2)
-                            gray = Mathf.Min(1f, gray + 0.1f);
+                            gray = Mathf.Min(1f, gray + 0.14f);
+
+                        if (distance > -4f && y < RoundedSize / 2)
+                            gray *= 0.8f;
                     }
 
                     texture.SetPixel(x, y, new Color(gray, gray, gray, alpha));
@@ -268,11 +275,11 @@ namespace MultiverseCardBattle.Screens
                     RoundedRadius, RoundedRadius));
         }
 
-        // พื้นหลังเต็มจอ: ไล่เฉดแบบวงรีจากกลางไปขอบ + ลายเส้นแนวตั้งจางๆ
+        // พื้นหลังเต็มจอ: ไล่เฉดแบบวงรีจากกลางไปขอบ + ลำแสงจากด้านบน + ลายวงเวทจางๆ ตรงกลาง
         private static Sprite BuildBackdrop(Color center, Color edge)
         {
-            const int width = 256;
-            const int height = 144;
+            const int width = 640;
+            const int height = 360;
 
             Texture2D texture =
                 new Texture2D(width, height, TextureFormat.RGB24, false);
@@ -296,11 +303,31 @@ namespace MultiverseCardBattle.Screens
 
                     Color color = Color.Lerp(center, edge, t);
 
-                    float grain = 1f + 0.025f * Mathf.Sin(x * 1.7f + y * 0.05f);
+                    // ลำแสงกว้างส่องลงจากกลางบน (ค่า dy บวก = ด้านบนของจอ)
+                    float beam = Mathf.Clamp01(1f - Mathf.Abs(dx) / (0.25f + (1f - dy) * 0.35f));
+
+                    beam *= Mathf.Clamp01((dy + 0.3f) / 1.3f) * 0.22f;
+
+                    // วงเวทสองวงจางๆ รอบจุดกลางจอ
+                    float r = Mathf.Sqrt(dx * dx * 3.16f + dy * dy);
+                    float rune = Mathf.Max(
+                        Mathf.Clamp01(1f - Mathf.Abs(r - 0.62f) / 0.008f),
+                        Mathf.Clamp01(1f - Mathf.Abs(r - 0.7f) / 0.004f)) * 0.07f;
+
+                    float lift = 1f + beam + rune;
+
+                    float grain = 1f + 0.02f * Mathf.Sin(x * 1.7f + y * 0.05f)
+                                     + 0.02f * (Mathf.PerlinNoise(x * 0.08f, y * 0.08f) - 0.5f);
+
+                    float k = lift * grain;
 
                     texture.SetPixel(
                         x, y,
-                        new Color(color.r * grain, color.g * grain, color.b * grain, 1f));
+                        new Color(
+                            Mathf.Clamp01(color.r * k),
+                            Mathf.Clamp01(color.g * k),
+                            Mathf.Clamp01(color.b * k),
+                            1f));
                 }
             }
 
